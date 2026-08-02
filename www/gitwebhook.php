@@ -18,7 +18,7 @@ $secret = GIT_WEBHOOK_SECRET;
 
 // Per-machine paths; override in config.local.php.
 $deployScript = defined('DEPLOY_SCRIPT') ? DEPLOY_SCRIPT
-    : '/home/everosenthal/deploy/neon.everosenthal.com.sh';
+    : '/home/everosenthal/deploy/neon.everosenthal.com.deploy.sh';
 $logFile = defined('DEPLOY_LOG') ? DEPLOY_LOG
     : '/home/everosenthal/deploy/logs/neon.everosenthal.com.webhook.log';
 
