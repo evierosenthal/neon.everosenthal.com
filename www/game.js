@@ -348,10 +348,10 @@
         player.vy = player.y - prevY;
       }
 
-      // Keyboard Component — noticeably quicker than the mouse glide
+      // Keyboard Component — much quicker than the mouse glide
       if (keyboardDrives) {
-        var kbAccel = accel * 1.5;
-        var kbTopSpeed = moveSpeed * 1.5;
+        var kbAccel = accel * 2.0;
+        var kbTopSpeed = moveSpeed * 2.0;
         if (keysPressed['KeyW'] || keysPressed['w'] || keysPressed['W'] || keysPressed['ArrowUp'] || keysPressed['Up']) {
           player.vy -= kbAccel;
         }
