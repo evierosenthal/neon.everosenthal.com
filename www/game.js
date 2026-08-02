@@ -182,8 +182,10 @@
       var targetY = height / 2 + (Math.random() - 0.5) * height;
       var angle = Math.atan2(targetY - y, targetX - x) + (Math.random() - 0.5) * 0.2;
       var superHardSpeedBoost = difficulty >= 4.0 ? 2.5 : 1.0;
-      // Extra speed boost for Super Hard mode
-      var speed = (Math.random() * 2.5 + 2.0) * difficulty * superHardSpeedBoost;
+      // Medium-tier band gets a small speed-only boost (spawn rate unchanged),
+      // keeping asteroid speed clearly above Easy but still below Hard's start.
+      var mediumSpeedBoost = (difficulty >= 0.6 && difficulty < 1.2) ? 1.12 : 1.0;
+      var speed = (Math.random() * 2.5 + 2.0) * difficulty * superHardSpeedBoost * mediumSpeedBoost;
 
       var vertexCount = 8 + Math.floor(Math.random() * 5);
       var vertices = [];
