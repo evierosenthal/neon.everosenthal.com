@@ -184,7 +184,7 @@
       var superHardSpeedBoost = difficulty >= 4.0 ? 2.5 : 1.0;
       // Medium-tier band gets a small speed-only boost (spawn rate unchanged),
       // keeping asteroid speed clearly above Easy but still below Hard's start.
-      var mediumSpeedBoost = (difficulty >= 0.6 && difficulty < 1.2) ? 1.12 : 1.0;
+      var mediumSpeedBoost = (difficulty >= 0.6 && difficulty < 1.2) ? 1.2 : 1.0;
       var speed = (Math.random() * 2.5 + 2.0) * difficulty * superHardSpeedBoost * mediumSpeedBoost;
 
       var vertexCount = 8 + Math.floor(Math.random() * 5);
@@ -348,26 +348,28 @@
         player.vy = player.y - prevY;
       }
 
-      // Keyboard Component
+      // Keyboard Component — a touch quicker than the mouse glide
       if (keyboardDrives) {
+        var kbAccel = accel * 1.2;
+        var kbTopSpeed = moveSpeed * 1.2;
         if (keysPressed['KeyW'] || keysPressed['w'] || keysPressed['W'] || keysPressed['ArrowUp'] || keysPressed['Up']) {
-          player.vy -= accel;
+          player.vy -= kbAccel;
         }
         if (keysPressed['KeyS'] || keysPressed['s'] || keysPressed['S'] || keysPressed['ArrowDown'] || keysPressed['Down']) {
-          player.vy += accel;
+          player.vy += kbAccel;
         }
         if (keysPressed['KeyA'] || keysPressed['a'] || keysPressed['A'] || keysPressed['ArrowLeft'] || keysPressed['Left']) {
-          player.vx -= accel;
+          player.vx -= kbAccel;
         }
         if (keysPressed['KeyD'] || keysPressed['d'] || keysPressed['D'] || keysPressed['ArrowRight'] || keysPressed['Right']) {
-          player.vx += accel;
+          player.vx += kbAccel;
         }
         player.vx *= friction;
         player.vy *= friction;
         var kbSpeed = Math.sqrt(player.vx * player.vx + player.vy * player.vy);
-        if (kbSpeed > moveSpeed) {
-          player.vx = (player.vx / kbSpeed) * moveSpeed;
-          player.vy = (player.vy / kbSpeed) * moveSpeed;
+        if (kbSpeed > kbTopSpeed) {
+          player.vx = (player.vx / kbSpeed) * kbTopSpeed;
+          player.vy = (player.vy / kbSpeed) * kbTopSpeed;
         }
         player.x += player.vx;
         player.y += player.vy;
@@ -548,7 +550,7 @@
     function updateSpawns() {
       // Spawn asteroids. The medium-tier band gets a small density boost so it
       // clearly outnumbers Easy while staying below Hard's starting density.
-      var mediumSpawnBoost = (state.difficulty >= 0.6 && state.difficulty < 1.2) ? 1.3 : 1.0;
+      var mediumSpawnBoost = (state.difficulty >= 0.6 && state.difficulty < 1.2) ? 1.45 : 1.0;
       var spawnChance = SPAWN_RATE * Math.pow(state.difficulty, 2) * mediumSpawnBoost;
       while (spawnChance > 0) {
         if (Math.random() < Math.min(1, spawnChance)) {
