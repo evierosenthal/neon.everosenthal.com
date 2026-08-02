@@ -191,7 +191,8 @@
     onGameOver: handleGameOver,
     onScoreUpdate: setScore,
     onHealthUpdate: setHealth,
-    onDifficultyUpdate: handleDifficultyUpdate
+    onDifficultyUpdate: handleDifficultyUpdate,
+    onDeath: playDeathSound // crash boom at the moment of impact, with the explosion
   });
 
   // --- Helpers -----------------------------------------------------------
@@ -383,7 +384,6 @@
 
   function handleGameOver(finalScore) {
     game.stop();
-    playDeathSound();
     var beatRecord = finalScore > highScores[currentMode] && finalScore > 0;
 
     if (beatRecord) {

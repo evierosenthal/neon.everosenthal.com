@@ -35,7 +35,8 @@
       onGameOver: (callbacks && callbacks.onGameOver) || function () {},
       onScoreUpdate: (callbacks && callbacks.onScoreUpdate) || function () {},
       onHealthUpdate: (callbacks && callbacks.onHealthUpdate) || function () {},
-      onDifficultyUpdate: (callbacks && callbacks.onDifficultyUpdate) || function () {}
+      onDifficultyUpdate: (callbacks && callbacks.onDifficultyUpdate) || function () {},
+      onDeath: (callbacks && callbacks.onDeath) || function () {}
     };
 
     var config = {
@@ -257,6 +258,9 @@
         score: 0,
         health: 100,
         isGameOver: false,
+        dying: false,
+        deathTimer: 0,
+        shipsDestroyed: false,
         difficulty: config.initialDifficulty,
         activeEffects: {
           shield: 0,
@@ -783,8 +787,7 @@
               asteroidDestroyed = true;
 
               if (state.health <= 0) {
-                state.isGameOver = true;
-                handlers.onGameOver(state.score);
+                startDeathSequence(p, asteroid);
               }
               break;
             }
@@ -806,8 +809,79 @@
       }
     }
 
+    // Fatal hit: blow the ship(s) and the killer asteroid apart on-canvas,
+    // hold for a beat so the explosion plays out, then raise game over.
+    function startDeathSequence(deadPlayer, killerAsteroid) {
+      if (state.dying) return;
+      state.dying = true;
+      state.deathTimer = 100; // ~1.7s at 60fps
+      shake = 40;
+      handlers.onDeath();
+
+      function explode(x, y, colors, sparks, ringSize) {
+        colors.forEach(function (color) {
+          createShockwaveRing(x, y, color, ringSize);
+        });
+        for (var i = 0; i < sparks; i++) {
+          var debris = createParticle(x, y, colors[i % colors.length]);
+          debris.vx *= 1.2 + Math.random() * 2.2; // fling debris harder than a normal hit
+          debris.vy *= 1.2 + Math.random() * 2.2;
+          debris.radius = 2.5 + Math.random() * 4; // chunky, clearly-visible wreckage
+          debris.life *= 2.5;
+          debris.maxLife = debris.life;
+          state.particles.push(debris);
+        }
+      }
+
+      explode(killerAsteroid.x, killerAsteroid.y, [killerAsteroid.color || '#a855f7', '#fbbf24'], 45, 16);
+      [state.player, state.player2].forEach(function (ship) {
+        if (!ship) return;
+        explode(ship.x, ship.y, ['#22d3ee', '#ff5533', '#ffffff'], 70, 20);
+      });
+      addFloatingText(deadPlayer.x, deadPlayer.y - 40, 'HULL DESTROYED', '#ff0000', 1.4);
+
+      state.shipsDestroyed = true; // stop drawing the ships — they're debris now
+    }
+
+    function updateDeathSequence() {
+      // Aftermath only: debris flies, rings expand, asteroids keep drifting.
+      for (var i = 0; i < state.asteroids.length; i++) {
+        var a = state.asteroids[i];
+        a.x += a.vx;
+        a.y += a.vy;
+        a.rotation += a.spinSpeed;
+      }
+      for (var pt = state.particles.length - 1; pt >= 0; pt--) {
+        var particle = state.particles[pt];
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vx *= 0.985;
+        particle.vy *= 0.985;
+        particle.life--;
+        if (particle.life <= 0) state.particles.splice(pt, 1);
+      }
+      for (var ft = state.floatingTexts.length - 1; ft >= 0; ft--) {
+        var text = state.floatingTexts[ft];
+        text.y -= 1.2;
+        text.life -= 1;
+        text.alpha = Math.max(0, text.life / 60);
+        if (text.life <= 0) state.floatingTexts.splice(ft, 1);
+      }
+      if (shake > 0) shake *= 0.9;
+
+      state.deathTimer--;
+      if (state.deathTimer <= 0) {
+        state.isGameOver = true;
+        handlers.onGameOver(state.score);
+      }
+    }
+
     function update() {
       if (isPaused || !state || state.isGameOver) return;
+      if (state.dying) {
+        updateDeathSequence();
+        return;
+      }
 
       // Background stars parallax
       for (var i = 0; i < stars.length; i++) {
@@ -880,7 +954,8 @@
           state.particles.splice(pt, 1);
         }
       }
-      if (state.particles.length > 80) {
+      // (skip the cap on the death frame so the full explosion survives)
+      if (!state.dying && state.particles.length > 80) {
         state.particles.splice(0, state.particles.length - 80);
       }
 
@@ -918,6 +993,7 @@
     }
 
     function drawAtmosphere() {
+      if (state.shipsDestroyed || !state.player) return;
       var gradient = ctx.createRadialGradient(
         state.player.x, state.player.y, 0,
         state.player.x, state.player.y, 400
@@ -1058,6 +1134,7 @@
     }
 
     function drawShips() {
+      if (state.shipsDestroyed) return;
       [state.player, state.player2].forEach(function (p) {
         if (!p) return;
 
