@@ -153,13 +153,13 @@
       });
     },
 
-    submitScore: function (score) {
-      return post('submit-score.php', { score: score });
+    submitScore: function (score, mode) {
+      return post('submit-score.php', { score: score, mode: mode });
     },
 
-    getLeaderboard: function () {
+    getLeaderboards: function () {
       return request('leaderboard.php', { credentials: 'same-origin' })
-        .then(function (data) { return data.leaderboard; });
+        .then(function (data) { return data.leaderboards; });
     },
 
     requestReset: function (email) {

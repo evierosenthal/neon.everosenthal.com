@@ -80,12 +80,14 @@ function require_post_with_csrf(): void
     }
 }
 
+const GAME_MODES = ['easy', 'medium', 'hard', 'super'];
+
 function current_user(): ?array
 {
     if (empty($_SESSION['user_id'])) {
         return null;
     }
-    $stmt = db()->prepare('SELECT id, username, email, password_hash, google_sub, best_score FROM users WHERE id = ?');
+    $stmt = db()->prepare('SELECT id, username, email, password_hash, google_sub FROM users WHERE id = ?');
     $stmt->execute([(int)$_SESSION['user_id']]);
     $user = $stmt->fetch();
     if (!$user) {
@@ -106,10 +108,16 @@ function require_user(): array
 
 function user_payload(array $user): array
 {
+    $bests = array_fill_keys(GAME_MODES, 0);
+    $stmt = db()->prepare('SELECT mode, best_score FROM scores WHERE user_id = ?');
+    $stmt->execute([(int)$user['id']]);
+    foreach ($stmt->fetchAll() as $row) {
+        $bests[$row['mode']] = (int)$row['best_score'];
+    }
     return [
         'id' => (int)$user['id'],
         'username' => $user['username'],
-        'bestScore' => (int)$user['best_score'],
+        'bestScores' => $bests,
     ];
 }
 
@@ -137,19 +145,30 @@ function rate_limit(string $key, int $max, int $windowSec): void
     $_SESSION['rl_' . $key] = $events;
 }
 
-function leaderboard_rows(): array
+function leaderboard_rows(string $mode): array
 {
-    $rows = db()->query(
-        'SELECT username, best_score FROM users WHERE best_score > 0
-         ORDER BY best_score DESC, best_score_at ASC LIMIT 10'
-    )->fetchAll();
+    $stmt = db()->prepare(
+        'SELECT u.username, s.best_score FROM scores s JOIN users u ON u.id = s.user_id
+         WHERE s.mode = ? AND s.best_score > 0
+         ORDER BY s.best_score DESC, s.best_score_at ASC LIMIT 10'
+    );
+    $stmt->execute([$mode]);
     $out = [];
-    foreach ($rows as $i => $row) {
+    foreach ($stmt->fetchAll() as $i => $row) {
         $out[] = [
             'rank' => $i + 1,
             'username' => $row['username'],
             'score' => (int)$row['best_score'],
         ];
+    }
+    return $out;
+}
+
+function all_leaderboards(): array
+{
+    $out = [];
+    foreach (GAME_MODES as $mode) {
+        $out[$mode] = leaderboard_rows($mode);
     }
     return $out;
 }

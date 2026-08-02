@@ -71,13 +71,13 @@ function derive_username(PDO $db, string $profileName, string $email): string
 try {
     $db = db();
 
-    $stmt = $db->prepare('SELECT id, username, email, password_hash, google_sub, best_score FROM users WHERE google_sub = ?');
+    $stmt = $db->prepare('SELECT id, username, email, password_hash, google_sub FROM users WHERE google_sub = ?');
     $stmt->execute([$sub]);
     $user = $stmt->fetch();
 
     if (!$user) {
         // Link to an existing password account with the same (verified) email.
-        $stmt = $db->prepare('SELECT id, username, email, password_hash, google_sub, best_score FROM users WHERE email = ?');
+        $stmt = $db->prepare('SELECT id, username, email, password_hash, google_sub FROM users WHERE email = ?');
         $stmt->execute([$email]);
         $user = $stmt->fetch();
         if ($user) {
@@ -90,7 +90,7 @@ try {
         $username = derive_username($db, $profileName, $email);
         $db->prepare('INSERT INTO users (username, email, google_sub) VALUES (?, ?, ?)')
             ->execute([$username, $email, $sub]);
-        $stmt = $db->prepare('SELECT id, username, email, password_hash, google_sub, best_score FROM users WHERE id = ?');
+        $stmt = $db->prepare('SELECT id, username, email, password_hash, google_sub FROM users WHERE id = ?');
         $stmt->execute([(int)$db->lastInsertId()]);
         $user = $stmt->fetch();
     }

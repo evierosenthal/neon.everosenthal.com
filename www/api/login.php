@@ -23,7 +23,7 @@ if (count($fails) >= 10) {
 
 try {
     $stmt = db()->prepare(
-        'SELECT id, username, email, password_hash, google_sub, best_score
+        'SELECT id, username, email, password_hash, google_sub
          FROM users WHERE username = ? OR email = ? LIMIT 1'
     );
     $stmt->execute([$who, $who]);

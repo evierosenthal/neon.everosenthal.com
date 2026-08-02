@@ -200,6 +200,7 @@
         <canvas id="newhigh-fireworks" class="fireworks-canvas"></canvas>
         <div class="panel panel-gameover panel-newhigh">
           <div class="panel-topline panel-topline-cyan"></div>
+          <p id="newhigh-mode" class="newhigh-mode"></p>
           <h2 class="newhigh-title">NEW HIGH SCORE!</h2>
           <p class="newhigh-sub">Galactic Record Broken</p>
 
@@ -297,6 +298,12 @@
             <button id="leaderboard-close" class="close-btn">
               <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
+          </div>
+          <div class="lb-tabs">
+            <button class="lb-tab" data-mode="easy">EASY</button>
+            <button class="lb-tab" data-mode="medium">MEDIUM</button>
+            <button class="lb-tab" data-mode="hard">HARD</button>
+            <button class="lb-tab" data-mode="super">SUPER</button>
           </div>
           <div id="leaderboard-list" class="lb-list"></div>
         </div>

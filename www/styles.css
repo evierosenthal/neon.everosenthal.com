@@ -1000,6 +1000,49 @@ body {
   background: linear-gradient(to right, transparent, rgba(34, 211, 238, 0.6), transparent);
 }
 
+.newhigh-mode {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  color: var(--amber-400);
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+  margin-bottom: 0.75rem;
+}
+
+.lb-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.lb-tab {
+  flex: 1;
+  padding: 0.5rem 0;
+  border-radius: 0.625rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--slate-400);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.lb-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--slate-200);
+}
+
+.lb-tab.active {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: var(--cyan-400);
+  color: #fff;
+}
+
 .newhigh-title {
   font-family: var(--font-display);
   font-weight: 900;

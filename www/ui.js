@@ -9,8 +9,16 @@
 (function () {
   'use strict';
 
-  var HIGHSCORE_KEY = 'neon_nebula_highscore';
+  var HIGHSCORE_PREFIX = 'neon_nebula_highscore_'; // + mode
   var CONTROL_KEY = 'neon_nebula_control_mode';
+
+  var MODES = ['easy', 'medium', 'hard', 'super'];
+  var MODE_LABELS = {
+    easy: 'EASY MODE',
+    medium: 'MEDIUM MODE',
+    hard: 'HARD MODE',
+    super: 'SUPER HARD MODE'
+  };
 
   var ZAP_ICON = '<svg viewBox="0 0 24 24" class="icon icon-stroke">' +
     '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>';
@@ -63,15 +71,19 @@
   var isLocalMultiplayer = false;
   var isCPUMultiplayer = false;
   var score = 0;
-  var highScore = 0;
+  var highScores = { easy: 0, medium: 0, hard: 0, super: 0 };
+  var currentMode = 'easy';
   var health = 100;
   var isPaused = false;
   var difficulty = 1;
   var controlModePreference = 'both';
   var isSettingsOpen = false;
   var pendingScore = null; // new high score awaiting server submission
+  var pendingMode = null; // mode the pending score was earned in
   var newhighPhase = 'offer'; // 'offer' | 'register' | 'forgot' | 'submitting' | 'result' | 'none'
   var isLeaderboardOpen = false;
+  var leaderboards = null; // {easy: [...], medium: [...], ...} cache for the modal
+  var leaderboardTab = 'easy';
   var isResetOpen = false;
   var resetToken = null;
 
@@ -101,6 +113,7 @@
     userChipName: document.getElementById('user-chip-name'),
     logoutLink: document.getElementById('logout-link'),
     newhighScreen: document.getElementById('newhigh-screen'),
+    newhighMode: document.getElementById('newhigh-mode'),
     newhighScore: document.getElementById('newhigh-score'),
     newhighPhases: {
       'offer': document.getElementById('newhigh-auth'),
@@ -179,10 +192,33 @@
     el.hudHealthBar.classList.toggle('critical', health <= 30);
   }
 
-  function setHighScore(value) {
-    highScore = value;
-    el.hudHighScore.textContent = formatNumber(highScore);
-    el.finalHighScore.textContent = formatNumber(highScore);
+  function modeFromDifficulty(diff) {
+    if (diff >= 5.0) return 'super';
+    if (diff >= 1.0) return 'hard';
+    if (diff >= 0.6) return 'medium';
+    return 'easy';
+  }
+
+  function refreshHighScoreDisplays() {
+    el.hudHighScore.textContent = formatNumber(highScores[currentMode]);
+    el.finalHighScore.textContent = formatNumber(highScores[currentMode]);
+  }
+
+  function setModeHighScore(mode, value) {
+    highScores[mode] = value;
+    try {
+      localStorage.setItem(HIGHSCORE_PREFIX + mode, String(value));
+    } catch (err) { /* storage unavailable — keep the session high score */ }
+    refreshHighScoreDisplays();
+  }
+
+  // Merge the server's per-mode bests into the local records (new-device sync).
+  function syncServerBests(user) {
+    if (!user || !user.bestScores) return;
+    MODES.forEach(function (mode) {
+      var serverBest = user.bestScores[mode] || 0;
+      if (serverBest > highScores[mode]) setModeHighScore(mode, serverBest);
+    });
   }
 
   function render() {
@@ -278,16 +314,15 @@
 
   function handleGameOver(finalScore) {
     game.stop();
-    var beatRecord = finalScore > highScore && finalScore > 0;
+    var beatRecord = finalScore > highScores[currentMode] && finalScore > 0;
 
     if (beatRecord) {
-      setHighScore(finalScore);
-      try {
-        localStorage.setItem(HIGHSCORE_KEY, String(finalScore));
-      } catch (err) { /* storage unavailable — keep the session high score */ }
+      setModeHighScore(currentMode, Math.round(finalScore));
 
       gameState = 'NEWHIGH';
       pendingScore = Math.round(finalScore);
+      pendingMode = currentMode;
+      el.newhighMode.textContent = MODE_LABELS[currentMode];
       el.newhighScore.textContent = formatNumber(finalScore);
 
       var auth = window.NeonAuth;
@@ -353,9 +388,10 @@
     if (pendingScore == null) return;
     setNewhighPhase('submitting');
     var submitted = pendingScore;
-    window.NeonAuth.submitScore(submitted).then(function (data) {
+    var mode = pendingMode;
+    window.NeonAuth.submitScore(submitted, mode).then(function (data) {
       pendingScore = null;
-      setHighScore(Math.max(highScore, data.bestScore));
+      if (data.bestScore > highScores[mode]) setModeHighScore(mode, data.bestScore);
       el.newhighRank.textContent = data.improved
         ? 'GALACTIC RANK #' + data.rank
         : 'YOUR RECORD STANDS AT ' + formatNumber(data.bestScore);
@@ -499,6 +535,8 @@
     setScore(0);
     setHealth(100);
     difficulty = diff;
+    currentMode = modeFromDifficulty(diff);
+    refreshHighScoreDisplays();
     isLocalMultiplayer = !!localMultiplayer;
     isCPUMultiplayer = !!cpuMultiplayer;
     gameState = 'PLAYING';
@@ -530,14 +568,15 @@
   // --- Wiring ------------------------------------------------------------
 
   function init() {
-    var savedScore = null;
     var savedControl = null;
     try {
-      savedScore = localStorage.getItem(HIGHSCORE_KEY);
+      MODES.forEach(function (mode) {
+        var saved = localStorage.getItem(HIGHSCORE_PREFIX + mode);
+        if (saved) highScores[mode] = parseInt(saved, 10) || 0;
+      });
       savedControl = localStorage.getItem(CONTROL_KEY);
     } catch (err) { /* storage unavailable — start with defaults */ }
-
-    if (savedScore) setHighScore(parseInt(savedScore, 10) || 0);
+    refreshHighScoreDisplays();
     if (savedControl === 'mouse' || savedControl === 'keyboard' || savedControl === 'both') {
       controlModePreference = savedControl;
       game.setControlModePreference(savedControl);

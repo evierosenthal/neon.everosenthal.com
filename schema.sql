@@ -8,11 +8,19 @@ CREATE TABLE users (
   email         VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NULL,             -- NULL for Google-only accounts
   google_sub    VARCHAR(64)  NULL UNIQUE,      -- Apple later: add apple_sub the same way
+  created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- One best score per user per difficulty mode.
+CREATE TABLE scores (
+  user_id       INT UNSIGNED NOT NULL,
+  mode          ENUM('easy','medium','hard','super') NOT NULL,
   best_score    INT UNSIGNED NOT NULL DEFAULT 0,
   best_score_at DATETIME     NULL,             -- tiebreak: earlier score wins
-  created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  KEY idx_best_score (best_score DESC)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  PRIMARY KEY (user_id, mode),
+  KEY idx_mode_score (mode, best_score DESC),
+  CONSTRAINT fk_scores_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE password_resets (
   id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -23,3 +31,9 @@ CREATE TABLE password_resets (
   created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_pr_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- If you already created the database with the earlier single-score schema
+-- (users.best_score / users.best_score_at), run this instead of the CREATEs:
+--
+--   CREATE TABLE scores ( ... as above ... );
+--   ALTER TABLE users DROP COLUMN best_score, DROP COLUMN best_score_at;
