@@ -27,6 +27,10 @@ python3 -m http.server 8000
 The only external asset is the Orbitron + Inter webfont from Google Fonts; without a network
 connection the game still runs and falls back to system fonts.
 
+New-high-score fanfare: `sounds/new-high-score.mp3` — "You Win Sequence 3" sound effect by
+[floraphonic](https://pixabay.com/users/floraphonic-38928062/) from
+[Pixabay](https://pixabay.com/sound-effects/you-win-sequence-3-183950/).
+
 ## Modes
 
 - **Easy / Medium / Hard / Super Hard** — solo, initial difficulty `0.3 / 0.8 / 1.2 / 6.0`

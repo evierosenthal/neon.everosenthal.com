@@ -163,6 +163,12 @@
     }
   };
 
+  // "You Win" fanfare by floraphonic (pixabay.com, sound #183950) — played
+  // when the new-high-score screen opens.
+  var newHighSound = new Audio('sounds/new-high-score.mp3');
+  newHighSound.preload = 'auto';
+  newHighSound.volume = 0.8;
+
   var game = window.NeonNebula.createGame(el.canvas, {
     onGameOver: handleGameOver,
     onScoreUpdate: setScore,
@@ -279,8 +285,15 @@
       show(el.newhighPhases[key], gameState === 'NEWHIGH' && key === newhighPhase);
     });
 
-    if (gameState === 'NEWHIGH') fireworks.start();
-    else fireworks.stop();
+    if (gameState === 'NEWHIGH') {
+      fireworks.start();
+    } else {
+      fireworks.stop();
+      if (!newHighSound.paused) {
+        newHighSound.pause();
+        newHighSound.currentTime = 0;
+      }
+    }
 
     Object.keys(el.menus).forEach(function (key) {
       show(el.menus[key], key === menuMode);
@@ -362,6 +375,12 @@
       pendingMode = currentMode;
       el.newhighMode.textContent = MODE_LABELS[currentMode];
       el.newhighScore.textContent = formatNumber(finalScore);
+
+      // Fanfare leads the celebration in (the fireworks start on render()).
+      try {
+        newHighSound.currentTime = 0;
+        newHighSound.play().catch(function () { /* autoplay blocked — celebrate silently */ });
+      } catch (err) { /* audio unavailable */ }
 
       var auth = window.NeonAuth;
       if (auth && auth.state.user) {
