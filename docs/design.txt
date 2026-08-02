@@ -1,0 +1,55 @@
+# Comprehensive Game Specification: Cosmic Vanguard (2D Space Arcade Shooter)
+
+## 1. Overview & Architecture
+- **Genre**: Fast-paced 2D Space Arcade Shooter / Asteroid Survival game.
+- **Rendering Engine**: HTML5 2D Canvas (60 FPS `requestAnimationFrame` loop) or any native/framework 2D game engine (e.g., Pygame, Godot 2D, Raylib, Unity 2D, Flutter CustomPainter).
+- **Language Requirements**: Plain JavaScript (ES6+), Python, C++, or any non-TypeScript runtime. No TypeScript type annotations required.
+- **Primary Game Loop Structure**:
+  - `init()`: Resets canvas dimensions, scores, player state, entity arrays, and timers.
+  - `update(deltaTime)`: Updates ship physics, controls, AI behavior, entity positions, collisions, difficulty progression, active power-up timers, and particle decay.
+  - `render(ctx)`: Clears canvas, renders starfield, draws shockwaves, entities (asteroids, collectibles, powerups, projectiles, ships), particles, screen shake, and HUD overlay.
+
+---
+
+## 2. Game Modes
+1. **Singleplayer (`single`)**: 1 Player vs Infinite Asteroids, Alien Raider Ships, and Bosses.
+2. **CPU Co-Op (`cpu_coop`)**: 1 Player + 1 AI-controlled Teammate fighting together against hazards.
+3. **CPU Versus (`cpu_versus`)**: 1 Player vs 1 AI-controlled Enemy Ship amidst space hazards.
+4. **Local 2P Co-Op (`local_coop`)**: 2 Players on the same keyboard/screen sharing a score pool.
+5. **Local 2P Versus (`local_versus`)**: 2 Players competing against each other with shared hazard threats.
+
+---
+
+## 3. Player Ship Controls & Physics
+- **Movement Physics**:
+  - Velocity vector (`vx`, `vy`) with smooth inertia.
+  - Acceleration rate: `0.45` px/frame².
+  - Top speed: `8.0` px/frame (increases to `13.0` px/frame when **Speed Boost** is active).
+  - Damping/Friction: `0.985` multiplier per frame (gradually slows ship down when no thrust keys are pressed).
+  - Rotation/Banking: Dynamic visual tilt angle computed as `vx * 0.035` radians.
+- **Ship Radius**: `18` pixels (circle collider).
+- **Base Stats**: Max Health = `100` HP, Shield = `0` (or `100` when active).
+- **Boundary Handling**: Soft bounce/wrap at canvas edges with a `20`px padding margin.
+- **Controls Mapping**:
+  - **Player 1**:
+    - Thrust/Steer: `W` (Up), `A` (Left), `S` (Down), `D` (Right) or `Arrow Keys`.
+    - Fire Main Weapon: `Spacebar`.
+    - Special Ability / Bomb: `Left Shift` or `E`.
+  - **Player 2** (Local Multiplayer):
+    - Thrust/Steer: `I` (Up), `J` (Left), `K` (Down), `L` (Right).
+    - Fire Main Weapon: `Numpad 0`, `Enter`, or `Slash (/)`.
+    - Special Ability / Bomb: `Right Shift` or `O`.
+
+---
+
+## 4. Progressive Difficulty Mechanics
+Difficulty is tracked as a floating-point multiplier (`state.difficulty`) that affects asteroid spawn speeds, enemy AI accuracy, spawn rates, and hazard density.
+
+### Initial Baseline Difficulty by Mode Selection:
+- **Easy Mode**: Initial difficulty = `0.3`
+- **Medium Mode**: Initial difficulty = `0.85`
+- **Hard Mode**: Initial difficulty = `1.2`
+- **Super Hard Mode**: Initial difficulty = `6.0`
+
+### Dynamic Difficulty Growth Over Time:
+Every frame during active gameplay, difficulty increases based on survival time and player score:

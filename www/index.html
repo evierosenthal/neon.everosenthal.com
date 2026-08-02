@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Neon Nebula</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- Background Nebula Gradients -->
+      <div class="nebula">
+        <div class="nebula-blob nebula-indigo"></div>
+        <div class="nebula-blob nebula-purple"></div>
+        <div class="nebula-blob nebula-emerald"></div>
+      </div>
+
+      <!-- Game Layer -->
+      <canvas id="game-canvas" tabindex="0" class="game-canvas hidden"></canvas>
+
+      <!-- HUD Layer -->
+      <div id="hud" class="hud hidden">
+        <div class="hud-inner">
+          <div class="hud-bar frosted-glass">
+            <div class="hud-group">
+              <div class="stack">
+                <span class="label label-indigo">Commander Terminal</span>
+                <span class="terminal-name">NEBULA PRIME</span>
+              </div>
+              <div class="hud-divider"></div>
+              <div class="hud-group hud-group-tight">
+                <div class="stack">
+                  <span class="label">Score</span>
+                  <span id="hud-score" class="stat-score neon-text-cyan">0</span>
+                </div>
+                <div class="stack">
+                  <span class="label">High Score</span>
+                  <span id="hud-highscore" class="stat-high">0</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="hud-group hud-group-right">
+              <div class="hull">
+                <div class="hull-labels">
+                  <span>Hull Integrity</span>
+                  <span id="hud-health-pct" class="hull-ok">100%</span>
+                </div>
+                <div class="hull-track">
+                  <div id="hud-health-bar" class="hull-fill"></div>
+                </div>
+              </div>
+              <button id="pause-btn" class="icon-button" title="Pause">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="icon"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Persistent Top Left Settings Button -->
+      <button id="settings-btn" class="settings-btn" title="Flight Control Settings">
+        <svg viewBox="0 0 24 24" class="icon icon-stroke gear"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span class="settings-btn-text">Settings</span>
+      </button>
+
+      <!-- Start Screen -->
+      <div id="start-screen" class="overlay overlay-start">
+        <div class="panel panel-start">
+          <div class="panel-accent"></div>
+
+          <!-- Main Menu -->
+          <div id="menu-main" class="menu">
+            <div class="title-block">
+              <h1 class="title">NEON<br />NEBULA</h1>
+              <div class="title-rule title-rule-cyan"></div>
+            </div>
+            <p class="subtitle">Galactic Tactical System // 4.0</p>
+
+            <div class="pillars">
+              <div class="pillar">
+                <div class="pillar-icon pillar-indigo">
+                  <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+                </div>
+                <span class="pillar-label">Guard</span>
+              </div>
+              <div class="pillar">
+                <div class="pillar-icon pillar-emerald">
+                  <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                </div>
+                <span class="pillar-label">Persist</span>
+              </div>
+              <div class="pillar">
+                <div class="pillar-icon pillar-amber">
+                  <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
+                </div>
+                <span class="pillar-label">Ascend</span>
+              </div>
+            </div>
+
+            <div class="btn-stack">
+              <div class="difficulty-buttons" data-mode="single"></div>
+
+              <button class="btn btn-ghost-indigo" data-menu="two-player">
+                <span class="btn-sheen"></span>
+                <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                TWO PLAYER MODE
+              </button>
+
+              <button class="btn btn-ghost-rose" data-menu="cpu">
+                <span class="btn-sheen"></span>
+                <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
+                CPU CO-PILOT MODE
+              </button>
+            </div>
+          </div>
+
+          <!-- Two Player Menu -->
+          <div id="menu-two-player" class="menu hidden">
+            <button class="back-btn" data-menu="main">
+              <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+              MAIN MENU
+            </button>
+            <div class="title-block">
+              <h1 class="title title-sm">TWO PLAYER MODE</h1>
+              <div class="title-rule title-rule-indigo"></div>
+            </div>
+            <p class="subtitle">Select Co-op Difficulty</p>
+            <div class="btn-stack">
+              <div class="difficulty-buttons" data-mode="local"></div>
+            </div>
+          </div>
+
+          <!-- CPU Menu -->
+          <div id="menu-cpu" class="menu hidden">
+            <button class="back-btn" data-menu="main">
+              <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+              MAIN MENU
+            </button>
+            <div class="title-block">
+              <h1 class="title title-sm">CPU CO-PILOT MODE</h1>
+              <div class="title-rule title-rule-rose"></div>
+            </div>
+            <p class="subtitle">Select AI Companion Difficulty</p>
+            <div class="btn-stack">
+              <div class="difficulty-buttons" data-mode="cpu"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Over Screen -->
+      <div id="gameover-screen" class="overlay overlay-gameover hidden">
+        <div class="panel panel-gameover">
+          <div class="panel-topline"></div>
+          <h2 class="gameover-title">SECTOR LOST</h2>
+          <p class="gameover-sub">Critical Hull Failure Detected</p>
+
+          <div class="score-card">
+            <div class="score-card-label">Efficiency Rating</div>
+            <div id="final-score" class="score-card-value">0</div>
+            <div class="score-card-rule"></div>
+            <div class="score-card-row">
+              <span class="score-card-key">HISTORICAL PEAK</span>
+              <span id="final-highscore" class="score-card-peak neon-text-cyan">0</span>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button id="gameover-home" class="btn btn-muted btn-flex-1">
+              <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              COMMAND
+            </button>
+            <button id="gameover-restart" class="btn btn-indigo btn-flex-2">
+              <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              RESTART MISSION
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pause Screen -->
+      <div id="pause-screen" class="overlay overlay-pause hidden">
+        <div class="panel panel-pause">
+          <h2 class="pause-title">SUSPENDED</h2>
+          <p class="pause-sub">Awaiting Further Orders</p>
+          <div class="btn-stack">
+            <button id="pause-resume" class="btn btn-indigo btn-lg">RESUME MISSION</button>
+            <button id="pause-home" class="btn btn-muted">
+              <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              RETURN TO HOME
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Modal -->
+      <div id="settings-modal" class="overlay overlay-settings hidden">
+        <div class="panel panel-settings">
+          <div class="settings-header">
+            <div class="settings-header-left">
+              <div class="settings-header-icon">
+                <svg viewBox="0 0 24 24" class="icon icon-stroke"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
+              </div>
+              <div>
+                <h3 class="settings-title">GAME SETTINGS</h3>
+                <p class="settings-subtitle">Flight Control Configuration</p>
+              </div>
+            </div>
+            <button id="settings-close" class="close-btn">
+              <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+
+          <div class="settings-section">
+            <label class="settings-label">Player 1 Input Controls</label>
+            <div id="control-options" class="control-options"></div>
+          </div>
+
+          <div class="settings-footer">
+            <button id="settings-done" class="btn btn-cyan btn-sm">DONE</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subtle Grid Overlay -->
+      <div class="grid-overlay"></div>
+    </div>
+
+    <script src="game.js"></script>
+    <script src="ui.js"></script>
+  </body>
+</html>

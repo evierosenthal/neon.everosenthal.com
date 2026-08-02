@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Orbitron", sans-serif;
+  --font-sans: "Inter", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-200 overflow-hidden;
+    font-family: var(--font-sans);
+  }
+}
+
+@layer components {
+  .frosted-glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl;
+  }
+
+  .neon-glow-magenta {
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.4), inset 0 0 15px rgba(255, 0, 255, 0.2);
+    border: 1px solid rgba(255, 0, 255, 0.5);
+  }
+  
+  .neon-glow-cyan {
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4), inset 0 0 15px rgba(0, 255, 255, 0.2);
+    border: 1px solid rgba(0, 255, 255, 0.5);
+  }
+
+  .neon-text-cyan {
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+  }
+
+  .neon-text-magenta {
+    text-shadow: 0 0 8px rgba(255, 0, 255, 0.6);
+  }
+}
