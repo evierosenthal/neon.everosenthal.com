@@ -106,9 +106,9 @@
     }
 
     function createPowerUp(width, height, difficulty) {
-      // Magnet is rare (~6% chance) and ONLY spawns in Medium mode (difficulty >= 0.8),
+      // Magnet is rare (~6% chance) and ONLY spawns in Medium mode (difficulty >= 0.6),
       // Hard mode, and Super Hard mode.
-      var isMediumOrHigher = difficulty >= 0.8;
+      var isMediumOrHigher = difficulty >= 0.6;
       var rand = Math.random();
       var type;
       if (isMediumOrHigher && rand < 0.06) {
@@ -534,7 +534,7 @@
         // Hard mode cap (gets significantly harder, but stays well below Super Hard's 6.0)
         maxDiffCap = 2.8;
       } else if (initDiff >= 0.6) {
-        maxDiffCap = 1.2; // Medium mode cap (reaches start of Hard mode)
+        maxDiffCap = 1.0; // Medium mode cap (stays clearly below Hard's 1.2 start)
       } else {
         maxDiffCap = 0.85; // Easy mode cap (reaches start of Medium mode)
       }

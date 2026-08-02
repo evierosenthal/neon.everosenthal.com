@@ -17,7 +17,7 @@
 
   var DIFFICULTIES = [
     { label: 'EASY MODE', value: 0.3, className: 'btn btn-emerald' },
-    { label: 'MEDIUM MODE', value: 0.85, className: 'btn btn-indigo btn-medium' },
+    { label: 'MEDIUM MODE', value: 0.6, className: 'btn btn-indigo btn-medium' },
     { label: 'HARD MODE', value: 1.2, className: 'btn btn-rose' },
     { label: 'SUPER HARD', value: 6.0, className: 'btn btn-super', zap: true }
   ];
@@ -205,6 +205,9 @@
       show(el.newhighPhases[key], gameState === 'NEWHIGH' && key === newhighPhase);
     });
 
+    if (gameState === 'NEWHIGH') fireworks.start();
+    else fireworks.stop();
+
     Object.keys(el.menus).forEach(function (key) {
       show(el.menus[key], key === menuMode);
     });
@@ -368,6 +371,118 @@
       setNewhighPhase('result');
     });
   }
+
+  // Celebration fireworks behind the new-high-score panel. Runs only while
+  // that screen is visible; render() starts/stops it.
+  var fireworks = (function () {
+    var canvas = document.getElementById('newhigh-fireworks');
+    var ctx = canvas.getContext('2d');
+    var running = false;
+    var rockets = [];
+    var sparks = [];
+    var frame = 0;
+    var COLORS = ['#22d3ee', '#34d399', '#fbbf24', '#f43f5e', '#818cf8', '#c084fc'];
+
+    function resize() {
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+    }
+
+    function launch() {
+      rockets.push({
+        x: canvas.width * (0.1 + Math.random() * 0.8),
+        y: canvas.height,
+        vx: (Math.random() - 0.5) * 1.2,
+        vy: -(canvas.height * (0.009 + Math.random() * 0.004)),
+        targetY: canvas.height * (0.15 + Math.random() * 0.35),
+        color: COLORS[Math.floor(Math.random() * COLORS.length)]
+      });
+    }
+
+    function explode(rocket) {
+      var count = 40 + Math.floor(Math.random() * 30);
+      for (var i = 0; i < count; i++) {
+        var angle = (Math.PI * 2 * i) / count + Math.random() * 0.2;
+        var speed = 1.5 + Math.random() * 3.5;
+        sparks.push({
+          x: rocket.x,
+          y: rocket.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1,
+          decay: 0.008 + Math.random() * 0.012,
+          color: rocket.color
+        });
+      }
+    }
+
+    function tick() {
+      if (!running) return;
+      frame++;
+
+      // Fade the previous frame toward transparent so sparks leave glowing trails.
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.globalCompositeOperation = 'lighter';
+
+      if (frame % 45 === 0 || (rockets.length === 0 && sparks.length < 30)) launch();
+
+      for (var i = rockets.length - 1; i >= 0; i--) {
+        var r = rockets[i];
+        r.x += r.vx;
+        r.y += r.vy;
+        r.vy += 0.03;
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = r.color;
+        ctx.fillRect(r.x - 1.5, r.y - 1.5, 3, 3);
+        if (r.y <= r.targetY || r.vy >= 0) {
+          explode(r);
+          rockets.splice(i, 1);
+        }
+      }
+
+      for (var j = sparks.length - 1; j >= 0; j--) {
+        var s = sparks[j];
+        s.x += s.vx;
+        s.y += s.vy;
+        s.vx *= 0.985;
+        s.vy = s.vy * 0.985 + 0.045; // drag + gravity
+        s.life -= s.decay;
+        if (s.life <= 0) {
+          sparks.splice(j, 1);
+          continue;
+        }
+        ctx.globalAlpha = s.life;
+        ctx.fillStyle = s.color;
+        ctx.fillRect(s.x - 1.5, s.y - 1.5, 3, 3);
+      }
+      ctx.globalAlpha = 1;
+
+      requestAnimationFrame(tick);
+    }
+
+    window.addEventListener('resize', function () {
+      if (running) resize();
+    });
+
+    return {
+      start: function () {
+        if (running) return;
+        running = true;
+        resize();
+        rockets = [];
+        sparks = [];
+        frame = 0;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        launch();
+        requestAnimationFrame(tick);
+      },
+      stop: function () {
+        running = false;
+      }
+    };
+  })();
 
   function openLeaderboard() {
     isLeaderboardOpen = true;
