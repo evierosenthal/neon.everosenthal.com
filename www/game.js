@@ -534,7 +534,7 @@
         // Hard mode cap (gets significantly harder, but stays well below Super Hard's 6.0)
         maxDiffCap = 2.8;
       } else if (initDiff >= 0.6) {
-        maxDiffCap = 1.0; // Medium mode cap (stays clearly below Hard's 1.2 start)
+        maxDiffCap = 1.1; // Medium mode cap (stays below Hard's 1.2 start)
       } else {
         maxDiffCap = 0.85; // Easy mode cap (reaches start of Medium mode)
       }

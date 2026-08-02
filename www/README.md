@@ -29,7 +29,7 @@ connection the game still runs and falls back to system fonts.
 
 ## Modes
 
-- **Easy / Medium / Hard / Super Hard** — solo, initial difficulty `0.3 / 0.6 / 1.2 / 6.0`
+- **Easy / Medium / Hard / Super Hard** — solo, initial difficulty `0.3 / 0.75 / 1.2 / 6.0`
 - **Two Player Mode** — local co-op on one keyboard, shared score and hull
 - **CPU Co-Pilot Mode** — an AI wingman that dodges hazards and harvests pickups
 
