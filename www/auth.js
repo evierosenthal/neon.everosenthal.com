@@ -10,7 +10,7 @@
   'use strict';
 
   var state = {
-    user: null,       // {id, username, bestScore} | null
+    user: null,       // {id, username, bestScores: {easy,medium,hard,super}} | null
     csrf: null,
     googleClientId: null,
     offline: false,

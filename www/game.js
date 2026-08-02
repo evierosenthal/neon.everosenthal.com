@@ -34,7 +34,8 @@
     var handlers = {
       onGameOver: (callbacks && callbacks.onGameOver) || function () {},
       onScoreUpdate: (callbacks && callbacks.onScoreUpdate) || function () {},
-      onHealthUpdate: (callbacks && callbacks.onHealthUpdate) || function () {}
+      onHealthUpdate: (callbacks && callbacks.onHealthUpdate) || function () {},
+      onDifficultyUpdate: (callbacks && callbacks.onDifficultyUpdate) || function () {}
     };
 
     var config = {
@@ -546,6 +547,7 @@
       if (state.difficulty < maxDiffCap) {
         state.difficulty = Math.min(maxDiffCap, state.difficulty + totalGrowth);
       }
+      handlers.onDifficultyUpdate(state.difficulty);
     }
 
     function updateSpawns() {

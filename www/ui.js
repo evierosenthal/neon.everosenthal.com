@@ -92,6 +92,7 @@
     hud: document.getElementById('hud'),
     hudScore: document.getElementById('hud-score'),
     hudHighScore: document.getElementById('hud-highscore'),
+    hudModes: document.getElementById('hud-modes'),
     hudHealthPct: document.getElementById('hud-health-pct'),
     hudHealthBar: document.getElementById('hud-health-bar'),
     pauseBtn: document.getElementById('pause-btn'),
@@ -165,7 +166,8 @@
   var game = window.NeonNebula.createGame(el.canvas, {
     onGameOver: handleGameOver,
     onScoreUpdate: setScore,
-    onHealthUpdate: setHealth
+    onHealthUpdate: setHealth,
+    onDifficultyUpdate: handleDifficultyUpdate
   });
 
   // --- Helpers -----------------------------------------------------------
@@ -210,6 +212,42 @@
       localStorage.setItem(HIGHSCORE_PREFIX + mode, String(value));
     } catch (err) { /* storage unavailable — keep the session high score */ }
     refreshHighScoreDisplays();
+  }
+
+  // --- HUD difficulty strip ----------------------------------------------
+  // Shows the tiers from the starting mode upward; the lit tile follows the
+  // engine's live difficulty as it grows across tier boundaries.
+
+  var liveTier = 'easy';
+
+  function buildModeStrip() {
+    var base = ['easy', 'medium', 'hard'];
+    var tiers = currentMode === 'super' ? ['super'] : base.slice(base.indexOf(currentMode));
+    el.hudModes.innerHTML = '';
+    tiers.forEach(function (tier) {
+      var span = document.createElement('span');
+      span.className = 'hud-mode';
+      span.setAttribute('data-tier', tier);
+      span.textContent = tier === 'super' ? 'Super Hard' : tier;
+      el.hudModes.appendChild(span);
+    });
+    liveTier = currentMode;
+    highlightModeStrip();
+  }
+
+  function highlightModeStrip() {
+    var tiles = el.hudModes.children;
+    for (var i = 0; i < tiles.length; i++) {
+      tiles[i].classList.toggle('active', tiles[i].getAttribute('data-tier') === liveTier);
+    }
+  }
+
+  function handleDifficultyUpdate(diff) {
+    if (currentMode === 'super') return; // super runs keep their single lit tile
+    var tier = modeFromDifficulty(diff);
+    if (tier === liveTier) return;
+    liveTier = tier;
+    highlightModeStrip();
   }
 
   // Merge the server's per-mode bests into the local records (new-device sync).
@@ -520,12 +558,23 @@
     };
   })();
 
+  function renderLeaderboardTab() {
+    var tabs = el.leaderboardModal.querySelectorAll('.lb-tab');
+    Array.prototype.forEach.call(tabs, function (tab) {
+      tab.classList.toggle('active', tab.getAttribute('data-mode') === leaderboardTab);
+    });
+    if (leaderboards) buildLeaderboardList(el.leaderboardList, leaderboards[leaderboardTab]);
+  }
+
   function openLeaderboard() {
     isLeaderboardOpen = true;
+    leaderboardTab = currentMode;
     el.leaderboardList.innerHTML = '<div class="lb-empty">Contacting command&hellip;</div>';
     render();
-    window.NeonAuth.getLeaderboard().then(function (rows) {
-      buildLeaderboardList(el.leaderboardList, rows);
+    renderLeaderboardTab();
+    window.NeonAuth.getLeaderboards().then(function (boards) {
+      leaderboards = boards;
+      renderLeaderboardTab();
     }).catch(function () {
       el.leaderboardList.innerHTML = '<div class="lb-empty">COMMS OFFLINE — leaderboard unavailable.</div>';
     });
@@ -537,6 +586,7 @@
     difficulty = diff;
     currentMode = modeFromDifficulty(diff);
     refreshHighScoreDisplays();
+    buildModeStrip();
     isLocalMultiplayer = !!localMultiplayer;
     isCPUMultiplayer = !!cpuMultiplayer;
     gameState = 'PLAYING';
@@ -613,16 +663,14 @@
     var auth = window.NeonAuth;
 
     auth.init(function (authState) {
-      if (authState.user) {
-        // New-device sync: the server best may beat this browser's localStorage.
-        setHighScore(Math.max(highScore, authState.user.bestScore));
-      }
+      // New-device sync: the server bests may beat this browser's localStorage.
+      syncServerBests(authState.user);
       render();
     });
 
     auth.onAuthChange(function (user) {
       if (user) {
-        setHighScore(Math.max(highScore, user.bestScore));
+        syncServerBests(user);
         if (gameState === 'NEWHIGH' && pendingScore != null) {
           submitPendingScore();
         }
@@ -708,6 +756,12 @@
     el.leaderboardClose.addEventListener('click', function () {
       isLeaderboardOpen = false;
       render();
+    });
+    Array.prototype.forEach.call(el.leaderboardModal.querySelectorAll('.lb-tab'), function (tab) {
+      tab.addEventListener('click', function () {
+        leaderboardTab = tab.getAttribute('data-mode');
+        renderLeaderboardTab();
+      });
     });
 
     el.settingsBtn.addEventListener('click', function () {
