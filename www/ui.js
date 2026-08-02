@@ -169,6 +169,24 @@
   newHighSound.preload = 'auto';
   newHighSound.volume = 0.8;
 
+  // "Spacecraft crashing" by freesound_community (pixabay.com, sound #88048) —
+  // only its final seconds play, on the asteroid hit that destroys the ship
+  // (not on ordinary health-losing hits).
+  var DEATH_SOUND_TAIL_SEC = 3;
+  var deathSound = new Audio('sounds/crash-death.mp3');
+  deathSound.preload = 'auto';
+  deathSound.volume = 0.9;
+
+  function playDeathSound() {
+    try {
+      var dur = deathSound.duration;
+      deathSound.currentTime = (isFinite(dur) && dur > DEATH_SOUND_TAIL_SEC)
+        ? dur - DEATH_SOUND_TAIL_SEC
+        : 0;
+      deathSound.play().catch(function () { /* autoplay blocked — die silently */ });
+    } catch (err) { /* audio unavailable */ }
+  }
+
   var game = window.NeonNebula.createGame(el.canvas, {
     onGameOver: handleGameOver,
     onScoreUpdate: setScore,
@@ -365,6 +383,7 @@
 
   function handleGameOver(finalScore) {
     game.stop();
+    playDeathSound();
     var beatRecord = finalScore > highScores[currentMode] && finalScore > 0;
 
     if (beatRecord) {
