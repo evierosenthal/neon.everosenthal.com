@@ -8,8 +8,8 @@ One-time manual steps to bring the login system and leaderboard live.
    SELECT / INSERT / UPDATE / DELETE privileges on it.
 2. Run `schema.sql` against the database (phpMyAdmin SQL tab, or
    `mysql -u USER -p neon_nebula < schema.sql`).
-3. Append to the server's existing `config.local.php` (next to `config.php`,
-   one level above the web root — it already holds `GIT_WEBHOOK_SECRET`):
+3. Append to the server's `config.local.php` (in the web root, next to
+   `config.php` and `gitwebhook.php` — it already holds `GIT_WEBHOOK_SECRET`):
 
    ```php
    define('DB_DSN', 'mysql:host=localhost;dbname=neon_nebula;charset=utf8mb4');
@@ -61,5 +61,5 @@ php -S localhost:8000 -t www
 ```
 
 The PHP built-in server runs the `www/api/` endpoints; point `DB_DSN` in a
-local `config.local.php` at any test MySQL database. Without a database the
+local `www/config.local.php` at any test MySQL database. Without a database the
 game still runs — login and the leaderboard just report themselves offline.

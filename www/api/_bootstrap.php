@@ -4,7 +4,7 @@
 // a direct browser hit of _bootstrap.php outputs nothing.
 defined('NEON_API') or exit;
 
-require dirname(__DIR__, 2) . '/config.php';
+require dirname(__DIR__) . '/config.php';
 
 // --- Session ---------------------------------------------------------------
 
