@@ -327,10 +327,18 @@
         return;
       }
 
-      // Single Player / CPU mode: obey controlModePreference ('mouse', 'keyboard', or 'both')
+      // Single Player / CPU mode: obey controlModePreference ('mouse', 'keyboard', or 'both').
+      // In 'both', whichever device was used last owns the ship: pressing a move
+      // key hands control to the keyboard (suspending the mouse-follow so it
+      // can't drag the ship back toward a stationary cursor), and moving the
+      // mouse hands control back.
+      var mouseDrives = userControlMode === 'mouse' ||
+        (userControlMode === 'both' && controlMode === 'mouse');
+      var keyboardDrives = userControlMode === 'keyboard' ||
+        (userControlMode === 'both' && controlMode === 'keyboard');
 
       // Mouse Follow Component
-      if (userControlMode === 'mouse' || userControlMode === 'both') {
+      if (mouseDrives) {
         var followSpeed = state.activeEffects.speedBoost > 0 ? 0.15 : 0.08;
         var prevX = player.x;
         var prevY = player.y;
@@ -341,7 +349,7 @@
       }
 
       // Keyboard Component
-      if (userControlMode === 'keyboard') {
+      if (keyboardDrives) {
         if (keysPressed['KeyW'] || keysPressed['w'] || keysPressed['W'] || keysPressed['ArrowUp'] || keysPressed['Up']) {
           player.vy -= accel;
         }
@@ -363,21 +371,6 @@
         }
         player.x += player.vx;
         player.y += player.vy;
-      } else if (userControlMode === 'both') {
-        // In 'both' mode, mouse follows AND keyboard presses directly nudge ship
-        var kSpeed = state.activeEffects.speedBoost > 0 ? 7 : 5;
-        if (keysPressed['KeyW'] || keysPressed['w'] || keysPressed['W'] || keysPressed['ArrowUp'] || keysPressed['Up']) {
-          player.y -= kSpeed;
-        }
-        if (keysPressed['KeyS'] || keysPressed['s'] || keysPressed['S'] || keysPressed['ArrowDown'] || keysPressed['Down']) {
-          player.y += kSpeed;
-        }
-        if (keysPressed['KeyA'] || keysPressed['a'] || keysPressed['A'] || keysPressed['ArrowLeft'] || keysPressed['Left']) {
-          player.x -= kSpeed;
-        }
-        if (keysPressed['KeyD'] || keysPressed['d'] || keysPressed['D'] || keysPressed['ArrowRight'] || keysPressed['Right']) {
-          player.x += kSpeed;
-        }
       }
 
       // Clamp Player 1 within screen boundaries
@@ -553,8 +546,10 @@
     }
 
     function updateSpawns() {
-      // Spawn asteroids
-      var spawnChance = SPAWN_RATE * Math.pow(state.difficulty, 2);
+      // Spawn asteroids. The medium-tier band gets a small density boost so it
+      // clearly outnumbers Easy while staying below Hard's starting density.
+      var mediumSpawnBoost = (state.difficulty >= 0.6 && state.difficulty < 1.2) ? 1.3 : 1.0;
+      var spawnChance = SPAWN_RATE * Math.pow(state.difficulty, 2) * mediumSpawnBoost;
       while (spawnChance > 0) {
         if (Math.random() < Math.min(1, spawnChance)) {
           state.asteroids.push(createAsteroid(canvas.width, canvas.height, state.difficulty));
