@@ -20,7 +20,9 @@ python3 -m http.server 8000
 | `index.html` | Markup for the menus, HUD, overlays and the game canvas (icons are inline SVG) |
 | `styles.css` | The neon/frosted-glass design system |
 | `game.js` | Canvas game engine — physics, spawning, collisions, AI, rendering (`window.NeonNebula`) |
-| `ui.js` | Screen flow, menus, HUD updates, settings persistence |
+| `auth.js` | Login/leaderboard API client (`window.NeonAuth`) — Google Sign-In, accounts, score submission |
+| `ui.js` | Screen flow, menus, HUD updates, settings persistence, new-high-score/login flow |
+| `api/` | PHP endpoints: sessions, register/login/Google, score submit, top-10 leaderboard, password reset (see `docs/leaderboard-setup.md`) |
 
 The only external asset is the Orbitron + Inter webfont from Google Fonts; without a network
 connection the game still runs and falls back to system fonts.

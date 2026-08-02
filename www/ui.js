@@ -58,7 +58,7 @@
 
   // --- App state ---------------------------------------------------------
 
-  var gameState = 'START'; // 'START' | 'PLAYING' | 'GAMEOVER'
+  var gameState = 'START'; // 'START' | 'PLAYING' | 'GAMEOVER' | 'NEWHIGH'
   var menuMode = 'main'; // 'main' | 'two-player' | 'cpu'
   var isLocalMultiplayer = false;
   var isCPUMultiplayer = false;
@@ -69,6 +69,11 @@
   var difficulty = 1;
   var controlModePreference = 'both';
   var isSettingsOpen = false;
+  var pendingScore = null; // new high score awaiting server submission
+  var newhighPhase = 'offer'; // 'offer' | 'register' | 'forgot' | 'submitting' | 'result' | 'none'
+  var isLeaderboardOpen = false;
+  var isResetOpen = false;
+  var resetToken = null;
 
   var el = {
     canvas: document.getElementById('game-canvas'),
@@ -92,6 +97,51 @@
     gameoverRestart: document.getElementById('gameover-restart'),
     pauseResume: document.getElementById('pause-resume'),
     pauseHome: document.getElementById('pause-home'),
+    userChip: document.getElementById('user-chip'),
+    userChipName: document.getElementById('user-chip-name'),
+    logoutLink: document.getElementById('logout-link'),
+    newhighScreen: document.getElementById('newhigh-screen'),
+    newhighScore: document.getElementById('newhigh-score'),
+    newhighPhases: {
+      'offer': document.getElementById('newhigh-auth'),
+      'register': document.getElementById('newhigh-register'),
+      'forgot': document.getElementById('newhigh-forgot'),
+      'submitting': document.getElementById('newhigh-submitting'),
+      'result': document.getElementById('newhigh-result')
+    },
+    googleBtnSlot: document.getElementById('google-btn-slot'),
+    loginForm: document.getElementById('newhigh-login-form'),
+    authUser: document.getElementById('auth-user'),
+    authPass: document.getElementById('auth-pass'),
+    loginError: document.getElementById('login-error'),
+    registerForm: document.getElementById('newhigh-register-form'),
+    regUsername: document.getElementById('reg-username'),
+    regEmail: document.getElementById('reg-email'),
+    regPassword: document.getElementById('reg-password'),
+    registerError: document.getElementById('register-error'),
+    forgotForm: document.getElementById('newhigh-forgot-form'),
+    forgotEmail: document.getElementById('forgot-email'),
+    forgotError: document.getElementById('forgot-error'),
+    forgotSent: document.getElementById('forgot-sent'),
+    showRegister: document.getElementById('show-register'),
+    showForgot: document.getElementById('show-forgot'),
+    showLogin: document.getElementById('show-login'),
+    showLogin2: document.getElementById('show-login-2'),
+    newhighRank: document.getElementById('newhigh-rank'),
+    newhighLeaderboard: document.getElementById('newhigh-leaderboard'),
+    newhighSubmitError: document.getElementById('newhigh-submit-error'),
+    newhighRetry: document.getElementById('newhigh-retry'),
+    newhighHome: document.getElementById('newhigh-home'),
+    newhighRestart: document.getElementById('newhigh-restart'),
+    leaderboardModal: document.getElementById('leaderboard-modal'),
+    leaderboardList: document.getElementById('leaderboard-list'),
+    leaderboardClose: document.getElementById('leaderboard-close'),
+    seeHighscores: document.getElementById('see-highscores'),
+    resetModal: document.getElementById('reset-modal'),
+    resetForm: document.getElementById('reset-form'),
+    resetPasswordInput: document.getElementById('reset-password-input'),
+    resetError: document.getElementById('reset-error'),
+    resetClose: document.getElementById('reset-close'),
     menus: {
       'main': document.getElementById('menu-main'),
       'two-player': document.getElementById('menu-two-player'),
@@ -141,8 +191,19 @@
     show(el.hud, playing);
     show(el.startScreen, gameState === 'START');
     show(el.gameoverScreen, gameState === 'GAMEOVER');
+    show(el.newhighScreen, gameState === 'NEWHIGH');
     show(el.pauseScreen, playing && isPaused);
     show(el.settingsModal, isSettingsOpen);
+    show(el.leaderboardModal, isLeaderboardOpen);
+    show(el.resetModal, isResetOpen);
+
+    var user = window.NeonAuth ? window.NeonAuth.state.user : null;
+    show(el.userChip, !!user && !playing);
+    if (user) el.userChipName.textContent = user.username;
+
+    Object.keys(el.newhighPhases).forEach(function (key) {
+      show(el.newhighPhases[key], gameState === 'NEWHIGH' && key === newhighPhase);
+    });
 
     Object.keys(el.menus).forEach(function (key) {
       show(el.menus[key], key === menuMode);
@@ -213,16 +274,110 @@
   }
 
   function handleGameOver(finalScore) {
-    gameState = 'GAMEOVER';
     game.stop();
-    el.finalScore.textContent = formatNumber(finalScore);
-    if (finalScore > highScore) {
+    var beatRecord = finalScore > highScore && finalScore > 0;
+
+    if (beatRecord) {
       setHighScore(finalScore);
       try {
         localStorage.setItem(HIGHSCORE_KEY, String(finalScore));
       } catch (err) { /* storage unavailable — keep the session high score */ }
+
+      gameState = 'NEWHIGH';
+      pendingScore = Math.round(finalScore);
+      el.newhighScore.textContent = formatNumber(finalScore);
+
+      var auth = window.NeonAuth;
+      if (auth && auth.state.user) {
+        submitPendingScore();
+      } else if (auth && !auth.state.offline) {
+        setNewhighPhase('offer');
+      } else {
+        newhighPhase = 'none'; // no server available — celebration only
+      }
+    } else {
+      gameState = 'GAMEOVER';
+      el.finalScore.textContent = formatNumber(finalScore);
     }
     render();
+  }
+
+  // --- New-high-score / leaderboard helpers ------------------------------
+
+  function setNewhighPhase(phase) {
+    newhighPhase = phase;
+    if (phase === 'offer') {
+      window.NeonAuth.renderGoogleButton(el.googleBtnSlot);
+    }
+    render();
+  }
+
+  function setFormError(node, message) {
+    node.textContent = message || '';
+    show(node, !!message);
+  }
+
+  function buildLeaderboardList(container, rows) {
+    var user = window.NeonAuth ? window.NeonAuth.state.user : null;
+    container.innerHTML = '';
+    if (!rows || !rows.length) {
+      var empty = document.createElement('div');
+      empty.className = 'lb-empty';
+      empty.textContent = 'No scores transmitted yet — be the first commander on the board.';
+      container.appendChild(empty);
+      return;
+    }
+    rows.forEach(function (row) {
+      var div = document.createElement('div');
+      div.className = 'lb-row' + (user && user.username === row.username ? ' lb-me' : '');
+      var rank = document.createElement('span');
+      rank.className = 'lb-rank';
+      rank.textContent = '#' + row.rank;
+      var name = document.createElement('span');
+      name.className = 'lb-name';
+      name.textContent = row.username;
+      var scoreEl = document.createElement('span');
+      scoreEl.className = 'lb-score';
+      scoreEl.textContent = formatNumber(row.score);
+      div.appendChild(rank);
+      div.appendChild(name);
+      div.appendChild(scoreEl);
+      container.appendChild(div);
+    });
+  }
+
+  function submitPendingScore() {
+    if (pendingScore == null) return;
+    setNewhighPhase('submitting');
+    var submitted = pendingScore;
+    window.NeonAuth.submitScore(submitted).then(function (data) {
+      pendingScore = null;
+      setHighScore(Math.max(highScore, data.bestScore));
+      el.newhighRank.textContent = data.improved
+        ? 'GALACTIC RANK #' + data.rank
+        : 'YOUR RECORD STANDS AT ' + formatNumber(data.bestScore);
+      buildLeaderboardList(el.newhighLeaderboard, data.leaderboard);
+      setFormError(el.newhighSubmitError, '');
+      show(el.newhighRetry, false);
+      setNewhighPhase('result');
+    }).catch(function (err) {
+      el.newhighRank.textContent = '';
+      el.newhighLeaderboard.innerHTML = '';
+      setFormError(el.newhighSubmitError, 'Transmission failed: ' + err.message);
+      show(el.newhighRetry, true);
+      setNewhighPhase('result');
+    });
+  }
+
+  function openLeaderboard() {
+    isLeaderboardOpen = true;
+    el.leaderboardList.innerHTML = '<div class="lb-empty">Contacting command&hellip;</div>';
+    render();
+    window.NeonAuth.getLeaderboard().then(function (rows) {
+      buildLeaderboardList(el.leaderboardList, rows);
+    }).catch(function () {
+      el.leaderboardList.innerHTML = '<div class="lb-empty">COMMS OFFLINE — leaderboard unavailable.</div>';
+    });
   }
 
   function startGame(diff, localMultiplayer, cpuMultiplayer) {
@@ -291,6 +446,115 @@
     el.gameoverRestart.addEventListener('click', function () {
       startGame(difficulty, isLocalMultiplayer, isCPUMultiplayer);
     });
+    el.newhighHome.addEventListener('click', returnToStart);
+    el.newhighRestart.addEventListener('click', function () {
+      startGame(difficulty, isLocalMultiplayer, isCPUMultiplayer);
+    });
+    el.newhighRetry.addEventListener('click', function () {
+      submitPendingScore();
+    });
+
+    // --- Auth wiring -----------------------------------------------------
+
+    var auth = window.NeonAuth;
+
+    auth.init(function (authState) {
+      if (authState.user) {
+        // New-device sync: the server best may beat this browser's localStorage.
+        setHighScore(Math.max(highScore, authState.user.bestScore));
+      }
+      render();
+    });
+
+    auth.onAuthChange(function (user) {
+      if (user) {
+        setHighScore(Math.max(highScore, user.bestScore));
+        if (gameState === 'NEWHIGH' && pendingScore != null) {
+          submitPendingScore();
+        }
+      }
+      render();
+    });
+
+    auth.onGoogleReady = function () {
+      if (gameState === 'NEWHIGH' && newhighPhase === 'offer') {
+        auth.renderGoogleButton(el.googleBtnSlot);
+      }
+    };
+    auth.onGoogleError = function (err) {
+      setNewhighPhase('offer');
+      setFormError(el.loginError, err.message);
+    };
+
+    el.logoutLink.addEventListener('click', function () {
+      auth.logout().catch(function () { /* stale session — chip clears on next load */ });
+    });
+
+    el.showRegister.addEventListener('click', function () { setNewhighPhase('register'); });
+    el.showForgot.addEventListener('click', function () { setNewhighPhase('forgot'); });
+    el.showLogin.addEventListener('click', function () { setNewhighPhase('offer'); });
+    el.showLogin2.addEventListener('click', function () { setNewhighPhase('offer'); });
+
+    el.loginForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      setFormError(el.loginError, '');
+      auth.login(el.authUser.value.trim(), el.authPass.value).catch(function (err) {
+        setFormError(el.loginError, err.message);
+      });
+    });
+
+    el.registerForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      setFormError(el.registerError, '');
+      auth.register(el.regUsername.value.trim(), el.regEmail.value.trim(), el.regPassword.value)
+        .catch(function (err) {
+          setFormError(el.registerError, err.message);
+        });
+    });
+
+    el.forgotForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      setFormError(el.forgotError, '');
+      show(el.forgotSent, false);
+      auth.requestReset(el.forgotEmail.value.trim()).then(function (data) {
+        el.forgotSent.textContent = data.message;
+        show(el.forgotSent, true);
+      }).catch(function (err) {
+        setFormError(el.forgotError, err.message);
+      });
+    });
+
+    el.resetForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      setFormError(el.resetError, '');
+      auth.resetPassword(resetToken, el.resetPasswordInput.value).then(function () {
+        isResetOpen = false;
+        resetToken = null;
+        render();
+      }).catch(function (err) {
+        setFormError(el.resetError, err.message);
+      });
+    });
+    el.resetClose.addEventListener('click', function () {
+      isResetOpen = false;
+      render();
+    });
+
+    // Arriving via an emailed password-reset link (?reset=TOKEN).
+    var resetMatch = /[?&]reset=([a-f0-9]{64})/.exec(window.location.search);
+    if (resetMatch) {
+      resetToken = resetMatch[1];
+      isResetOpen = true;
+      try {
+        window.history.replaceState(null, '', window.location.pathname);
+      } catch (err) { /* history API unavailable — the token stays in the URL */ }
+    }
+
+    el.seeHighscores.addEventListener('click', openLeaderboard);
+    el.leaderboardClose.addEventListener('click', function () {
+      isLeaderboardOpen = false;
+      render();
+    });
 
     el.settingsBtn.addEventListener('click', function () {
       isSettingsOpen = true;
@@ -306,6 +570,8 @@
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
       if (isSettingsOpen) closeSettings();
+      else if (isLeaderboardOpen) { isLeaderboardOpen = false; render(); }
+      else if (isResetOpen) { isResetOpen = false; render(); }
       else if (gameState === 'PLAYING') setPaused(!isPaused);
     });
 
