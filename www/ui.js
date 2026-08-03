@@ -163,6 +163,22 @@
     }
   };
 
+  // Background music: "Synthwave Arcade Retro Nights" by alex-morgan
+  // (pixabay.com). Loops during play, pauses with the game, and stops on
+  // death so the crash/fanfare take the stage. Missing file = silent game.
+  var bgMusic = new Audio('sounds/background-music.mp3');
+  bgMusic.preload = 'auto';
+  bgMusic.loop = true;
+  bgMusic.volume = 0.35;
+
+  function setMusicPlaying(playing) {
+    if (playing) {
+      bgMusic.play().catch(function () { /* file missing or autoplay blocked */ });
+    } else {
+      bgMusic.pause();
+    }
+  }
+
   // "You Win" fanfare by floraphonic (pixabay.com, sound #183950) — played
   // when the new-high-score screen opens.
   var newHighSound = new Audio('sounds/new-high-score.mp3');
@@ -314,6 +330,8 @@
     show(el.settingsModal, isSettingsOpen);
     show(el.leaderboardModal, isLeaderboardOpen);
     show(el.resetModal, isResetOpen);
+
+    setMusicPlaying(playing && !isPaused);
 
     var user = window.NeonAuth ? window.NeonAuth.state.user : null;
     show(el.userChip, !!user && !playing);
@@ -644,6 +662,9 @@
     currentMode = modeFromDifficulty(diff);
     refreshHighScoreDisplays();
     buildModeStrip();
+    try {
+      bgMusic.currentTime = 0; // each mission starts the track from the top
+    } catch (err) { /* metadata not loaded yet */ }
     isLocalMultiplayer = !!localMultiplayer;
     isCPUMultiplayer = !!cpuMultiplayer;
     gameState = 'PLAYING';
