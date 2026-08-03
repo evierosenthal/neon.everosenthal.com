@@ -177,6 +177,24 @@
   deathSound.preload = 'auto';
   deathSound.volume = 0.9;
 
+  // "Sci-fi whoosh spectral glide" by Rescopic Sound (pixabay.com, sound
+  // #228310) — its final 2 seconds play on asteroid hits that hurt but don't
+  // kill (the fatal hit gets the crash sound instead).
+  var HIT_SOUND_TAIL_SEC = 2;
+  var hitSound = new Audio('sounds/asteroid-hit.mp3');
+  hitSound.preload = 'auto';
+  hitSound.volume = 0.7;
+
+  function playHitSound() {
+    try {
+      var dur = hitSound.duration;
+      hitSound.currentTime = (isFinite(dur) && dur > HIT_SOUND_TAIL_SEC)
+        ? dur - HIT_SOUND_TAIL_SEC
+        : 0;
+      hitSound.play().catch(function () { /* autoplay blocked */ });
+    } catch (err) { /* audio unavailable */ }
+  }
+
   function playDeathSound() {
     try {
       var dur = deathSound.duration;
@@ -192,7 +210,8 @@
     onScoreUpdate: setScore,
     onHealthUpdate: setHealth,
     onDifficultyUpdate: handleDifficultyUpdate,
-    onDeath: playDeathSound // crash boom at the moment of impact, with the explosion
+    onDeath: playDeathSound, // crash boom at the moment of impact, with the explosion
+    onHit: playHitSound // whoosh on hull damage that isn't fatal
   });
 
   // --- Helpers -----------------------------------------------------------

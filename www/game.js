@@ -36,7 +36,8 @@
       onScoreUpdate: (callbacks && callbacks.onScoreUpdate) || function () {},
       onHealthUpdate: (callbacks && callbacks.onHealthUpdate) || function () {},
       onDifficultyUpdate: (callbacks && callbacks.onDifficultyUpdate) || function () {},
-      onDeath: (callbacks && callbacks.onDeath) || function () {}
+      onDeath: (callbacks && callbacks.onDeath) || function () {},
+      onHit: (callbacks && callbacks.onHit) || function () {} // asteroid hit that hurts but doesn't kill
     };
 
     var config = {
@@ -787,7 +788,9 @@
               asteroidDestroyed = true;
 
               if (state.health <= 0) {
-                startDeathSequence(p, asteroid);
+                startDeathSequence(p, asteroid); // fatal hit has its own crash sound
+              } else {
+                handlers.onHit();
               }
               break;
             }

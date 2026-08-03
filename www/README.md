@@ -34,6 +34,9 @@ Sound effects (from [Pixabay](https://pixabay.com/)):
 - `sounds/crash-death.mp3` — "Spacecraft crashing" by
   [freesound_community](https://pixabay.com/users/freesound_community-46691455/) (#88048);
   the final 3 seconds play when the ship is destroyed
+- `sounds/asteroid-hit.mp3` — "Cinematic designed sci-fi whoosh spectral glide" by
+  [Rescopic Sound](https://pixabay.com/users/rescopicsound-45188866/) (#228310);
+  the final 2 seconds play on non-fatal asteroid hits
 
 ## Modes
 
