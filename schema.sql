@@ -32,8 +32,5 @@ CREATE TABLE password_resets (
   CONSTRAINT fk_pr_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- If you already created the database with the earlier single-score schema
--- (users.best_score / users.best_score_at), run this instead of the CREATEs:
---
---   CREATE TABLE scores ( ... as above ... );
---   ALTER TABLE users DROP COLUMN best_score, DROP COLUMN best_score_at;
+-- Upgrading an existing database instead of creating a fresh one? Run the
+-- numbered migrations in db_migrations/ (see db_migrations/README.md).
