@@ -81,6 +81,20 @@
     }
 
     function createCollectible(width, height) {
+      // Treats instead of coins: half sundaes, half donuts.
+      var kind = Math.random() < 0.5 ? 'sundae' : 'donut';
+      var sprinkles = [];
+      if (kind === 'donut') {
+        var sprinkleColors = ['#fef08a', '#86efac', '#93c5fd', '#fca5a5', '#f0abfc'];
+        for (var i = 0; i < 7; i++) {
+          sprinkles.push({
+            a: Math.random() * Math.PI * 2,
+            d: 0.55 + Math.random() * 0.35,
+            rot: Math.random() * Math.PI,
+            color: sprinkleColors[i % sprinkleColors.length]
+          });
+        }
+      }
       return {
         id: randomId(),
         x: Math.random() * width,
@@ -88,8 +102,10 @@
         vx: (Math.random() - 0.5) * 1,
         vy: (Math.random() - 0.5) * 1,
         radius: 9,
-        color: '#fbbf24', // Amber
-        type: 'collectible'
+        color: kind === 'donut' ? '#f472b6' : '#fde68a', // halo/particle tint
+        type: 'collectible',
+        kind: kind,
+        sprinkles: sprinkles
       };
     }
 
@@ -1007,19 +1023,87 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
+    function drawDonut(c) {
+      var R = c.radius * 1.25;
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = c.color;
+
+      // Dough rim, then pink frosting on top
+      ctx.beginPath();
+      ctx.arc(0, 0, R, 0, Math.PI * 2);
+      ctx.fillStyle = '#d9a066';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.beginPath();
+      ctx.arc(0, 0, R * 0.9, 0, Math.PI * 2);
+      ctx.fillStyle = '#f472b6';
+      ctx.fill();
+
+      // Hole
+      ctx.beginPath();
+      ctx.arc(0, 0, R * 0.38, 0, Math.PI * 2);
+      ctx.fillStyle = '#09090b';
+      ctx.fill();
+
+      // Sprinkles on the frosting band
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = 'round';
+      c.sprinkles.forEach(function (s) {
+        var sx = Math.cos(s.a) * R * s.d;
+        var sy = Math.sin(s.a) * R * s.d;
+        ctx.strokeStyle = s.color;
+        ctx.beginPath();
+        ctx.moveTo(sx - Math.cos(s.rot) * 2, sy - Math.sin(s.rot) * 2);
+        ctx.lineTo(sx + Math.cos(s.rot) * 2, sy + Math.sin(s.rot) * 2);
+        ctx.stroke();
+      });
+    }
+
+    function drawSundae(c) {
+      var R = c.radius * 1.3;
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = c.color;
+
+      // Glass bowl (lower half-disc) with a little stem and foot
+      ctx.beginPath();
+      ctx.arc(0, R * 0.05, R, 0, Math.PI);
+      ctx.closePath();
+      ctx.fillStyle = '#7dd3fc';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#7dd3fc';
+      ctx.fillRect(-R * 0.1, R * 1.0, R * 0.2, R * 0.32);
+      ctx.fillRect(-R * 0.4, R * 1.32, R * 0.8, R * 0.14);
+
+      // Whipped-cream scoops
+      ctx.fillStyle = '#fef3c7';
+      [[-0.42, 0.0], [0.42, 0.0], [0, -0.3]].forEach(function (pos) {
+        ctx.beginPath();
+        ctx.arc(pos[0] * R, pos[1] * R, R * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Cherry on top
+      ctx.beginPath();
+      ctx.arc(0, -R * 0.72, R * 0.22, 0, Math.PI * 2);
+      ctx.fillStyle = '#ef4444';
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = '#ef4444';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
     function drawCollectibles() {
       state.collectibles.forEach(function (c) {
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
-        ctx.fillStyle = c.color;
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = c.color;
-        ctx.fill();
-        ctx.shadowBlur = 0;
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        if (c.kind === 'donut') drawDonut(c);
+        else drawSundae(c);
+        ctx.restore();
 
         // Halo
         ctx.beginPath();
-        ctx.arc(c.x, c.y, c.radius + 4 + Math.sin(Date.now() / 200) * 2, 0, Math.PI * 2);
+        ctx.arc(c.x, c.y, c.radius + 6 + Math.sin(Date.now() / 200) * 2, 0, Math.PI * 2);
         ctx.strokeStyle = c.color;
         ctx.lineWidth = 1;
         ctx.globalAlpha = 0.3;

@@ -63,7 +63,7 @@ arrow keys stay free for Player 2.
 | `S` Shield | Absorbs asteroid impacts instead of taking hull damage |
 | `V` Speed | Faster movement and fire rate; ramming knocks asteroids aside |
 | `W` Weapon | Enables the blasters; a second pickup upgrades to a 4-shot spread |
-| `M` Magnet | Pulls nearby gold toward your ship (Medium difficulty and above only) |
+| `M` Magnet | Pulls nearby treats toward your ship (Medium difficulty and above only) |
 
-Gold pays 100 points and repairs the hull; destroyed asteroids pay 20; asteroids that drift off
-screen pay 10. Difficulty climbs with survival time and score up to a per-mode ceiling.
+Sundaes and donuts pay 100 points and repair the hull; destroyed asteroids pay 20; asteroids
+that drift off screen pay 10. Difficulty climbs with survival time and score up to a per-mode ceiling.
