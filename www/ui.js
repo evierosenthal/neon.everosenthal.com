@@ -163,10 +163,11 @@
     }
   };
 
-  // Background music: "Synthwave Arcade Retro Nights" by alex-morgan
-  // (pixabay.com). Loops during play, pauses with the game, and stops on
-  // death so the crash/fanfare take the stage. Missing file = silent game.
-  var bgMusic = new Audio('sounds/background-music.mp3');
+  // Background music: original synthwave loop composed for the game
+  // (8 bars, 112 BPM, Am-F-C-G — kick/snare/hats, pumped saw pads, square
+  // arp). Loops during play, pauses with the game, and stops on death so
+  // the crash/fanfare take the stage. Missing file = silent game.
+  var bgMusic = new Audio('sounds/background-music.m4a');
   bgMusic.preload = 'auto';
   bgMusic.loop = true;
   bgMusic.volume = 0.35;

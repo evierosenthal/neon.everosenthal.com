@@ -37,8 +37,8 @@ Sound effects (from [Pixabay](https://pixabay.com/)):
 - `sounds/asteroid-hit.mp3` — "Cinematic designed sci-fi whoosh spectral glide" by
   [Rescopic Sound](https://pixabay.com/users/rescopicsound-45188866/) (#228310);
   the final 2 seconds play on non-fatal asteroid hits
-- `sounds/background-music.mp3` — "Synthwave Arcade Retro Nights" by
-  alex-morgan (Pixabay); loops during gameplay, pauses with the game
+- `sounds/background-music.m4a` — original synthwave loop composed for this game
+  (8 bars, 112 BPM, Am-F-C-G); loops during gameplay, pauses with the game
 
 ## Modes
 
