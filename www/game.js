@@ -1059,38 +1059,93 @@
       });
     }
 
+    // Mini waffle-cone sundae: three scoops, whipped cream with sprinkles,
+    // cherry on top and sparkles — a tiny take on the reference art.
     function drawSundae(c) {
-      var R = c.radius * 1.3;
-      ctx.shadowBlur = 12;
+      var R = c.radius * 1.35;
+      ctx.shadowBlur = 10;
       ctx.shadowColor = c.color;
 
-      // Glass bowl (lower half-disc) with a little stem and foot
+      // Waffle cone
       ctx.beginPath();
-      ctx.arc(0, R * 0.05, R, 0, Math.PI);
+      ctx.moveTo(-R * 0.55, R * 0.15);
+      ctx.lineTo(R * 0.55, R * 0.15);
+      ctx.lineTo(0, R * 1.5);
       ctx.closePath();
-      ctx.fillStyle = '#7dd3fc';
+      ctx.fillStyle = '#e8a33d';
       ctx.fill();
       ctx.shadowBlur = 0;
-      ctx.fillStyle = '#7dd3fc';
-      ctx.fillRect(-R * 0.1, R * 1.0, R * 0.2, R * 0.32);
-      ctx.fillRect(-R * 0.4, R * 1.32, R * 0.8, R * 0.14);
+      ctx.strokeStyle = '#b45309';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-R * 0.4, R * 0.35);
+      ctx.lineTo(R * 0.15, R * 1.15);
+      ctx.moveTo(-R * 0.1, R * 0.2);
+      ctx.lineTo(R * 0.35, R * 0.85);
+      ctx.moveTo(R * 0.4, R * 0.35);
+      ctx.lineTo(-R * 0.15, R * 1.15);
+      ctx.moveTo(R * 0.1, R * 0.2);
+      ctx.lineTo(-R * 0.35, R * 0.85);
+      ctx.stroke();
 
-      // Whipped-cream scoops
-      ctx.fillStyle = '#fef3c7';
-      [[-0.42, 0.0], [0.42, 0.0], [0, -0.3]].forEach(function (pos) {
+      // Three scoops: lemon, blueberry, strawberry in front
+      ctx.beginPath();
+      ctx.arc(-R * 0.42, -R * 0.15, R * 0.42, 0, Math.PI * 2);
+      ctx.fillStyle = '#fde68a';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(R * 0.42, -R * 0.15, R * 0.42, 0, Math.PI * 2);
+      ctx.fillStyle = '#93c5fd';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, -R * 0.05, R * 0.48, 0, Math.PI * 2);
+      ctx.fillStyle = '#f9a8d4';
+      ctx.fill();
+
+      // Whipped cream swirl with sprinkles
+      ctx.beginPath();
+      ctx.arc(0, -R * 0.6, R * 0.4, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff7ed';
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = 'round';
+      [['#ef4444', -0.2, -0.65, 0.6], ['#22c55e', 0.15, -0.5, -0.4],
+       ['#3b82f6', 0.02, -0.78, 0.1], ['#f59e0b', -0.12, -0.45, -0.9]].forEach(function (s) {
+        ctx.strokeStyle = s[0];
         ctx.beginPath();
-        ctx.arc(pos[0] * R, pos[1] * R, R * 0.45, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(s[1] * R - Math.cos(s[3]) * 1.6, s[2] * R - Math.sin(s[3]) * 1.6);
+        ctx.lineTo(s[1] * R + Math.cos(s[3]) * 1.6, s[2] * R + Math.sin(s[3]) * 1.6);
+        ctx.stroke();
       });
 
-      // Cherry on top
+      // Cherry with stem
+      ctx.strokeStyle = '#7c2d12';
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(0, -R * 0.72, R * 0.22, 0, Math.PI * 2);
+      ctx.moveTo(0, -R * 1.0);
+      ctx.quadraticCurveTo(R * 0.12, -R * 1.25, R * 0.2, -R * 1.35);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, -R * 0.98, R * 0.2, 0, Math.PI * 2);
       ctx.fillStyle = '#ef4444';
       ctx.shadowBlur = 8;
       ctx.shadowColor = '#ef4444';
       ctx.fill();
       ctx.shadowBlur = 0;
+
+      // Sparkles
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.lineWidth = 1;
+      [[0.62, -0.6], [-0.68, 0.25]].forEach(function (pos) {
+        var sx = pos[0] * R;
+        var sy = pos[1] * R;
+        ctx.beginPath();
+        ctx.moveTo(sx - 3, sy);
+        ctx.lineTo(sx + 3, sy);
+        ctx.moveTo(sx, sy - 3);
+        ctx.lineTo(sx, sy + 3);
+        ctx.stroke();
+      });
     }
 
     function drawCollectibles() {
