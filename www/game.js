@@ -1483,31 +1483,129 @@
         ctx.translate(p.x, p.y);
         ctx.rotate(tilt);
 
-        // Modular space fighter geometry
-        ctx.beginPath();
-        ctx.moveTo(0, -p.radius * 1.5);
-        ctx.lineTo(-p.radius, p.radius);
-        ctx.lineTo(0, p.radius * 0.5); // Wing Notch
-        ctx.lineTo(p.radius, p.radius);
-        ctx.closePath();
+        var R = p.radius;
 
+        // --- Rocket exhaust flame (behind the body) ---
+        if (!isPaused && !state.isGameOver && !state.dying) {
+          var flick = 0.8 + 0.35 * Math.abs(Math.sin(Date.now() / 47 + p.x)) + Math.random() * 0.15;
+          var flameLen = R * 1.0 * flick;
+          // outer orange tongue
+          ctx.beginPath();
+          ctx.moveTo(-R * 0.34, R * 1.1);
+          ctx.quadraticCurveTo(-R * 0.28, R * 1.1 + flameLen * 0.7, 0, R * 1.1 + flameLen);
+          ctx.quadraticCurveTo(R * 0.28, R * 1.1 + flameLen * 0.7, R * 0.34, R * 1.1);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(249, 115, 22, 0.85)';
+          ctx.shadowBlur = 18;
+          ctx.shadowColor = '#fb923c';
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          // middle yellow tongue
+          ctx.beginPath();
+          ctx.moveTo(-R * 0.22, R * 1.1);
+          ctx.quadraticCurveTo(-R * 0.18, R * 1.1 + flameLen * 0.5, 0, R * 1.1 + flameLen * 0.68);
+          ctx.quadraticCurveTo(R * 0.18, R * 1.1 + flameLen * 0.5, R * 0.22, R * 1.1);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(251, 191, 36, 0.95)';
+          ctx.fill();
+          // hot white-blue core
+          ctx.beginPath();
+          ctx.moveTo(-R * 0.11, R * 1.1);
+          ctx.quadraticCurveTo(-R * 0.09, R * 1.1 + flameLen * 0.3, 0, R * 1.1 + flameLen * 0.4);
+          ctx.quadraticCurveTo(R * 0.09, R * 1.1 + flameLen * 0.3, R * 0.11, R * 1.1);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(224, 242, 254, 0.95)';
+          ctx.fill();
+        }
+
+        // --- Swept tail fins (tinted per player) ---
+        ctx.beginPath();
+        ctx.moveTo(-R * 0.6, R * 0.15);
+        ctx.lineTo(-R * 1.15, R * 1.05);
+        ctx.lineTo(-R * 0.55, R * 0.95);
+        ctx.closePath();
+        ctx.moveTo(R * 0.6, R * 0.15);
+        ctx.lineTo(R * 1.15, R * 1.05);
+        ctx.lineTo(R * 0.55, R * 0.95);
+        ctx.closePath();
         ctx.fillStyle = p.color;
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 12;
         ctx.shadowColor = p.color;
         ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = 1.2;
         ctx.stroke();
         ctx.shadowBlur = 0;
 
-        // Pilot Glass Canopy
+        // --- Hull: cylinder with a rounded nose cone ---
+        var hull = ctx.createLinearGradient(-R * 0.7, 0, R * 0.7, 0);
+        hull.addColorStop(0, '#94a3b8');
+        hull.addColorStop(0.35, '#f1f5f9');
+        hull.addColorStop(0.65, '#e2e8f0');
+        hull.addColorStop(1, '#64748b');
         ctx.beginPath();
-        ctx.moveTo(0, -p.radius * 0.82);
-        ctx.lineTo(-p.radius * 0.35, p.radius * 0.1);
-        ctx.lineTo(p.radius * 0.35, p.radius * 0.1);
+        ctx.moveTo(-R * 0.62, R * 0.95);
+        ctx.lineTo(-R * 0.62, -R * 0.45);
+        ctx.quadraticCurveTo(-R * 0.62, -R * 1.35, 0, -R * 1.6);
+        ctx.quadraticCurveTo(R * 0.62, -R * 1.35, R * 0.62, -R * 0.45);
+        ctx.lineTo(R * 0.62, R * 0.95);
         ctx.closePath();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fillStyle = hull;
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = p.color;
         ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineWidth = 1.3;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Nose-cone tip in the player color
+        ctx.beginPath();
+        ctx.moveTo(-R * 0.58, -R * 0.72);
+        ctx.quadraticCurveTo(-R * 0.55, -R * 1.32, 0, -R * 1.6);
+        ctx.quadraticCurveTo(R * 0.55, -R * 1.32, R * 0.58, -R * 0.72);
+        ctx.quadraticCurveTo(0, -R * 0.92, -R * 0.58, -R * 0.72);
+        ctx.closePath();
+        ctx.fillStyle = p.color;
+        ctx.fill();
+
+        // Body stripe in the player color
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-R * 0.62, R * 0.45, R * 1.24, R * 0.18);
+
+        // --- Porthole window ---
+        var glass = ctx.createRadialGradient(-R * 0.1, -R * 0.32, R * 0.04, 0, -R * 0.22, R * 0.34);
+        glass.addColorStop(0, '#e0f2fe');
+        glass.addColorStop(0.5, '#67e8f9');
+        glass.addColorStop(1, '#0e7490');
+        ctx.beginPath();
+        ctx.arc(0, -R * 0.22, R * 0.32, 0, Math.PI * 2);
+        ctx.fillStyle = glass;
+        ctx.fill();
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = R * 0.1;
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // glint
+        ctx.beginPath();
+        ctx.arc(-R * 0.11, -R * 0.33, R * 0.07, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.fill();
+
+        // --- Engine nozzle skirt ---
+        ctx.beginPath();
+        ctx.moveTo(-R * 0.45, R * 0.95);
+        ctx.lineTo(R * 0.45, R * 0.95);
+        ctx.lineTo(R * 0.58, R * 1.18);
+        ctx.lineTo(-R * 0.58, R * 1.18);
+        ctx.closePath();
+        ctx.fillStyle = '#475569';
+        ctx.fill();
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        ctx.stroke();
 
         // Shield Effect
         if (state.activeEffects.shield > 0) {
@@ -1572,8 +1670,8 @@
             ? '#22c55e'
             : (p.id === 'player1' ? '#ff00ff' : '#fb7185');
           // Thrusters stream from ship tail
-          var streamX = p.x - Math.sin(tilt) * (p.radius * 0.8);
-          var streamY = p.y + Math.cos(tilt) * p.radius;
+          var streamX = p.x - Math.sin(tilt) * (p.radius * 1.3);
+          var streamY = p.y + Math.cos(tilt) * (p.radius * 1.3); // below the nozzle
           for (var i = 0; i < thrusterCount; i++) {
             state.particles.push(createParticle(streamX, streamY, thrusterColor, true));
           }
