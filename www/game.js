@@ -205,20 +205,54 @@
       var mediumSpeedBoost = (difficulty >= 0.6 && difficulty < 1.2) ? 1.2 : 1.0;
       var speed = (Math.random() * 2.5 + 2.0) * difficulty * superHardSpeedBoost * mediumSpeedBoost;
 
-      var vertexCount = 8 + Math.floor(Math.random() * 5);
+      // Three dark-purple looks, mixed at random:
+      // 'rocky'   — shaded cratered rock (mini of the photo reference)
+      // 'faceted' — chunky cel-shaded rock with angular potholes
+      // 'blobby'  — smooth round rock with big rimmed craters
+      var style = ['rocky', 'faceted', 'blobby'][Math.floor(Math.random() * 3)];
+
+      var vertexCount, roundness, spread;
+      if (style === 'blobby') {
+        vertexCount = 10 + Math.floor(Math.random() * 3);
+        roundness = 0.92;
+        spread = 0.14;
+      } else if (style === 'faceted') {
+        vertexCount = 9 + Math.floor(Math.random() * 4);
+        roundness = 0.78;
+        spread = 0.38;
+      } else {
+        vertexCount = 8 + Math.floor(Math.random() * 5);
+        roundness = 0.85;
+        spread = 0.3;
+      }
       var vertices = [];
       for (var i = 0; i < vertexCount; i++) {
-        vertices.push(0.85 + Math.random() * 0.3);
+        vertices.push(roundness + Math.random() * spread);
       }
 
-      var craterCount = 2 + Math.floor(Math.random() * 2);
+      var craterCount, craterBase, craterVar;
+      if (style === 'blobby') { craterCount = 3; craterBase = 0.16; craterVar = 0.14; }
+      else if (style === 'faceted') { craterCount = 4 + Math.floor(Math.random() * 3); craterBase = 0.08; craterVar = 0.1; }
+      else { craterCount = 2 + Math.floor(Math.random() * 2); craterBase = 0.12; craterVar = 0.12; }
       var craters = [];
       for (var j = 0; j < craterCount; j++) {
         craters.push({
-          rx: (Math.random() - 0.5) * 0.5,
-          ry: (Math.random() - 0.5) * 0.5,
-          r: 0.12 + Math.random() * 0.12
+          rx: (Math.random() - 0.5) * (style === 'blobby' ? 0.8 : 0.5),
+          ry: (Math.random() - 0.5) * (style === 'blobby' ? 0.8 : 0.5),
+          r: craterBase + Math.random() * craterVar,
+          rot: Math.random() * Math.PI * 2
         });
+      }
+
+      var speckles = [];
+      if (style === 'rocky') {
+        for (var k = 0; k < 5; k++) {
+          speckles.push({
+            rx: (Math.random() - 0.5) * 1.1,
+            ry: (Math.random() - 0.5) * 1.1,
+            r: 0.02 + Math.random() * 0.04
+          });
+        }
       }
 
       return {
@@ -228,10 +262,12 @@
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         radius: ASTEROID_MIN_RADIUS + Math.random() * (ASTEROID_MAX_RADIUS - ASTEROID_MIN_RADIUS),
-        color: 'hsl(' + (280 + Math.random() * 40) + ', 70%, 50%)', // Purples/Magentas
+        color: 'hsl(' + (265 + Math.random() * 20) + ', 70%, 60%)', // bright purple, tints debris/shockwaves
         type: 'asteroid',
+        style: style,
         vertices: vertices,
         craters: craters,
+        speckles: speckles,
         rotation: Math.random() * Math.PI * 2,
         spinSpeed: (Math.random() - 0.5) * 0.03
       };
@@ -1236,41 +1272,150 @@
       ctx.globalAlpha = 1;
     }
 
+    // Trace the asteroid's outline in local (translated/rotated) coordinates.
+    function traceAsteroidPath(a) {
+      ctx.beginPath();
+      var steps = a.vertices.length;
+      for (var i = 0; i < steps; i++) {
+        var angle = (i / steps) * Math.PI * 2;
+        var r = a.radius * a.vertices[i];
+        if (i === 0) ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
+        else ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+      }
+      ctx.closePath();
+    }
+
+    // Shaded cratered rock — mini of the photo reference, in dark purple.
+    function drawRockyAsteroid(a) {
+      var R = a.radius;
+      var g = ctx.createLinearGradient(-R, -R, R, R);
+      g.addColorStop(0, '#8b5cf6');
+      g.addColorStop(0.45, '#5b21b6');
+      g.addColorStop(1, '#2e1065');
+      ctx.fillStyle = g;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(139, 92, 246, 0.45)';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      ctx.save();
+      ctx.clip();
+      a.craters.forEach(function (crater) {
+        var cx = crater.rx * R;
+        var cy = crater.ry * R;
+        var cr = crater.r * R;
+        ctx.beginPath();
+        ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(15, 5, 36, 0.6)';
+        ctx.fill();
+        // sunlit rim on the lower-right of each crater
+        ctx.beginPath();
+        ctx.arc(cx, cy, cr, Math.PI * 0.1, Math.PI * 0.9);
+        ctx.strokeStyle = 'rgba(196, 181, 253, 0.35)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      });
+      a.speckles.forEach(function (dot) {
+        ctx.beginPath();
+        ctx.arc(dot.rx * R, dot.ry * R, dot.r * R + 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(233, 213, 255, 0.2)';
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    // Chunky cel-shaded rock with angular potholes — mini of the low-poly art.
+    function drawFacetedAsteroid(a) {
+      var R = a.radius;
+      ctx.fillStyle = '#5b21b6';
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#2e1065';
+      ctx.stroke();
+
+      ctx.save();
+      ctx.clip();
+      // Two flat facet highlights toward the light
+      ctx.fillStyle = 'rgba(167, 139, 250, 0.35)';
+      ctx.beginPath();
+      ctx.moveTo(-R, -R);
+      ctx.lineTo(R * 0.25, -R * 0.55);
+      ctx.lineTo(-R * 0.3, R * 0.15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = 'rgba(167, 139, 250, 0.18)';
+      ctx.beginPath();
+      ctx.moveTo(R * 0.1, -R);
+      ctx.lineTo(R * 0.8, -R * 0.3);
+      ctx.lineTo(R * 0.25, -R * 0.1);
+      ctx.closePath();
+      ctx.fill();
+
+      // Angular hexagon potholes
+      ctx.fillStyle = '#1e1b4b';
+      a.craters.forEach(function (crater) {
+        var cx = crater.rx * R;
+        var cy = crater.ry * R;
+        var cr = crater.r * R * 1.2;
+        ctx.beginPath();
+        for (var i = 0; i < 6; i++) {
+          var ha = crater.rot + (i / 6) * Math.PI * 2;
+          var hx = cx + Math.cos(ha) * cr;
+          var hy = cy + Math.sin(ha) * cr;
+          if (i === 0) ctx.moveTo(hx, hy);
+          else ctx.lineTo(hx, hy);
+        }
+        ctx.closePath();
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    // Smooth round rock with big rimmed craters — mini of the round cartoon art.
+    function drawBlobbyAsteroid(a) {
+      var R = a.radius;
+      ctx.fillStyle = '#6d28d9';
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(139, 92, 246, 0.4)';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#3b0f6e';
+      ctx.stroke();
+
+      ctx.save();
+      ctx.clip();
+      // Lit side
+      ctx.fillStyle = 'rgba(167, 139, 250, 0.22)';
+      ctx.beginPath();
+      ctx.arc(-R * 0.35, -R * 0.35, R * 1.05, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Big organic craters with light rims
+      a.craters.forEach(function (crater) {
+        var cx = crater.rx * R;
+        var cy = crater.ry * R;
+        var cr = crater.r * R;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, cr * 1.35, cr * 0.95, crater.rot, 0, Math.PI * 2);
+        ctx.fillStyle = '#1a0b38';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(196, 181, 253, 0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+
     function drawAsteroids() {
       state.asteroids.forEach(function (a) {
         ctx.save();
-        ctx.beginPath();
-        var steps = a.vertices.length;
-        for (var i = 0; i < steps; i++) {
-          var angle = (i / steps) * Math.PI * 2;
-          var r = a.radius * a.vertices[i];
-          var vx = a.x + Math.cos(angle + a.rotation) * r;
-          var vy = a.y + Math.sin(angle + a.rotation) * r;
-          if (i === 0) ctx.moveTo(vx, vy);
-          else ctx.lineTo(vx, vy);
-        }
-        ctx.closePath();
-        ctx.fillStyle = a.color;
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // Draw rock textures / craters
-        a.craters.forEach(function (crater) {
-          ctx.beginPath();
-          // rotate craters alongside the asteroid body
-          var dist = Math.sqrt(crater.rx * crater.rx + crater.ry * crater.ry) * a.radius;
-          var initialAngle = Math.atan2(crater.ry, crater.rx);
-          var cx = a.x + Math.cos(initialAngle + a.rotation) * dist;
-          var cy = a.y + Math.sin(initialAngle + a.rotation) * dist;
-          ctx.arc(cx, cy, crater.r * a.radius, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-          ctx.fill();
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-          ctx.lineWidth = 0.8;
-          ctx.stroke();
-        });
+        ctx.translate(a.x, a.y);
+        ctx.rotate(a.rotation);
+        traceAsteroidPath(a);
+        if (a.style === 'faceted') drawFacetedAsteroid(a);
+        else if (a.style === 'blobby') drawBlobbyAsteroid(a);
+        else drawRockyAsteroid(a);
         ctx.restore();
       });
     }
