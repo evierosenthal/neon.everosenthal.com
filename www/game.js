@@ -248,7 +248,9 @@
       // 'faceted' — chunky cel-shaded rock with angular potholes
       // 'blobby'  — smooth round rock with big rimmed craters
       var style = ['rocky', 'faceted', 'blobby'][Math.floor(Math.random() * 3)];
-      var tint = Math.random() < 0.35 ? 'pink' : 'purple';
+      // All purple for now — pink rocks read too much like the donut pickups.
+      // (Set the pink chance back above 0 to bring them back.)
+      var tint = Math.random() < 0 ? 'pink' : 'purple';
 
       var vertexCount, roundness, spread;
       if (style === 'blobby') {
