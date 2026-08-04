@@ -49,6 +49,57 @@
       lit: 'rgba(251, 207, 232, 0.25)',
       blobCrater: '#500724',
       blobRim: 'rgba(251, 207, 232, 0.45)'
+    },
+    gray: { // the rocky photo's natural stone gray
+      gradient: ['#e2e8f0', '#94a3b8', '#475569'],
+      craterFill: 'rgba(15, 23, 42, 0.5)',
+      craterRim: 'rgba(255, 255, 255, 0.35)',
+      speckle: 'rgba(255, 255, 255, 0.25)',
+      glow: 'rgba(148, 163, 184, 0.4)',
+      base: '#94a3b8',
+      outline: '#475569',
+      facet: 'rgba(226, 232, 240, 0.4)',
+      facetSoft: 'rgba(226, 232, 240, 0.2)',
+      hole: '#1e293b',
+      blobBase: '#94a3b8',
+      blobOutline: '#475569',
+      lit: 'rgba(241, 245, 249, 0.25)',
+      blobCrater: '#1e293b',
+      blobRim: 'rgba(255, 255, 255, 0.35)'
+    },
+    blue: { // the low-poly art's royal blue
+      gradient: ['#93c5fd', '#2563eb', '#1e3a8a'],
+      craterFill: 'rgba(11, 20, 60, 0.6)',
+      craterRim: 'rgba(191, 219, 254, 0.4)',
+      speckle: 'rgba(219, 234, 254, 0.25)',
+      glow: 'rgba(59, 130, 246, 0.45)',
+      base: '#2563eb',
+      outline: '#1e3a8a',
+      facet: 'rgba(147, 197, 253, 0.45)',
+      facetSoft: 'rgba(147, 197, 253, 0.22)',
+      hole: '#172554',
+      blobBase: '#2563eb',
+      blobOutline: '#1e3a8a',
+      lit: 'rgba(147, 197, 253, 0.25)',
+      blobCrater: '#172554',
+      blobRim: 'rgba(191, 219, 254, 0.4)'
+    },
+    darkblue: { // the round cartoon's deep blue
+      gradient: ['#60a5fa', '#1e40af', '#172554'],
+      craterFill: 'rgba(5, 10, 40, 0.65)',
+      craterRim: 'rgba(147, 197, 253, 0.4)',
+      speckle: 'rgba(191, 219, 254, 0.22)',
+      glow: 'rgba(37, 99, 235, 0.4)',
+      base: '#1e40af',
+      outline: '#172554',
+      facet: 'rgba(96, 165, 250, 0.35)',
+      facetSoft: 'rgba(96, 165, 250, 0.18)',
+      hole: '#0f172a',
+      blobBase: '#1e40af',
+      blobOutline: '#172554',
+      lit: 'rgba(96, 165, 250, 0.25)',
+      blobCrater: '#0f172a',
+      blobRim: 'rgba(147, 197, 253, 0.4)'
     }
   };
   var STAR_COUNT = 50;
@@ -248,9 +299,9 @@
       // 'faceted' — chunky cel-shaded rock with angular potholes
       // 'blobby'  — smooth round rock with big rimmed craters
       var style = ['rocky', 'faceted', 'blobby'][Math.floor(Math.random() * 3)];
-      // All purple for now — pink rocks read too much like the donut pickups.
-      // (Set the pink chance back above 0 to bring them back.)
-      var tint = Math.random() < 0 ? 'pink' : 'purple';
+      // Each style wears its reference picture's original color:
+      // rocky = stone gray, faceted = royal blue, blobby = dark blue.
+      var tint = style === 'rocky' ? 'gray' : (style === 'faceted' ? 'blue' : 'darkblue');
 
       var vertexCount, roundness, spread;
       if (style === 'blobby') {
@@ -303,9 +354,9 @@
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         radius: ASTEROID_MIN_RADIUS + Math.random() * (ASTEROID_MAX_RADIUS - ASTEROID_MIN_RADIUS),
-        color: tint === 'pink'
-          ? 'hsl(' + (325 + Math.random() * 15) + ', 85%, 65%)'  // hot pink debris/shockwaves
-          : 'hsl(' + (265 + Math.random() * 20) + ', 70%, 60%)', // bright purple debris/shockwaves
+        color: tint === 'gray'
+          ? 'hsl(215, 15%, ' + (65 + Math.random() * 10) + '%)'  // silvery debris/shockwaves
+          : 'hsl(' + (218 + Math.random() * 12) + ', 80%, ' + (tint === 'darkblue' ? 55 : 65) + '%)',
         type: 'asteroid',
         style: style,
         tint: tint,
