@@ -774,12 +774,33 @@ body {
   width: 100%;
 }
 
-.difficulty-buttons,
-.btn-duo {
-  display: flex;
-  flex-direction: column;
+/* Difficulty picks sit in a compact 2x2 grid */
+.difficulty-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
   width: 100%;
+}
+
+.difficulty-buttons .btn {
+  padding: 0.875rem 1rem;
+  font-size: 1rem;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.btn-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.btn-duo .btn {
+  padding: 0.75rem 0.75rem;
+  font-size: 0.875rem;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .btn {
