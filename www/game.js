@@ -1538,6 +1538,15 @@
 
         var R = p.radius;
 
+        // Player 1 flies the equipped skin; player 2 keeps its own colors.
+        var skin = (p.id === 'player1' && config.skin) ? config.skin : null;
+        var accent = skin ? skin.accent : p.color;
+        if (skin && skin.animated) {
+          accent = 'hsl(' + Math.floor((Date.now() / 15) % 360) + ', 85%, 65%)';
+        }
+        var hullStops = (skin && skin.hull) || ['#94a3b8', '#f1f5f9', '#e2e8f0', '#64748b'];
+        var winStops = (skin && skin.window) || ['#e0f2fe', '#67e8f9', '#0e7490'];
+
         // --- Rocket exhaust flame (behind the body) ---
         if (!isPaused && !state.isGameOver && !state.dying) {
           var flick = 0.8 + 0.35 * Math.abs(Math.sin(Date.now() / 47 + p.x)) + Math.random() * 0.15;
@@ -1581,9 +1590,9 @@
         ctx.lineTo(R * 1.15, R * 1.05);
         ctx.lineTo(R * 0.55, R * 0.95);
         ctx.closePath();
-        ctx.fillStyle = p.color;
+        ctx.fillStyle = accent;
         ctx.shadowBlur = 12;
-        ctx.shadowColor = p.color;
+        ctx.shadowColor = accent;
         ctx.fill();
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
         ctx.lineWidth = 1.2;
@@ -1592,10 +1601,10 @@
 
         // --- Hull: cylinder with a rounded nose cone ---
         var hull = ctx.createLinearGradient(-R * 0.7, 0, R * 0.7, 0);
-        hull.addColorStop(0, '#94a3b8');
-        hull.addColorStop(0.35, '#f1f5f9');
-        hull.addColorStop(0.65, '#e2e8f0');
-        hull.addColorStop(1, '#64748b');
+        hull.addColorStop(0, hullStops[0]);
+        hull.addColorStop(0.35, hullStops[1]);
+        hull.addColorStop(0.65, hullStops[2]);
+        hull.addColorStop(1, hullStops[3]);
         ctx.beginPath();
         ctx.moveTo(-R * 0.62, R * 0.95);
         ctx.lineTo(-R * 0.62, -R * 0.45);
@@ -1605,7 +1614,7 @@
         ctx.closePath();
         ctx.fillStyle = hull;
         ctx.shadowBlur = 14;
-        ctx.shadowColor = p.color;
+        ctx.shadowColor = accent;
         ctx.fill();
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.lineWidth = 1.3;
@@ -1619,18 +1628,18 @@
         ctx.quadraticCurveTo(R * 0.55, -R * 1.32, R * 0.58, -R * 0.72);
         ctx.quadraticCurveTo(0, -R * 0.92, -R * 0.58, -R * 0.72);
         ctx.closePath();
-        ctx.fillStyle = p.color;
+        ctx.fillStyle = accent;
         ctx.fill();
 
         // Body stripe in the player color
-        ctx.fillStyle = p.color;
+        ctx.fillStyle = accent;
         ctx.fillRect(-R * 0.62, R * 0.45, R * 1.24, R * 0.18);
 
         // --- Porthole window ---
         var glass = ctx.createRadialGradient(-R * 0.1, -R * 0.32, R * 0.04, 0, -R * 0.22, R * 0.34);
-        glass.addColorStop(0, '#e0f2fe');
-        glass.addColorStop(0.5, '#67e8f9');
-        glass.addColorStop(1, '#0e7490');
+        glass.addColorStop(0, winStops[0]);
+        glass.addColorStop(0.5, winStops[1]);
+        glass.addColorStop(1, winStops[2]);
         ctx.beginPath();
         ctx.arc(0, -R * 0.22, R * 0.32, 0, Math.PI * 2);
         ctx.fillStyle = glass;
@@ -1997,6 +2006,7 @@
         config.isLocalMultiplayer = !!options.isLocalMultiplayer;
         config.isCPUMultiplayer = !!options.isCPUMultiplayer;
         config.controlModePreference = options.controlModePreference || 'both';
+        config.skin = options.skin || null; // player 1's rocket skin
 
         resizeCanvas();
         reset();

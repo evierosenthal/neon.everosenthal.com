@@ -20,6 +20,26 @@
     super: 'SUPER HARD MODE'
   };
 
+  // --- Rocket skins & coin economy --------------------------------------
+  // Coins: score / 50 per mission, times 5 on a new high score.
+  var COINS_KEY = 'neon_nebula_coins';
+  var SKIN_KEY = 'neon_nebula_skin';
+  var SKINS_OWNED_KEY = 'neon_nebula_skins_owned';
+  var COIN_SCORE_DIVISOR = 50;
+  var RECORD_COIN_MULTIPLIER = 5;
+
+  var SKINS = [
+    { id: 'cyan', name: 'Neon Classic', price: 0, accent: '#22d3ee' },
+    { id: 'rose', name: 'Rose Racer', price: 250, accent: '#fb7185' },
+    { id: 'emerald', name: 'Emerald Comet', price: 250, accent: '#34d399' },
+    { id: 'gold', name: 'Solar Flare', price: 750, accent: '#fbbf24',
+      hull: ['#b45309', '#fef9c3', '#fde68a', '#a16207'] },
+    { id: 'void', name: 'Void Shadow', price: 1500, accent: '#c084fc',
+      hull: ['#1e293b', '#64748b', '#475569', '#0f172a'],
+      window: ['#f5d0fe', '#e879f9', '#701a75'] },
+    { id: 'galaxy', name: 'Galaxy Prism', price: 3000, accent: '#22d3ee', animated: true }
+  ];
+
   var ZAP_ICON = '<svg viewBox="0 0 24 24" class="icon icon-stroke">' +
     '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>';
 
@@ -84,6 +104,10 @@
   var isLeaderboardOpen = false;
   var leaderboards = null; // {easy: [...], medium: [...], ...} cache for the modal
   var leaderboardTab = 'easy';
+  var isSkinsOpen = false;
+  var coins = 0;
+  var ownedSkins = ['cyan'];
+  var selectedSkin = 'cyan';
   var isResetOpen = false;
   var resetToken = null;
 
@@ -151,6 +175,14 @@
     leaderboardList: document.getElementById('leaderboard-list'),
     leaderboardClose: document.getElementById('leaderboard-close'),
     seeHighscores: document.getElementById('see-highscores'),
+    skinsBtn: document.getElementById('skins-btn'),
+    skinsModal: document.getElementById('skins-modal'),
+    skinsClose: document.getElementById('skins-close'),
+    skinsGrid: document.getElementById('skins-grid'),
+    skinsCoins: document.getElementById('skins-coins'),
+    skinsError: document.getElementById('skins-error'),
+    gameoverCoins: document.getElementById('gameover-coins'),
+    newhighCoins: document.getElementById('newhigh-coins'),
     resetModal: document.getElementById('reset-modal'),
     resetForm: document.getElementById('reset-form'),
     resetPasswordInput: document.getElementById('reset-password-input'),
@@ -330,6 +362,7 @@
     show(el.pauseScreen, playing && isPaused);
     show(el.settingsModal, isSettingsOpen);
     show(el.leaderboardModal, isLeaderboardOpen);
+    show(el.skinsModal, isSkinsOpen);
     show(el.resetModal, isResetOpen);
 
     setMusicPlaying(playing && !isPaused);
@@ -424,6 +457,14 @@
     game.stop();
     var beatRecord = finalScore > highScores[currentMode] && finalScore > 0;
 
+    // Mission pay: coins scale with score, with a big bonus for a new record.
+    var earned = Math.max(0, Math.round(finalScore / COIN_SCORE_DIVISOR));
+    if (beatRecord) earned *= RECORD_COIN_MULTIPLIER;
+    if (earned > 0) {
+      coins += earned;
+      saveWallet();
+    }
+
     if (beatRecord) {
       setModeHighScore(currentMode, Math.round(finalScore));
 
@@ -432,6 +473,7 @@
       pendingMode = currentMode;
       el.newhighMode.textContent = MODE_LABELS[currentMode];
       el.newhighScore.textContent = formatNumber(finalScore);
+      el.newhighCoins.textContent = '+' + formatNumber(earned) + ' COINS — ' + RECORD_COIN_MULTIPLIER + '× RECORD BONUS!';
 
       // Fanfare leads the celebration in (the fireworks start on render()).
       try {
@@ -450,6 +492,7 @@
     } else {
       gameState = 'GAMEOVER';
       el.finalScore.textContent = formatNumber(finalScore);
+      el.gameoverCoins.textContent = '+' + formatNumber(earned);
     }
     render();
   }
@@ -634,6 +677,77 @@
     };
   })();
 
+  // --- Skins shop --------------------------------------------------------
+
+  function getSkin(id) {
+    for (var i = 0; i < SKINS.length; i++) {
+      if (SKINS[i].id === id) return SKINS[i];
+    }
+    return SKINS[0];
+  }
+
+  function saveWallet() {
+    try {
+      localStorage.setItem(COINS_KEY, String(coins));
+      localStorage.setItem(SKINS_OWNED_KEY, JSON.stringify(ownedSkins));
+      localStorage.setItem(SKIN_KEY, selectedSkin);
+    } catch (err) { /* storage unavailable — session-only wallet */ }
+  }
+
+  function skinSvg(skin) {
+    var hull = skin.hull || ['#94a3b8', '#f1f5f9', '#e2e8f0', '#64748b'];
+    var win = (skin.window || ['#e0f2fe', '#67e8f9', '#0e7490'])[1];
+    var accent = skin.animated ? 'url(#prism-' + skin.id + ')' : skin.accent;
+    var defs = skin.animated
+      ? '<defs><linearGradient id="prism-' + skin.id + '" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#f472b6"/><stop offset="0.5" stop-color="#a855f7"/>' +
+        '<stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>'
+      : '';
+    return '<svg viewBox="0 0 40 64">' + defs +
+      '<path d="M12 34 L3 52 L13 48 Z" fill="' + accent + '"/>' +
+      '<path d="M28 34 L37 52 L27 48 Z" fill="' + accent + '"/>' +
+      '<path d="M12 48 L12 22 Q12 6 20 4 Q28 6 28 22 L28 48 Z" fill="' + hull[1] + '" stroke="#fff" stroke-width="0.8"/>' +
+      '<path d="M12.5 18 Q13 7 20 4 Q27 7 27.5 18 Q20 13 12.5 18 Z" fill="' + accent + '"/>' +
+      '<rect x="12" y="38" width="16" height="3.5" fill="' + accent + '"/>' +
+      '<circle cx="20" cy="26" r="4.6" fill="' + win + '" stroke="#cbd5e1" stroke-width="1.6"/>' +
+      '<path d="M14 48 L26 48 L28 53 L12 53 Z" fill="#475569"/>' +
+      '<path d="M16 54 Q20 63 24 54 Q20 57 16 54 Z" fill="#fb923c"/>' +
+      '</svg>';
+  }
+
+  function renderSkinsGrid() {
+    el.skinsCoins.textContent = formatNumber(coins);
+    el.skinsGrid.innerHTML = '';
+    SKINS.forEach(function (skin) {
+      var owned = ownedSkins.indexOf(skin.id) !== -1;
+      var card = document.createElement('button');
+      card.className = 'skin-card' + (selectedSkin === skin.id ? ' selected' : (owned ? '' : ' locked'));
+      card.innerHTML = skinSvg(skin) +
+        '<span class="skin-name">' + skin.name + '</span>' +
+        (owned
+          ? '<span class="skin-status">' + (selectedSkin === skin.id ? 'EQUIPPED' : 'TAP TO EQUIP') + '</span>'
+          : '<span class="skin-status price">' + formatNumber(skin.price) + '</span>');
+      card.addEventListener('click', function () { handleSkinClick(skin); });
+      el.skinsGrid.appendChild(card);
+    });
+  }
+
+  function handleSkinClick(skin) {
+    setFormError(el.skinsError, '');
+    if (ownedSkins.indexOf(skin.id) === -1) {
+      if (coins < skin.price) {
+        setFormError(el.skinsError,
+          'Not enough coins — fly more missions! You need ' + formatNumber(skin.price - coins) + ' more.');
+        return;
+      }
+      coins -= skin.price;
+      ownedSkins.push(skin.id);
+    }
+    selectedSkin = skin.id;
+    saveWallet();
+    renderSkinsGrid();
+  }
+
   function renderLeaderboardTab() {
     var tabs = el.leaderboardModal.querySelectorAll('.lb-tab');
     Array.prototype.forEach.call(tabs, function (tab) {
@@ -676,7 +790,8 @@
       initialDifficulty: difficulty,
       isLocalMultiplayer: isLocalMultiplayer,
       isCPUMultiplayer: isCPUMultiplayer,
-      controlModePreference: controlModePreference
+      controlModePreference: controlModePreference,
+      skin: getSkin(selectedSkin)
     });
   }
 
@@ -704,6 +819,15 @@
         if (saved) highScores[mode] = parseInt(saved, 10) || 0;
       });
       savedControl = localStorage.getItem(CONTROL_KEY);
+
+      coins = parseInt(localStorage.getItem(COINS_KEY), 10) || 0;
+      var savedOwned = JSON.parse(localStorage.getItem(SKINS_OWNED_KEY) || '[]');
+      if (savedOwned instanceof Array && savedOwned.length) {
+        if (savedOwned.indexOf('cyan') === -1) savedOwned.push('cyan');
+        ownedSkins = savedOwned;
+      }
+      var savedSkin = localStorage.getItem(SKIN_KEY);
+      if (savedSkin && ownedSkins.indexOf(savedSkin) !== -1) selectedSkin = savedSkin;
     } catch (err) { /* storage unavailable — start with defaults */ }
     refreshHighScoreDisplays();
     if (savedControl === 'mouse' || savedControl === 'keyboard' || savedControl === 'both') {
@@ -843,6 +967,17 @@
       });
     });
 
+    el.skinsBtn.addEventListener('click', function () {
+      setFormError(el.skinsError, '');
+      renderSkinsGrid();
+      isSkinsOpen = true;
+      render();
+    });
+    el.skinsClose.addEventListener('click', function () {
+      isSkinsOpen = false;
+      render();
+    });
+
     el.settingsBtn.addEventListener('click', function () {
       isSettingsOpen = true;
       render();
@@ -858,6 +993,7 @@
       if (e.key !== 'Escape') return;
       if (isSettingsOpen) closeSettings();
       else if (isLeaderboardOpen) { isLeaderboardOpen = false; render(); }
+      else if (isSkinsOpen) { isSkinsOpen = false; render(); }
       else if (isResetOpen) { isResetOpen = false; render(); }
       else if (gameState === 'PLAYING') setPaused(!isPaused);
     });
