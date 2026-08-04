@@ -175,6 +175,9 @@
     leaderboardList: document.getElementById('leaderboard-list'),
     leaderboardClose: document.getElementById('leaderboard-close'),
     seeHighscores: document.getElementById('see-highscores'),
+    homeBest: document.getElementById('home-best'),
+    homeCoins: document.getElementById('home-coins'),
+    homePilot: document.getElementById('home-pilot'),
     skinsBtn: document.getElementById('skins-btn'),
     skinsModal: document.getElementById('skins-modal'),
     skinsClose: document.getElementById('skins-close'),
@@ -352,8 +355,17 @@
     });
   }
 
+  function refreshHomeStats() {
+    var best = Math.max(highScores.easy, highScores.medium, highScores.hard, highScores.super);
+    el.homeBest.textContent = formatNumber(best);
+    el.homeCoins.textContent = formatNumber(coins);
+    var user = window.NeonAuth ? window.NeonAuth.state.user : null;
+    el.homePilot.textContent = user ? user.username : 'GUEST';
+  }
+
   function render() {
     var playing = gameState === 'PLAYING';
+    if (gameState === 'START') refreshHomeStats();
     show(el.canvas, playing);
     show(el.hud, playing);
     show(el.startScreen, gameState === 'START');
