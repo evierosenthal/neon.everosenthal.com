@@ -11,6 +11,7 @@
 
   var HIGHSCORE_PREFIX = 'neon_nebula_highscore_'; // + mode
   var CONTROL_KEY = 'neon_nebula_control_mode';
+  var SPEED_KEY = 'neon_nebula_speed'; // rocket speed percent, 50-200
 
   var MODES = ['easy', 'medium', 'hard', 'super'];
   var MODE_LABELS = {
@@ -128,6 +129,8 @@
     settingsModal: document.getElementById('settings-modal'),
     settingsBtn: document.getElementById('settings-btn'),
     settingsClose: document.getElementById('settings-close'),
+    speedSlider: document.getElementById('speed-slider'),
+    speedValue: document.getElementById('speed-value'),
     settingsDone: document.getElementById('settings-done'),
     controlOptions: document.getElementById('control-options'),
     finalScore: document.getElementById('final-score'),
@@ -602,6 +605,12 @@
 
   // --- Actions -----------------------------------------------------------
 
+  function applySpeedSetting() {
+    var pct = parseInt(el.speedSlider.value, 10) || 100;
+    el.speedValue.textContent = pct + '%';
+    game.setSpeedFactor(pct / 100);
+  }
+
   function handleControlChange(mode) {
     controlModePreference = mode;
     try {
@@ -992,6 +1001,21 @@
       controlModePreference = savedControl;
       game.setControlModePreference(savedControl);
     }
+
+    var savedSpeed = null;
+    try {
+      savedSpeed = parseInt(localStorage.getItem(SPEED_KEY), 10);
+    } catch (err) { /* storage unavailable */ }
+    if (savedSpeed >= 50 && savedSpeed <= 200) {
+      el.speedSlider.value = savedSpeed;
+    }
+    applySpeedSetting();
+    el.speedSlider.addEventListener('input', function () {
+      applySpeedSetting();
+      try {
+        localStorage.setItem(SPEED_KEY, el.speedSlider.value);
+      } catch (err) { /* storage unavailable — keep for this session */ }
+    });
 
     buildDifficultyButtons();
     buildControlOptions();

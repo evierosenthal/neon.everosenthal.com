@@ -2099,3 +2099,60 @@ body {
   display: flex;
   justify-content: flex-end;
 }
+
+/* --- Rocket speed slider --- */
+
+.speed-value {
+  float: right;
+  font-family: var(--font-display);
+  color: var(--cyan-400);
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.4);
+}
+
+.speed-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.speed-end {
+  font-size: 0.625rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--slate-500);
+  flex: none;
+}
+
+.speed-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: linear-gradient(to right, var(--indigo-600), var(--cyan-500));
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  outline: none;
+  cursor: pointer;
+}
+
+.speed-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%, #e0f2fe, var(--cyan-400) 65%, var(--cyan-500));
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.7);
+  cursor: grab;
+}
+
+.speed-slider::-moz-range-thumb {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%, #e0f2fe, var(--cyan-400) 65%, var(--cyan-500));
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.7);
+  cursor: grab;
+}

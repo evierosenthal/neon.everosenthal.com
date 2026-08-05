@@ -133,7 +133,8 @@
       initialDifficulty: 1,
       isLocalMultiplayer: false,
       isCPUMultiplayer: false,
-      controlModePreference: 'both'
+      controlModePreference: 'both',
+      speedFactor: 1 // 0.5-2.0, from the Settings rocket-speed slider
     };
 
     var state = null;
@@ -491,7 +492,7 @@
 
       // Mouse Follow Component
       if (mouseDrives) {
-        var followSpeed = state.activeEffects.speedBoost > 0 ? 0.15 : 0.08;
+        var followSpeed = Math.min(0.4, (state.activeEffects.speedBoost > 0 ? 0.15 : 0.08) * config.speedFactor);
         var prevX = player.x;
         var prevY = player.y;
         player.x += (mousePos.x - player.x) * followSpeed;
@@ -1044,8 +1045,8 @@
         if (stars[i].y > canvas.height) stars[i].y = 0;
       }
 
-      var moveSpeed = state.activeEffects.speedBoost > 0 ? 8 : 5;
-      var accel = 0.5;
+      var moveSpeed = (state.activeEffects.speedBoost > 0 ? 8 : 5) * config.speedFactor;
+      var accel = 0.5 * config.speedFactor;
       var friction = 0.92;
 
       for (var m = 0; m < MOVE_KEYS.length; m++) {
@@ -2045,6 +2046,10 @@
 
       setControlModePreference: function (mode) {
         config.controlModePreference = mode;
+      },
+
+      setSpeedFactor: function (factor) {
+        config.speedFactor = Math.max(0.5, Math.min(2, Number(factor) || 1));
       }
     };
   }
