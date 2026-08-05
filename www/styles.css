@@ -528,6 +528,52 @@ body {
   }
 }
 
+/* Shooting stars streak across the menu backdrop */
+.shooting-star {
+  position: absolute;
+  width: 90px;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(165, 243, 252, 0.4), transparent);
+  rotate: var(--angle);
+  animation: shoot 1.2s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes shoot {
+  from {
+    translate: 0 0;
+    opacity: 1;
+  }
+  to {
+    translate: var(--dx) var(--dy);
+    opacity: 0;
+  }
+}
+
+/* Slow background drifters (treats & rocks) for depth */
+.drifter {
+  position: absolute;
+  opacity: 0.45;
+  pointer-events: none;
+  animation: drift var(--dur) ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate(55px, -38px) rotate(55deg);
+  }
+}
+
+/* The menu panel leans gently toward the cursor */
+.panel-start {
+  transition: transform 0.2s ease-out;
+  will-change: transform;
+}
+
 /* The equipped rocket bobs beside the title */
 .home-rocket {
   position: absolute;

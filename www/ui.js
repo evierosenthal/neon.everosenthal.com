@@ -386,6 +386,67 @@
       star.style.animationDuration = (2.2 + Math.random() * 3) + 's';
       el.startStars.appendChild(star);
     }
+
+    // Slow drifting treats & rocks behind the panel, for depth
+    var DONUT_SVG = '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="#d9a066"/>' +
+      '<circle cx="20" cy="20" r="14" fill="#f472b6"/><circle cx="20" cy="20" r="6" fill="#0b0716"/>' +
+      '<circle cx="13" cy="14" r="1.5" fill="#fef08a"/><circle cx="27" cy="15" r="1.5" fill="#86efac"/>' +
+      '<circle cx="25" cy="26" r="1.5" fill="#93c5fd"/><circle cx="14" cy="25" r="1.5" fill="#fca5a5"/></svg>';
+    var BLUE_ROCK_SVG = '<svg viewBox="0 0 40 40"><path d="M8 14 L20 4 L34 12 L36 26 L24 37 L9 32 Z" ' +
+      'fill="#2563eb" stroke="#1e3a8a" stroke-width="2"/><path d="M14 18 L20 14 L26 19 L23 25 L15 24 Z" fill="#172554"/></svg>';
+    var GRAY_ROCK_SVG = '<svg viewBox="0 0 40 40"><path d="M6 16 L16 5 L31 8 L36 22 L27 35 L10 33 Z" ' +
+      'fill="#94a3b8" stroke="#475569" stroke-width="2"/><circle cx="18" cy="18" r="4" fill="#334155" opacity="0.7"/>' +
+      '<circle cx="27" cy="26" r="3" fill="#334155" opacity="0.7"/></svg>';
+    [
+      { html: DONUT_SVG, size: 32, top: '16%', left: '10%', dur: 26 },
+      { html: GRAY_ROCK_SVG, size: 46, top: '72%', left: '7%', dur: 36 },
+      { html: BLUE_ROCK_SVG, size: 30, top: '26%', left: '87%', dur: 30 },
+      { html: DONUT_SVG, size: 22, top: '80%', left: '86%', dur: 22 }
+    ].forEach(function (d) {
+      var node = document.createElement('span');
+      node.className = 'drifter';
+      node.style.width = d.size + 'px';
+      node.style.height = d.size + 'px';
+      node.style.top = d.top;
+      node.style.left = d.left;
+      node.style.setProperty('--dur', d.dur + 's');
+      node.innerHTML = d.html;
+      el.startStars.appendChild(node);
+    });
+
+    // A shooting star streaks by every few seconds while on the menu
+    setInterval(function () {
+      if (gameState !== 'START') return;
+      var s = document.createElement('span');
+      s.className = 'shooting-star';
+      s.style.left = (10 + Math.random() * 70) + '%';
+      s.style.top = (5 + Math.random() * 45) + '%';
+      var angleDeg = 15 + Math.random() * 30;
+      var dir = Math.random() < 0.5 ? 1 : -1;
+      var dist = 260 + Math.random() * 220;
+      var rad = angleDeg * Math.PI / 180;
+      s.style.setProperty('--angle', (dir === 1 ? angleDeg : 180 - angleDeg) + 'deg');
+      s.style.setProperty('--dx', (Math.cos(rad) * dist * dir) + 'px');
+      s.style.setProperty('--dy', (Math.sin(rad) * dist) + 'px');
+      el.startStars.appendChild(s);
+      setTimeout(function () { s.remove(); }, 1400);
+    }, 2800);
+  }
+
+  // The menu panel leans a few degrees toward the cursor (3D-card feel).
+  function wireStartParallax() {
+    var panel = document.querySelector('#start-screen .panel-start');
+    el.startScreen.addEventListener('mousemove', function (e) {
+      var rect = panel.getBoundingClientRect();
+      var dx = (e.clientX - (rect.left + rect.width / 2)) / rect.width;
+      var dy = (e.clientY - (rect.top + rect.height / 2)) / rect.height;
+      dx = Math.max(-0.7, Math.min(0.7, dx));
+      dy = Math.max(-0.7, Math.min(0.7, dy));
+      panel.style.transform = 'perspective(1400px) rotateY(' + (dx * 4).toFixed(2) + 'deg) rotateX(' + (-dy * 3).toFixed(2) + 'deg)';
+    });
+    el.startScreen.addEventListener('mouseleave', function () {
+      panel.style.transform = '';
+    });
   }
 
   function render() {
@@ -876,6 +937,7 @@
     buildControlOptions();
     renderControlOptions();
     buildStartStars();
+    wireStartParallax();
 
     Array.prototype.forEach.call(document.querySelectorAll('[data-menu]'), function (button) {
       button.addEventListener('click', function () {
