@@ -101,6 +101,7 @@
   var difficulty = 1;
   var controlModePreference = 'both';
   var isSettingsOpen = false;
+  var settingsAutoPaused = false; // we paused for the settings modal, so we resume on close
   var pendingScore = null; // new high score awaiting server submission
   var pendingMode = null; // mode the pending score was earned in
   var newhighPhase = 'offer'; // 'offer' | 'register' | 'forgot' | 'submitting' | 'result' | 'none'
@@ -1166,10 +1167,20 @@
 
     el.settingsBtn.addEventListener('click', function () {
       isSettingsOpen = true;
+      // Never let the pilot die while fiddling with settings mid-flight.
+      if (gameState === 'PLAYING' && !isPaused) {
+        settingsAutoPaused = true;
+        setPaused(true);
+      }
       render();
     });
     function closeSettings() {
       isSettingsOpen = false;
+      // Resume only if it was our auto-pause; a manual pause stays paused.
+      if (settingsAutoPaused) {
+        settingsAutoPaused = false;
+        if (gameState === 'PLAYING') setPaused(false);
+      }
       render();
     }
     el.settingsClose.addEventListener('click', closeSettings);
