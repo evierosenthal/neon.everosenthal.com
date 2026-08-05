@@ -23,6 +23,8 @@
   // --- Rocket skins & coin economy --------------------------------------
   // Coins: score / 50 per mission, times 5 on a new high score.
   var COINS_KEY = 'neon_nebula_coins';
+  var DAILY_KEY = 'neon_nebula_daily_claim';
+  var DAILY_BONUS = 150;
   var SKIN_KEY = 'neon_nebula_skin';
   var SKINS_OWNED_KEY = 'neon_nebula_skins_owned';
   var COIN_SCORE_DIVISOR = 50;
@@ -176,6 +178,8 @@
     leaderboardClose: document.getElementById('leaderboard-close'),
     seeHighscores: document.getElementById('see-highscores'),
     startStars: document.getElementById('start-stars'),
+    dailyChest: document.getElementById('daily-chest'),
+    dailyChestLabel: document.getElementById('daily-chest-label'),
     homeRocket: document.getElementById('home-rocket'),
     homeBest: document.getElementById('home-best'),
     homeCoins: document.getElementById('home-coins'),
@@ -369,6 +373,8 @@
       el.homeRocket.setAttribute('data-skin', selectedSkin);
       el.homeRocket.innerHTML = skinSvg(getSkin(selectedSkin));
     }
+
+    refreshDailyChest();
   }
 
   function buildStartStars() {
@@ -414,6 +420,18 @@
       el.startStars.appendChild(node);
     });
 
+    // Every so often the equipped rocket cruises across the backdrop
+    setInterval(function () {
+      if (gameState !== 'START') return;
+      var fly = document.createElement('span');
+      fly.className = 'flyby';
+      fly.style.setProperty('--y', (12 + Math.random() * 65) + '%');
+      fly.style.setProperty('--t', (5 + Math.random() * 3) + 's');
+      fly.innerHTML = '<span class="flyby-inner">' + skinSvg(getSkin(selectedSkin)) + '</span>';
+      el.startStars.appendChild(fly);
+      setTimeout(function () { fly.remove(); }, 8500);
+    }, 17000);
+
     // A shooting star streaks by every few seconds while on the menu
     setInterval(function () {
       if (gameState !== 'START') return;
@@ -431,6 +449,48 @@
       el.startStars.appendChild(s);
       setTimeout(function () { s.remove(); }, 1400);
     }, 2800);
+  }
+
+  // --- Daily bonus chest -------------------------------------------------
+
+  function todayStamp() {
+    var d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+
+  function dailyClaimed() {
+    try {
+      return localStorage.getItem(DAILY_KEY) === todayStamp();
+    } catch (err) {
+      return true; // no storage — hide the freebie rather than gift it every visit
+    }
+  }
+
+  function refreshDailyChest() {
+    var claimed = dailyClaimed();
+    el.dailyChest.classList.toggle('available', !claimed);
+    el.dailyChest.classList.toggle('claimed', claimed);
+    el.dailyChestLabel.textContent = claimed ? 'COME BACK TOMORROW' : 'DAILY BONUS';
+  }
+
+  function claimDailyBonus() {
+    if (dailyClaimed()) return;
+    try {
+      localStorage.setItem(DAILY_KEY, todayStamp());
+    } catch (err) { /* storage unavailable */ }
+    coins += DAILY_BONUS;
+    saveWallet();
+    for (var i = 0; i < 12; i++) {
+      var pop = document.createElement('span');
+      pop.className = 'coin-pop';
+      pop.style.setProperty('--dx', ((Math.random() - 0.5) * 140) + 'px');
+      pop.style.setProperty('--dy', -(30 + Math.random() * 100) + 'px');
+      pop.style.animationDelay = (Math.random() * 0.15) + 's';
+      el.dailyChest.appendChild(pop);
+      (function (node) { setTimeout(function () { node.remove(); }, 1100); })(pop);
+    }
+    refreshHomeStats();
+    refreshDailyChest();
   }
 
   // The menu panel leans a few degrees toward the cursor (3D-card feel).
@@ -1066,6 +1126,8 @@
         renderLeaderboardTab();
       });
     });
+
+    el.dailyChest.addEventListener('click', claimDailyBonus);
 
     el.skinsBtn.addEventListener('click', function () {
       setFormError(el.skinsError, '');

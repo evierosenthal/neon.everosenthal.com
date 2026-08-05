@@ -501,6 +501,169 @@ body {
   transform: translate(-50%, 50%);
 }
 
+/* Slow-breathing nebula clouds behind the menu */
+.menu-nebula {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mn {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  mix-blend-mode: screen;
+  animation: mn-drift var(--t, 30s) ease-in-out infinite alternate;
+}
+
+.mn-1 {
+  width: 45vw;
+  height: 45vw;
+  background: #0e7490;
+  top: -15%;
+  left: -10%;
+  opacity: 0.5;
+  --t: 26s;
+}
+
+.mn-2 {
+  width: 40vw;
+  height: 40vw;
+  background: #6d28d9;
+  bottom: -20%;
+  right: -10%;
+  opacity: 0.5;
+  --t: 34s;
+}
+
+.mn-3 {
+  width: 30vw;
+  height: 30vw;
+  background: #be185d;
+  top: 40%;
+  left: 55%;
+  opacity: 0.3;
+  --t: 40s;
+}
+
+@keyframes mn-drift {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(6vw, -4vh) scale(1.15);
+  }
+}
+
+/* Daily bonus chest */
+.daily-chest {
+  position: absolute;
+  right: 2rem;
+  bottom: 2rem;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.daily-chest svg {
+  width: 3.25rem;
+  height: 2.85rem;
+}
+
+.daily-chest.available {
+  animation: chest-bounce 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.6));
+}
+
+.daily-chest.claimed {
+  opacity: 0.4;
+  cursor: default;
+  filter: none;
+}
+
+@keyframes chest-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  12% {
+    transform: translateY(-7px) rotate(-3deg);
+  }
+  24% {
+    transform: translateY(0) rotate(2deg);
+  }
+  36% {
+    transform: translateY(-3px) rotate(0);
+  }
+  48% {
+    transform: translateY(0);
+  }
+}
+
+.daily-chest-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
+  color: var(--amber-400);
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+  white-space: nowrap;
+}
+
+.coin-pop {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%, #fde68a, #f59e0b 60%, #b45309);
+  pointer-events: none;
+  animation: coin-pop 0.85s ease-out forwards;
+}
+
+@keyframes coin-pop {
+  from {
+    translate: 0 0;
+    opacity: 1;
+  }
+  to {
+    translate: var(--dx) var(--dy);
+    opacity: 0;
+  }
+}
+
+/* Equipped rocket occasionally cruises across the screen */
+.flyby {
+  position: absolute;
+  left: 0;
+  top: var(--y);
+  width: 46px;
+  pointer-events: none;
+  animation: flyby var(--t) linear forwards;
+}
+
+.flyby-inner {
+  display: block;
+  transform: rotate(90deg);
+}
+
+@keyframes flyby {
+  from {
+    translate: -70px 0;
+  }
+  to {
+    translate: calc(100vw + 70px) 0;
+  }
+}
+
 /* Twinkling starfield behind the menu panel */
 .start-stars {
   position: absolute;
@@ -568,10 +731,11 @@ body {
   }
 }
 
-/* The menu panel leans gently toward the cursor */
+/* The menu panel rises in on load, then leans gently toward the cursor */
 .panel-start {
   transition: transform 0.2s ease-out;
   will-change: transform;
+  animation: rise-in 0.45s ease backwards;
 }
 
 /* The equipped rocket bobs beside the title */
