@@ -527,9 +527,14 @@
         player.y += player.vy;
       }
 
-      // Clamp Player 1 within screen boundaries
-      player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
-      player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+      // Clamp Player 1 within screen boundaries (kill into-wall velocity so
+      // the ship slides freely along edges instead of sticking)
+      var clampedPX = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+      var clampedPY = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+      if (clampedPX !== player.x) player.vx = 0;
+      if (clampedPY !== player.y) player.vy = 0;
+      player.x = clampedPX;
+      player.y = clampedPY;
     }
 
     function updatePlayer2(accel, friction, moveSpeed) {
@@ -1063,13 +1068,19 @@
         }
       }
 
-      // Boundary check players
+      // Boundary check players. Zero any velocity still pressing into a wall,
+      // otherwise the speed cap keeps normalizing against it and the ship
+      // can barely slide along the edge.
       var players = [state.player, state.player2];
       for (var b = 0; b < players.length; b++) {
         var p = players[b];
         if (!p) continue;
-        p.x = Math.max(p.radius, Math.min(canvas.width - p.radius, p.x));
-        p.y = Math.max(p.radius, Math.min(canvas.height - p.radius, p.y));
+        var clampedX = Math.max(p.radius, Math.min(canvas.width - p.radius, p.x));
+        var clampedY = Math.max(p.radius, Math.min(canvas.height - p.radius, p.y));
+        if (clampedX !== p.x) p.vx = 0;
+        if (clampedY !== p.y) p.vy = 0;
+        p.x = clampedX;
+        p.y = clampedY;
       }
 
       updateSpawns();
