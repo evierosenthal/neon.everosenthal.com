@@ -501,6 +501,60 @@ body {
   transform: translate(-50%, 50%);
 }
 
+/* Twinkling starfield behind the menu panel */
+.start-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.start-star {
+  position: absolute;
+  border-radius: 9999px;
+  background: #fff;
+  animation: star-twinkle 3s ease-in-out infinite;
+}
+
+@keyframes star-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.15);
+  }
+}
+
+/* The equipped rocket bobs beside the title */
+.home-rocket {
+  position: absolute;
+  top: 1.75rem;
+  right: 2.25rem;
+  width: 3.25rem;
+  pointer-events: none;
+  filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.45));
+  animation: rocket-bob 4s ease-in-out infinite;
+}
+
+@keyframes rocket-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-9px) rotate(4deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .home-rocket {
+    display: none;
+  }
+}
+
 /* Live stats strip on the home screen */
 .home-stats {
   display: grid;

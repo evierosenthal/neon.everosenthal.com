@@ -175,6 +175,8 @@
     leaderboardList: document.getElementById('leaderboard-list'),
     leaderboardClose: document.getElementById('leaderboard-close'),
     seeHighscores: document.getElementById('see-highscores'),
+    startStars: document.getElementById('start-stars'),
+    homeRocket: document.getElementById('home-rocket'),
     homeBest: document.getElementById('home-best'),
     homeCoins: document.getElementById('home-coins'),
     homePilot: document.getElementById('home-pilot'),
@@ -361,6 +363,29 @@
     el.homeCoins.textContent = formatNumber(coins);
     var user = window.NeonAuth ? window.NeonAuth.state.user : null;
     el.homePilot.textContent = user ? user.username : 'GUEST';
+
+    // The equipped skin poses beside the title; re-render only on change.
+    if (el.homeRocket.getAttribute('data-skin') !== selectedSkin) {
+      el.homeRocket.setAttribute('data-skin', selectedSkin);
+      el.homeRocket.innerHTML = skinSvg(getSkin(selectedSkin));
+    }
+  }
+
+  function buildStartStars() {
+    var palette = ['#ffffff', '#ffffff', '#a5f3fc', '#c7d2fe'];
+    for (var i = 0; i < 42; i++) {
+      var star = document.createElement('span');
+      star.className = 'start-star';
+      var size = 1 + Math.random() * 1.8;
+      star.style.width = size + 'px';
+      star.style.height = size + 'px';
+      star.style.left = (Math.random() * 100) + '%';
+      star.style.top = (Math.random() * 100) + '%';
+      star.style.background = palette[Math.floor(Math.random() * palette.length)];
+      star.style.animationDelay = (Math.random() * 4) + 's';
+      star.style.animationDuration = (2.2 + Math.random() * 3) + 's';
+      el.startStars.appendChild(star);
+    }
   }
 
   function render() {
@@ -850,6 +875,7 @@
     buildDifficultyButtons();
     buildControlOptions();
     renderControlOptions();
+    buildStartStars();
 
     Array.prototype.forEach.call(document.querySelectorAll('[data-menu]'), function (button) {
       button.addEventListener('click', function () {
