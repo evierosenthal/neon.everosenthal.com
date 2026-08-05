@@ -2049,7 +2049,7 @@
       },
 
       setSpeedFactor: function (factor) {
-        config.speedFactor = Math.max(0.5, Math.min(2, Number(factor) || 1));
+        config.speedFactor = Math.max(0.01, Math.min(3, Number(factor) || 1));
       }
     };
   }

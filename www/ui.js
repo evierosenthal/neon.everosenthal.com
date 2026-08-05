@@ -1006,7 +1006,7 @@
     try {
       savedSpeed = parseInt(localStorage.getItem(SPEED_KEY), 10);
     } catch (err) { /* storage unavailable */ }
-    if (savedSpeed >= 50 && savedSpeed <= 200) {
+    if (savedSpeed >= 1 && savedSpeed <= 300) {
       el.speedSlider.value = savedSpeed;
     }
     applySpeedSetting();
