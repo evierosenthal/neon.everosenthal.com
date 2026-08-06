@@ -1744,6 +1744,9 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding-right: 0.25rem;
 }
 
 @media (max-width: 640px) {
