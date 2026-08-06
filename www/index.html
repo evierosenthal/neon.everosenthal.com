@@ -70,6 +70,60 @@
         <button id="logout-link" class="user-chip-logout">Logout</button>
       </div>
 
+      <!-- Logged-out Login Button (top right) -->
+      <button id="login-btn" class="user-chip login-btn hidden">LOG IN</button>
+
+      <!-- Login / Create Account Modal -->
+      <div id="auth-modal" class="overlay overlay-settings hidden">
+        <div class="panel panel-settings">
+          <div class="settings-header">
+            <div class="settings-header-left">
+              <div class="settings-header-icon">
+                <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <h3 id="auth-modal-title" class="settings-title">PILOT LOGIN</h3>
+                <p class="settings-subtitle">Save your scores on the leaderboard</p>
+              </div>
+            </div>
+            <button id="auth-close" class="close-btn">
+              <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+
+          <div id="am-google-slot" class="google-btn-slot"></div>
+          <div class="auth-divider"><span>OR</span></div>
+
+          <form id="am-login-form" class="auth-form">
+            <input type="text" id="am-user" class="text-input" placeholder="Username or email" autocomplete="username" />
+            <input type="password" id="am-pass" class="text-input" placeholder="Password" autocomplete="current-password" />
+            <p id="am-login-error" class="auth-error hidden"></p>
+            <button type="submit" class="btn btn-cyan btn-sm">LOG IN</button>
+          </form>
+
+          <form id="am-register-form" class="auth-form hidden">
+            <input type="text" id="am-reg-username" class="text-input" placeholder="Call sign (username)" autocomplete="username" />
+            <input type="email" id="am-reg-email" class="text-input" placeholder="Email" autocomplete="email" />
+            <input type="password" id="am-reg-password" class="text-input" placeholder="Password (8+ characters)" autocomplete="new-password" />
+            <p id="am-register-error" class="auth-error hidden"></p>
+            <button type="submit" class="btn btn-cyan btn-sm">CREATE ACCOUNT</button>
+          </form>
+
+          <form id="am-forgot-form" class="auth-form hidden">
+            <input type="email" id="am-forgot-email" class="text-input" placeholder="Email" autocomplete="email" />
+            <p id="am-forgot-error" class="auth-error hidden"></p>
+            <p id="am-forgot-sent" class="auth-success hidden"></p>
+            <button type="submit" class="btn btn-cyan btn-sm">SEND RESET LINK</button>
+          </form>
+
+          <div class="auth-links">
+            <button type="button" id="am-show-register" class="link-btn">Create account</button>
+            <button type="button" id="am-show-forgot" class="link-btn">Forgot password?</button>
+            <button type="button" id="am-show-login" class="link-btn hidden">Back to log in</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Persistent Top Left Settings Button -->
       <button id="settings-btn" class="settings-btn" title="Flight Control Settings">
         <svg viewBox="0 0 24 24" class="icon icon-stroke gear"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>

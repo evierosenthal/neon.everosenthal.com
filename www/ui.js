@@ -11,7 +11,8 @@
 
   var HIGHSCORE_PREFIX = 'neon_nebula_highscore_'; // + mode
   var CONTROL_KEY = 'neon_nebula_control_mode';
-  var SPEED_KEY = 'neon_nebula_speed'; // rocket speed percent, 50-200
+  var SPEED_KEY = 'neon_nebula_speed'; // rocket speed percent, 1-300
+  var HAS_ACCOUNT_KEY = 'neon_nebula_has_account'; // set after any successful login
 
   var MODES = ['easy', 'medium', 'hard', 'super'];
   var MODE_LABELS = {
@@ -127,6 +128,8 @@
   var leaderboards = null; // {easy: [...], medium: [...], ...} cache for the modal
   var leaderboardTab = 'easy';
   var isSkinsOpen = false;
+  var isAuthOpen = false;
+  var authModalPhase = 'login'; // 'login' | 'register' | 'forgot'
   var coins = 0;
   var ownedSkins = ['cyan'];
   var selectedSkin = 'cyan';
@@ -161,6 +164,27 @@
     userChip: document.getElementById('user-chip'),
     userChipName: document.getElementById('user-chip-name'),
     logoutLink: document.getElementById('logout-link'),
+    loginBtn: document.getElementById('login-btn'),
+    authModal: document.getElementById('auth-modal'),
+    authModalTitle: document.getElementById('auth-modal-title'),
+    authClose: document.getElementById('auth-close'),
+    amGoogleSlot: document.getElementById('am-google-slot'),
+    amLoginForm: document.getElementById('am-login-form'),
+    amUser: document.getElementById('am-user'),
+    amPass: document.getElementById('am-pass'),
+    amLoginError: document.getElementById('am-login-error'),
+    amRegisterForm: document.getElementById('am-register-form'),
+    amRegUsername: document.getElementById('am-reg-username'),
+    amRegEmail: document.getElementById('am-reg-email'),
+    amRegPassword: document.getElementById('am-reg-password'),
+    amRegisterError: document.getElementById('am-register-error'),
+    amForgotForm: document.getElementById('am-forgot-form'),
+    amForgotEmail: document.getElementById('am-forgot-email'),
+    amForgotError: document.getElementById('am-forgot-error'),
+    amForgotSent: document.getElementById('am-forgot-sent'),
+    amShowRegister: document.getElementById('am-show-register'),
+    amShowForgot: document.getElementById('am-show-forgot'),
+    amShowLogin: document.getElementById('am-show-login'),
     newhighScreen: document.getElementById('newhigh-screen'),
     newhighMode: document.getElementById('newhigh-mode'),
     newhighScore: document.getElementById('newhigh-score'),
@@ -374,6 +398,44 @@
     highlightModeStrip();
   }
 
+  // --- Login / create-account modal --------------------------------------
+
+  function hasAccountHistory() {
+    try {
+      return localStorage.getItem(HAS_ACCOUNT_KEY) === '1';
+    } catch (err) {
+      return true; // storage unavailable — default to the shorter label
+    }
+  }
+
+  function setAuthModalPhase(phase) {
+    authModalPhase = phase;
+    show(el.amLoginForm, phase === 'login');
+    show(el.amRegisterForm, phase === 'register');
+    show(el.amForgotForm, phase === 'forgot');
+    show(el.amShowRegister, phase === 'login');
+    show(el.amShowForgot, phase === 'login');
+    show(el.amShowLogin, phase !== 'login');
+    el.authModalTitle.textContent = phase === 'register' ? 'JOIN THE FLEET' : 'PILOT LOGIN';
+  }
+
+  function openAuthModal() {
+    isAuthOpen = true;
+    setFormError(el.amLoginError, '');
+    setFormError(el.amRegisterError, '');
+    setFormError(el.amForgotError, '');
+    show(el.amForgotSent, false);
+    // First-timers land on account creation; returning pilots on login.
+    setAuthModalPhase(hasAccountHistory() ? 'login' : 'register');
+    window.NeonAuth.renderGoogleButton(el.amGoogleSlot);
+    render();
+  }
+
+  function closeAuthModal() {
+    isAuthOpen = false;
+    render();
+  }
+
   // Merge the server's per-mode bests into the local records (new-device sync).
   function syncServerBests(user) {
     if (!user || !user.bestScores) return;
@@ -550,6 +612,13 @@
     var user = window.NeonAuth ? window.NeonAuth.state.user : null;
     show(el.userChip, !!user && !playing);
     if (user) el.userChipName.textContent = user.username;
+
+    // Logged out: corner button offers login — or account creation for
+    // browsers that have never logged in. (Hidden during play and on the
+    // celebration screen, which has its own login flow.)
+    show(el.loginBtn, !user && !playing && gameState !== 'NEWHIGH');
+    el.loginBtn.textContent = hasAccountHistory() ? 'LOG IN' : 'CREATE AN ACCOUNT';
+    show(el.authModal, isAuthOpen);
 
     Object.keys(el.newhighPhases).forEach(function (key) {
       show(el.newhighPhases[key], gameState === 'NEWHIGH' && key === newhighPhase);
@@ -1076,6 +1145,10 @@
 
     auth.onAuthChange(function (user) {
       if (user) {
+        try {
+          localStorage.setItem(HAS_ACCOUNT_KEY, '1');
+        } catch (err) { /* storage unavailable */ }
+        if (isAuthOpen) isAuthOpen = false; // logged in — the modal's job is done
         syncServerBests(user);
         if (gameState === 'NEWHIGH' && pendingScore != null) {
           submitPendingScore();
@@ -1088,6 +1161,9 @@
       if (gameState === 'NEWHIGH' && newhighPhase === 'offer') {
         auth.renderGoogleButton(el.googleBtnSlot);
       }
+      if (isAuthOpen) {
+        auth.renderGoogleButton(el.amGoogleSlot);
+      }
     };
     auth.onGoogleError = function (err) {
       setNewhighPhase('offer');
@@ -1096,6 +1172,41 @@
 
     el.logoutLink.addEventListener('click', function () {
       auth.logout().catch(function () { /* stale session — chip clears on next load */ });
+    });
+
+    el.loginBtn.addEventListener('click', openAuthModal);
+    el.authClose.addEventListener('click', closeAuthModal);
+    el.amShowRegister.addEventListener('click', function () { setAuthModalPhase('register'); });
+    el.amShowForgot.addEventListener('click', function () { setAuthModalPhase('forgot'); });
+    el.amShowLogin.addEventListener('click', function () { setAuthModalPhase('login'); });
+
+    el.amLoginForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      setFormError(el.amLoginError, '');
+      auth.login(el.amUser.value.trim(), el.amPass.value).catch(function (err) {
+        setFormError(el.amLoginError, err.message);
+      });
+    });
+
+    el.amRegisterForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      setFormError(el.amRegisterError, '');
+      auth.register(el.amRegUsername.value.trim(), el.amRegEmail.value.trim(), el.amRegPassword.value)
+        .catch(function (err) {
+          setFormError(el.amRegisterError, err.message);
+        });
+    });
+
+    el.amForgotForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      setFormError(el.amForgotError, '');
+      show(el.amForgotSent, false);
+      auth.requestReset(el.amForgotEmail.value.trim()).then(function (data) {
+        el.amForgotSent.textContent = data.message;
+        show(el.amForgotSent, true);
+      }).catch(function (err) {
+        setFormError(el.amForgotError, err.message);
+      });
     });
 
     el.showRegister.addEventListener('click', function () { setNewhighPhase('register'); });
@@ -1207,6 +1318,7 @@
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
       if (isSettingsOpen) closeSettings();
+      else if (isAuthOpen) closeAuthModal();
       else if (isLeaderboardOpen) { isLeaderboardOpen = false; render(); }
       else if (isSkinsOpen) { isSkinsOpen = false; render(); }
       else if (isResetOpen) { isResetOpen = false; render(); }

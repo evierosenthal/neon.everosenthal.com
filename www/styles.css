@@ -1876,6 +1876,21 @@ body {
   color: var(--rose-400);
 }
 
+.login-btn {
+  cursor: pointer;
+  color: var(--cyan-400);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.login-btn:hover {
+  background: rgba(6, 182, 212, 0.18);
+  color: #67e8f9;
+}
+
 .btn-ghost-cyan {
   background: rgba(6, 182, 212, 0.15);
   color: var(--cyan-400);
