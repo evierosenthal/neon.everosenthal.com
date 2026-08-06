@@ -23,7 +23,7 @@ try {
     $db = db();
     $stmt = $db->prepare(
         'SELECT pr.id AS reset_id, pr.expires_at, pr.used_at,
-                u.id, u.username, u.email, u.password_hash, u.google_sub
+                u.id, u.username, u.email, u.password_hash, u.google_sub, u.role
          FROM password_resets pr JOIN users u ON u.id = pr.user_id
          WHERE pr.token_hash = ?'
     );

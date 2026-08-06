@@ -37,7 +37,7 @@ try {
     $stmt = $db->prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)');
     $stmt->execute([$username, $email, password_hash($password, PASSWORD_DEFAULT)]);
 
-    $stmt = $db->prepare('SELECT id, username, email, password_hash, google_sub FROM users WHERE id = ?');
+    $stmt = $db->prepare('SELECT id, username, email, password_hash, google_sub, role FROM users WHERE id = ?');
     $stmt->execute([(int)$db->lastInsertId()]);
     $user = $stmt->fetch();
 } catch (PDOException $e) {

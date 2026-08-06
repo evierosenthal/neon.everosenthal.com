@@ -65,7 +65,7 @@
 
       <!-- Logged-in Pilot Chip (top right) -->
       <div id="user-chip" class="user-chip hidden">
-        <span class="user-chip-label">Pilot</span>
+        <span id="user-chip-role" class="user-chip-label">Pilot</span>
         <span id="user-chip-name" class="user-chip-name"></span>
         <button id="logout-link" class="user-chip-logout">Logout</button>
       </div>
@@ -480,6 +480,16 @@
           <div class="settings-section">
             <label class="settings-label">Player 1 Input Controls</label>
             <div id="control-options" class="control-options"></div>
+          </div>
+
+          <div id="dev-console" class="settings-section hidden">
+            <label class="settings-label">Developer Accounts</label>
+            <div class="dev-console-row">
+              <input type="text" id="dev-username" class="text-input" placeholder="Pilot username" />
+              <button id="dev-make" class="btn btn-cyan btn-sm">MAKE DEV</button>
+              <button id="dev-remove" class="btn btn-muted btn-sm">REMOVE</button>
+            </div>
+            <p id="dev-console-msg" class="auth-error hidden"></p>
           </div>
 
           <div class="settings-section">

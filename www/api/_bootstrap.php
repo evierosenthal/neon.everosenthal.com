@@ -87,7 +87,7 @@ function current_user(): ?array
     if (empty($_SESSION['user_id'])) {
         return null;
     }
-    $stmt = db()->prepare('SELECT id, username, email, password_hash, google_sub FROM users WHERE id = ?');
+    $stmt = db()->prepare('SELECT id, username, email, password_hash, google_sub, role FROM users WHERE id = ?');
     $stmt->execute([(int)$_SESSION['user_id']]);
     $user = $stmt->fetch();
     if (!$user) {
@@ -108,6 +108,17 @@ function require_user(): array
 
 function user_payload(array $user): array
 {
+    // Configured lead developers get their role on any login, so the very
+    // first sign-in with a listed email is already a lead account.
+    $leads = defined('LEAD_DEVELOPER_EMAILS') ? LEAD_DEVELOPER_EMAILS : [];
+    $role = $user['role'] ?? 'normal';
+    if ($role !== 'lead_developer'
+        && in_array(strtolower($user['email']), array_map('strtolower', $leads), true)) {
+        db()->prepare("UPDATE users SET role = 'lead_developer' WHERE id = ?")
+            ->execute([(int)$user['id']]);
+        $role = 'lead_developer';
+    }
+
     $bests = array_fill_keys(GAME_MODES, 0);
     $stmt = db()->prepare('SELECT mode, best_score FROM scores WHERE user_id = ?');
     $stmt->execute([(int)$user['id']]);
@@ -117,6 +128,7 @@ function user_payload(array $user): array
     return [
         'id' => (int)$user['id'],
         'username' => $user['username'],
+        'role' => $role,
         'bestScores' => $bests,
     ];
 }

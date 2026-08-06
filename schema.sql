@@ -8,6 +8,7 @@ CREATE TABLE users (
   email         VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NULL,             -- NULL for Google-only accounts
   google_sub    VARCHAR(64)  NULL UNIQUE,      -- Apple later: add apple_sub the same way
+  role          ENUM('normal','developer','lead_developer') NOT NULL DEFAULT 'normal',
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

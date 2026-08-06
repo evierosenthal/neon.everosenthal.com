@@ -7,6 +7,9 @@ define('GOOGLE_CLIENT_ID', '48815681108-3tt7h00u6lf3gvcdge4kfr0ugip8uh9t.apps.go
 
 define('APP_BASE_URL', 'https://neon.everosenthal.com');
 
+// These emails are granted the lead_developer role automatically at login.
+define('LEAD_DEVELOPER_EMAILS', ['eve.esther.rosenthal@gmail.com']);
+
 define('MAIL_SUBJECT_PREFIX', 'Neon Nebula');
 
 // Score submission sanity limits.

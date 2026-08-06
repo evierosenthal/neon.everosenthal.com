@@ -162,7 +162,13 @@
     pauseResume: document.getElementById('pause-resume'),
     pauseHome: document.getElementById('pause-home'),
     userChip: document.getElementById('user-chip'),
+    userChipRole: document.getElementById('user-chip-role'),
     userChipName: document.getElementById('user-chip-name'),
+    devConsole: document.getElementById('dev-console'),
+    devUsername: document.getElementById('dev-username'),
+    devMake: document.getElementById('dev-make'),
+    devRemove: document.getElementById('dev-remove'),
+    devConsoleMsg: document.getElementById('dev-console-msg'),
     logoutLink: document.getElementById('logout-link'),
     loginBtn: document.getElementById('login-btn'),
     authModal: document.getElementById('auth-modal'),
@@ -611,7 +617,12 @@
 
     var user = window.NeonAuth ? window.NeonAuth.state.user : null;
     show(el.userChip, !!user && !playing);
-    if (user) el.userChipName.textContent = user.username;
+    if (user) {
+      el.userChipName.textContent = user.username;
+      el.userChipRole.textContent = user.role === 'lead_developer' ? 'Lead Dev'
+        : (user.role === 'developer' ? 'Dev' : 'Pilot');
+    }
+    show(el.devConsole, !!user && user.role === 'lead_developer');
 
     // Logged out: corner button offers login — or account creation for
     // browsers that have never logged in. (Hidden during play and on the
@@ -934,6 +945,12 @@
 
   // --- Skins shop --------------------------------------------------------
 
+  // Developers (and the lead developer) get every unlockable for free.
+  function isDeveloper() {
+    var user = window.NeonAuth ? window.NeonAuth.state.user : null;
+    return !!user && (user.role === 'developer' || user.role === 'lead_developer');
+  }
+
   function getSkin(id) {
     for (var i = 0; i < SKINS.length; i++) {
       if (SKINS[i].id === id) return SKINS[i];
@@ -975,13 +992,16 @@
     el.skinsGrid.innerHTML = '';
     SKINS.forEach(function (skin) {
       var owned = ownedSkins.indexOf(skin.id) !== -1;
+      var devFree = !owned && isDeveloper();
       var card = document.createElement('button');
-      card.className = 'skin-card' + (selectedSkin === skin.id ? ' selected' : (owned ? '' : ' locked'));
+      card.className = 'skin-card' + (selectedSkin === skin.id ? ' selected' : (owned || devFree ? '' : ' locked'));
+      var status;
+      if (selectedSkin === skin.id) status = '<span class="skin-status">EQUIPPED</span>';
+      else if (owned) status = '<span class="skin-status">TAP TO EQUIP</span>';
+      else if (devFree) status = '<span class="skin-status">FREE — DEV</span>';
+      else status = '<span class="skin-status price">' + formatNumber(skin.price) + '</span>';
       card.innerHTML = skinSvg(skin) +
-        '<span class="skin-name">' + skin.name + '</span>' +
-        (owned
-          ? '<span class="skin-status">' + (selectedSkin === skin.id ? 'EQUIPPED' : 'TAP TO EQUIP') + '</span>'
-          : '<span class="skin-status price">' + formatNumber(skin.price) + '</span>');
+        '<span class="skin-name">' + skin.name + '</span>' + status;
       card.addEventListener('click', function () { handleSkinClick(skin); });
       el.skinsGrid.appendChild(card);
     });
@@ -989,7 +1009,7 @@
 
   function handleSkinClick(skin) {
     setFormError(el.skinsError, '');
-    if (ownedSkins.indexOf(skin.id) === -1) {
+    if (ownedSkins.indexOf(skin.id) === -1 && !isDeveloper()) {
       if (coins < skin.price) {
         setFormError(el.skinsError,
           'Not enough coins — fly more missions! You need ' + formatNumber(skin.price - coins) + ' more.');
@@ -1153,9 +1173,34 @@
         if (gameState === 'NEWHIGH' && pendingScore != null) {
           submitPendingScore();
         }
+      } else if (ownedSkins.indexOf(selectedSkin) === -1) {
+        // Logged out while wearing a dev-only skin — back to something owned.
+        selectedSkin = 'cyan';
+        saveWallet();
       }
       render();
     });
+
+    function devConsoleSet(role) {
+      var name = el.devUsername.value.trim();
+      el.devConsoleMsg.className = 'auth-error';
+      setFormError(el.devConsoleMsg, '');
+      if (!name) {
+        setFormError(el.devConsoleMsg, 'Enter a pilot username first.');
+        return;
+      }
+      auth.setRole(name, role).then(function (data) {
+        el.devConsoleMsg.className = 'auth-success';
+        el.devConsoleMsg.textContent = data.username + ' is now a ' +
+          (data.role === 'developer' ? 'developer' : 'normal account') + '.';
+        show(el.devConsoleMsg, true);
+      }).catch(function (err) {
+        el.devConsoleMsg.className = 'auth-error';
+        setFormError(el.devConsoleMsg, err.message);
+      });
+    }
+    el.devMake.addEventListener('click', function () { devConsoleSet('developer'); });
+    el.devRemove.addEventListener('click', function () { devConsoleSet('normal'); });
 
     auth.onGoogleReady = function () {
       if (gameState === 'NEWHIGH' && newhighPhase === 'offer') {

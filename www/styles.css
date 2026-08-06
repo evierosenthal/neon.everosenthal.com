@@ -2118,6 +2118,29 @@ body {
   justify-content: flex-end;
 }
 
+/* --- Lead developer console --- */
+
+.dev-console-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dev-console-row .text-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.dev-console-row .btn {
+  flex: none;
+  white-space: nowrap;
+}
+
+.dev-console-row + .auth-error,
+.dev-console-row + .auth-success {
+  margin-top: 0.5rem;
+  text-align: left;
+}
+
 /* --- Rocket speed slider --- */
 
 .speed-value {

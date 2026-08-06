@@ -166,6 +166,10 @@
       return post('request-reset.php', { email: email });
     },
 
+    setRole: function (username, role) {
+      return post('set-role.php', { username: username, role: role });
+    },
+
     resetPassword: function (token, newPassword) {
       return post('reset-password.php', { token: token, newPassword: newPassword })
         .then(function (data) {
