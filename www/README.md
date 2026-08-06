@@ -42,7 +42,7 @@ Sound effects (from [Pixabay](https://pixabay.com/)):
 
 ## Modes
 
-- **Easy / Medium / Hard / Super Hard** — solo, initial difficulty `0.3 / 0.77 / 1.3 / 6.0`
+- **Easy / Medium / Hard / Super Hard** — solo, initial difficulty `0.3 / 0.74 / 1.3 / 6.0`
 - **Two Player Mode** — local co-op on one keyboard, shared score and hull
 - **CPU Co-Pilot Mode** — an AI wingman that dodges hazards and harvests pickups
 
