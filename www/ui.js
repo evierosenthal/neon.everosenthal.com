@@ -67,7 +67,7 @@
 
   var DIFFICULTIES = [
     { label: 'EASY MODE', value: 0.3, className: 'btn btn-emerald' },
-    { label: 'MEDIUM MODE', value: 0.74, className: 'btn btn-indigo btn-medium' },
+    { label: 'MEDIUM MODE', value: 0.62, className: 'btn btn-indigo btn-medium' },
     { label: 'HARD MODE', value: 1.3, className: 'btn btn-rose' },
     { label: 'SUPER HARD', value: 6.0, className: 'btn btn-super', zap: true }
   ];
