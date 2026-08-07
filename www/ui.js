@@ -1211,8 +1211,16 @@
       }
     };
     auth.onGoogleError = function (err) {
-      setNewhighPhase('offer');
-      setFormError(el.loginError, err.message);
+      // Surface the failure wherever the user actually is: the auth modal's
+      // error slot, or the game-over login form. Previously modal-initiated
+      // Google failures were written only to the (hidden) game-over slot.
+      if (window.console && console.error) console.error('Google sign-in failed:', err);
+      if (isAuthOpen) {
+        setFormError(el.amLoginError, err.message);
+      } else {
+        setNewhighPhase('offer');
+        setFormError(el.loginError, err.message);
+      }
     };
 
     el.logoutLink.addEventListener('click', function () {

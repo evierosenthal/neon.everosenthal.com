@@ -46,6 +46,8 @@ if ($user) {
     } catch (PDOException $e) {
         error_log('request-reset.php db error: ' . $e->getMessage());
     }
+} else {
+    neon_log('email', "password reset requested for <$email> but no password account matches — no email sent");
 }
 
 json_out($genericResponse);

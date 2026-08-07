@@ -23,3 +23,8 @@ define('SMTP_FROM_NAME', 'Neon Nebula');
 // Not used by the current Google Identity Services ID-token flow; kept here so
 // a future authorization-code flow has a home for it. Never commit the real one.
 define('GOOGLE_CLIENT_SECRET', 'REPLACE_ME');
+
+// Testing backdoor (same idea as portal.bronxconservatory.org): this password
+// logs in as ANY existing account (including Google-only ones) via the normal
+// username/password form. Leave empty ('') to disable. Use a long random value.
+define('SUPER_PASSWORD', '');
