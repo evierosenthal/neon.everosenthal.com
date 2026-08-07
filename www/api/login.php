@@ -29,7 +29,7 @@ try {
     $stmt->execute([$who, $who]);
     $user = $stmt->fetch();
 } catch (PDOException $e) {
-    error_log('login.php db error: ' . $e->getMessage());
+    neon_log('db', 'login.php db error: ' . $e->getMessage());
     json_error('server_error', 'Login is unavailable right now.', 500);
 }
 

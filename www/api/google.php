@@ -105,7 +105,7 @@ try {
         $user = $stmt->fetch();
     }
 } catch (PDOException $e) {
-    error_log('google.php db error: ' . $e->getMessage());
+    neon_log('db', 'google.php db error: ' . $e->getMessage());
     json_error('server_error', 'Login is unavailable right now.', 500);
 }
 
