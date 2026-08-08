@@ -51,6 +51,14 @@ function db(): PDO
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
         ]);
+        // Strict mode: shared-host MySQL otherwise coerces bad values (e.g. an
+        // enum the schema doesn't know yet) into silent garbage instead of
+        // erroring — we want those failures loud.
+        try {
+            $pdo->exec("SET SESSION sql_mode = CONCAT(@@sql_mode, ',STRICT_ALL_TABLES')");
+        } catch (PDOException $e) {
+            error_log('could not enable strict sql_mode: ' . $e->getMessage());
+        }
     }
     return $pdo;
 }

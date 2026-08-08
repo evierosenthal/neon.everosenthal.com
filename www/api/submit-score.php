@@ -39,6 +39,16 @@ try {
             'INSERT INTO scores (user_id, mode, best_score, best_score_at) VALUES (?, ?, ?, NOW())
              ON DUPLICATE KEY UPDATE best_score = VALUES(best_score), best_score_at = NOW()'
         )->execute([(int)$user['id'], $mode, $score]);
+
+        // Belt & suspenders: confirm the row exists under the requested mode.
+        // If the scores.mode enum predates this mode, non-strict MySQL saves
+        // a blank mode instead of failing — surface that loudly.
+        $stmt = $db->prepare('SELECT COUNT(*) FROM scores WHERE user_id = ? AND mode = ?');
+        $stmt->execute([(int)$user['id'], $mode]);
+        if ((int)$stmt->fetchColumn() === 0) {
+            neon_log('db', "score write for mode '$mode' vanished — scores.mode enum out of date; run db_migrations/03_two_player_modes.sql");
+            json_error('server_error', 'This game mode is not enabled on the server yet.', 500);
+        }
     }
     $_SESSION['last_score_submit'] = time();
 

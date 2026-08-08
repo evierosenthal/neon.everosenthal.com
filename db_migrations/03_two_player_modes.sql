@@ -5,6 +5,10 @@
 -- installation that is already current (including one created fresh from
 -- schema.sql) and safe to re-run.
 
+-- Rows written before this migration on a non-strict server were coerced to a
+-- blank mode and are unusable — clear them first so the ALTER can't complain.
+DELETE FROM scores WHERE mode = '';
+
 SET @sql := (SELECT IF(
   (SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = DATABASE() AND table_name = 'scores'
