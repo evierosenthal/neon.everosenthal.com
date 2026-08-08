@@ -451,10 +451,29 @@
     });
   }
 
+  // Roll a stat tile's number toward its new value instead of snapping.
+  function animateStat(node, target) {
+    var current = parseInt(node.getAttribute('data-val') || '0', 10);
+    if (current === target) {
+      node.textContent = formatNumber(target);
+      return;
+    }
+    node.setAttribute('data-val', target);
+    var start = null;
+    function step(ts) {
+      if (!start) start = ts;
+      var t = Math.min(1, (ts - start) / 600);
+      var eased = 1 - Math.pow(1 - t, 3);
+      node.textContent = formatNumber(Math.round(current + (target - current) * eased));
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
   function refreshHomeStats() {
     var best = Math.max(highScores.easy, highScores.medium, highScores.hard, highScores.super);
-    el.homeBest.textContent = formatNumber(best);
-    el.homeCoins.textContent = formatNumber(coins);
+    animateStat(el.homeBest, best);
+    animateStat(el.homeCoins, coins);
     var user = window.NeonAuth ? window.NeonAuth.state.user : null;
     el.homePilot.textContent = user ? user.username : 'GUEST';
 
