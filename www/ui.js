@@ -59,6 +59,8 @@
     { id: 'stealth', name: 'Stealth Ops', price: 2000, accent: '#64748b',
       hull: ['#0f172a', '#334155', '#1e293b', '#020617'],
       window: ['#fecaca', '#ef4444', '#450a0a'] },
+    { id: 'aurora', name: 'Aurora Prism', price: 2500, accent: '#a855f7',
+      accentGradient: ['#f472b6', '#a855f7', '#22d3ee'] },
     { id: 'galaxy', name: 'Galaxy Prism', price: 3000, accent: '#22d3ee', animated: true }
   ];
 
@@ -1000,11 +1002,12 @@
   function skinSvg(skin) {
     var hull = skin.hull || ['#94a3b8', '#f1f5f9', '#e2e8f0', '#64748b'];
     var win = (skin.window || ['#e0f2fe', '#67e8f9', '#0e7490'])[1];
-    var accent = skin.animated ? 'url(#prism-' + skin.id + ')' : skin.accent;
-    var defs = skin.animated
+    var gradStops = skin.accentGradient || (skin.animated ? ['#f472b6', '#a855f7', '#22d3ee'] : null);
+    var accent = gradStops ? 'url(#prism-' + skin.id + ')' : skin.accent;
+    var defs = gradStops
       ? '<defs><linearGradient id="prism-' + skin.id + '" x1="0" y1="0" x2="0" y2="1">' +
-        '<stop offset="0" stop-color="#f472b6"/><stop offset="0.5" stop-color="#a855f7"/>' +
-        '<stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>'
+        '<stop offset="0" stop-color="' + gradStops[0] + '"/><stop offset="0.5" stop-color="' + gradStops[1] + '"/>' +
+        '<stop offset="1" stop-color="' + gradStops[2] + '"/></linearGradient></defs>'
       : '';
     return '<svg viewBox="0 0 40 64">' + defs +
       '<path d="M12 34 L3 52 L13 48 Z" fill="' + accent + '"/>' +
