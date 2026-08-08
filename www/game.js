@@ -1556,15 +1556,27 @@
         if (skin && skin.animated) {
           accent = 'hsl(' + Math.floor((Date.now() / 15) % 360) + ', 85%, 65%)';
         }
-        // Gradient accents (nose-to-tail) — the "looks like the hangar card" look
-        var accentFill = accent;
+        // Gradient accents, applied per part (fins / nose / stripe each get the
+        // full color run) — exactly how the hangar card's SVG paints them.
+        var finFill = accent;
+        var noseFill = accent;
+        var stripeFill = accent;
         if (skin && skin.accentGradient) {
-          var ag = ctx.createLinearGradient(0, -p.radius * 1.6, 0, p.radius * 1.2);
-          ag.addColorStop(0, skin.accentGradient[0]);
-          ag.addColorStop(0.5, skin.accentGradient[1]);
-          ag.addColorStop(1, skin.accentGradient[2]);
-          accentFill = ag;
+          var mkAccentGrad = function (y0, y1) {
+            var g = ctx.createLinearGradient(0, y0, 0, y1);
+            g.addColorStop(0, skin.accentGradient[0]);
+            g.addColorStop(0.5, skin.accentGradient[1]);
+            g.addColorStop(1, skin.accentGradient[2]);
+            return g;
+          };
+          finFill = mkAccentGrad(p.radius * 0.15, p.radius * 1.05);
+          noseFill = mkAccentGrad(-p.radius * 1.6, -p.radius * 0.72);
+          stripeFill = mkAccentGrad(p.radius * 0.45, p.radius * 0.63);
           accent = skin.accentGradient[1]; // glows stay a solid mid-tone
+        } else {
+          finFill = accent;
+          noseFill = accent;
+          stripeFill = accent;
         }
         var hullStops = (skin && skin.hull) || ['#94a3b8', '#f1f5f9', '#e2e8f0', '#64748b'];
         var winStops = (skin && skin.window) || ['#e0f2fe', '#67e8f9', '#0e7490'];
@@ -1612,7 +1624,7 @@
         ctx.lineTo(R * 1.15, R * 1.05);
         ctx.lineTo(R * 0.55, R * 0.95);
         ctx.closePath();
-        ctx.fillStyle = accentFill;
+        ctx.fillStyle = finFill;
         ctx.shadowBlur = 12;
         ctx.shadowColor = accent;
         ctx.fill();
@@ -1650,11 +1662,11 @@
         ctx.quadraticCurveTo(R * 0.55, -R * 1.32, R * 0.58, -R * 0.72);
         ctx.quadraticCurveTo(0, -R * 0.92, -R * 0.58, -R * 0.72);
         ctx.closePath();
-        ctx.fillStyle = accentFill;
+        ctx.fillStyle = noseFill;
         ctx.fill();
 
         // Body stripe in the player color
-        ctx.fillStyle = accentFill;
+        ctx.fillStyle = stripeFill;
         ctx.fillRect(-R * 0.62, R * 0.45, R * 1.24, R * 0.18);
 
         // --- Porthole window ---
