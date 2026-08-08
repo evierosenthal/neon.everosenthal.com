@@ -1776,6 +1776,37 @@ body {
   color: var(--cyan-400);
 }
 
+.lb-section-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  color: var(--indigo-300);
+}
+
+.lb-section-head .icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.lb-level {
+  flex: none;
+  font-size: 0.5625rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  color: var(--indigo-300);
+}
+
 .lb-empty {
   color: var(--slate-500);
   font-size: 0.8125rem;

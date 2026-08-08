@@ -94,7 +94,8 @@ function require_post_with_csrf(): void
     }
 }
 
-const GAME_MODES = ['easy', 'medium', 'hard', 'super'];
+// Solo tiers plus their two-player counterparts (tracked separately).
+const GAME_MODES = ['easy', 'medium', 'hard', 'super', '2p_easy', '2p_medium', '2p_hard', '2p_super'];
 
 function current_user(): ?array
 {

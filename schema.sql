@@ -15,7 +15,7 @@ CREATE TABLE users (
 -- One best score per user per difficulty mode.
 CREATE TABLE scores (
   user_id       INT UNSIGNED NOT NULL,
-  mode          ENUM('easy','medium','hard','super') NOT NULL,
+  mode          ENUM('easy','medium','hard','super','2p_easy','2p_medium','2p_hard','2p_super') NOT NULL,
   best_score    INT UNSIGNED NOT NULL DEFAULT 0,
   best_score_at DATETIME     NULL,             -- tiebreak: earlier score wins
   PRIMARY KEY (user_id, mode),

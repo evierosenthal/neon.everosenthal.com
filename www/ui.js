@@ -14,13 +14,26 @@
   var SPEED_KEY = 'neon_nebula_speed'; // rocket speed percent, 1-300
   var HAS_ACCOUNT_KEY = 'neon_nebula_has_account'; // set after any successful login
 
-  var MODES = ['easy', 'medium', 'hard', 'super'];
+  // Solo and two-player records are tracked separately: a two-player run
+  // records under '2p_<tier>' instead of '<tier>'.
+  var SOLO_MODES = ['easy', 'medium', 'hard', 'super'];
+  var DUO_MODES = ['2p_easy', '2p_medium', '2p_hard', '2p_super'];
+  var MODES = SOLO_MODES.concat(DUO_MODES);
   var MODE_LABELS = {
     easy: 'EASY MODE',
     medium: 'MEDIUM MODE',
     hard: 'HARD MODE',
-    super: 'SUPER HARD MODE'
+    super: 'SUPER HARD MODE',
+    '2p_easy': 'TWO PLAYER — EASY',
+    '2p_medium': 'TWO PLAYER — MEDIUM',
+    '2p_hard': 'TWO PLAYER — HARD',
+    '2p_super': 'TWO PLAYER — SUPER HARD'
   };
+  var TIER_LABELS = { easy: 'EASY', medium: 'MEDIUM', hard: 'HARD', super: 'SUPER' };
+
+  function tierOf(mode) {
+    return mode.indexOf('2p_') === 0 ? mode.slice(3) : mode;
+  }
 
   // --- Rocket skins & coin economy --------------------------------------
   // Coins: score / 50 per mission, times 5 on a new high score.
@@ -115,7 +128,8 @@
   var isLocalMultiplayer = false;
   var isCPUMultiplayer = false;
   var score = 0;
-  var highScores = { easy: 0, medium: 0, hard: 0, super: 0 };
+  var highScores = {};
+  MODES.forEach(function (m) { highScores[m] = 0; });
   var currentMode = 'easy';
   var health = 100;
   var isPaused = false;
@@ -229,6 +243,7 @@
     newhighRestart: document.getElementById('newhigh-restart'),
     leaderboardModal: document.getElementById('leaderboard-modal'),
     leaderboardList: document.getElementById('leaderboard-list'),
+    leaderboard2pList: document.getElementById('leaderboard-2p-list'),
     leaderboardClose: document.getElementById('leaderboard-close'),
     seeHighscores: document.getElementById('see-highscores'),
     startStars: document.getElementById('start-stars'),
@@ -378,7 +393,8 @@
 
   function buildModeStrip() {
     var base = ['easy', 'medium', 'hard'];
-    var tiers = currentMode === 'super' ? ['super'] : base.slice(base.indexOf(currentMode));
+    var tier = tierOf(currentMode);
+    var tiers = tier === 'super' ? ['super'] : base.slice(base.indexOf(tier));
     el.hudModes.innerHTML = '';
     tiers.forEach(function (tier) {
       var span = document.createElement('span');
@@ -387,7 +403,7 @@
       span.textContent = tier === 'super' ? 'Super Hard' : tier;
       el.hudModes.appendChild(span);
     });
-    liveTier = currentMode;
+    liveTier = tier;
     highlightModeStrip();
   }
 
@@ -399,7 +415,7 @@
   }
 
   function handleDifficultyUpdate(diff) {
-    if (currentMode === 'super') return; // super runs keep their single lit tile
+    if (tierOf(currentMode) === 'super') return; // super runs keep their single lit tile
     var tier = modeFromDifficulty(diff);
     if (tier === liveTier) return;
     liveTier = tier;
@@ -473,7 +489,8 @@
   }
 
   function refreshHomeStats() {
-    var best = Math.max(highScores.easy, highScores.medium, highScores.hard, highScores.super);
+    var best = 0;
+    MODES.forEach(function (m) { best = Math.max(best, highScores[m]); });
     animateStat(el.homeBest, best);
     animateStat(el.homeCoins, coins);
     var user = window.NeonAuth ? window.NeonAuth.state.user : null;
@@ -1065,17 +1082,64 @@
     if (leaderboards) buildLeaderboardList(el.leaderboardList, leaderboards[leaderboardTab]);
   }
 
+  // Merge the four two-player boards into one list, best first, each row
+  // labeled with its level.
+  function render2pSection() {
+    var rows = [];
+    DUO_MODES.forEach(function (mode) {
+      (leaderboards && leaderboards[mode] ? leaderboards[mode] : []).forEach(function (row) {
+        rows.push({ username: row.username, score: row.score, level: TIER_LABELS[tierOf(mode)] });
+      });
+    });
+    rows.sort(function (a, b) { return b.score - a.score; });
+    rows = rows.slice(0, 10);
+
+    var user = window.NeonAuth ? window.NeonAuth.state.user : null;
+    el.leaderboard2pList.innerHTML = '';
+    if (!rows.length) {
+      var empty = document.createElement('div');
+      empty.className = 'lb-empty';
+      empty.textContent = 'No two-player scores yet — grab a co-pilot!';
+      el.leaderboard2pList.appendChild(empty);
+      return;
+    }
+    rows.forEach(function (row, i) {
+      var div = document.createElement('div');
+      div.className = 'lb-row' + (user && user.username === row.username ? ' lb-me' : '');
+      var rank = document.createElement('span');
+      rank.className = 'lb-rank';
+      rank.textContent = '#' + (i + 1);
+      var name = document.createElement('span');
+      name.className = 'lb-name';
+      name.textContent = row.username;
+      var level = document.createElement('span');
+      level.className = 'lb-level';
+      level.textContent = row.level;
+      var scoreEl = document.createElement('span');
+      scoreEl.className = 'lb-score';
+      scoreEl.textContent = formatNumber(row.score);
+      div.appendChild(rank);
+      div.appendChild(name);
+      div.appendChild(level);
+      div.appendChild(scoreEl);
+      el.leaderboard2pList.appendChild(div);
+    });
+  }
+
   function openLeaderboard() {
     isLeaderboardOpen = true;
-    leaderboardTab = currentMode;
+    leaderboardTab = tierOf(currentMode); // tabs cover the solo tiers
     el.leaderboardList.innerHTML = '<div class="lb-empty">Contacting command&hellip;</div>';
+    el.leaderboard2pList.innerHTML = '<div class="lb-empty">Contacting command&hellip;</div>';
     render();
     renderLeaderboardTab();
     window.NeonAuth.getLeaderboards().then(function (boards) {
       leaderboards = boards;
       renderLeaderboardTab();
+      render2pSection();
     }).catch(function () {
       el.leaderboardList.innerHTML = '<div class="lb-empty">COMMS OFFLINE — leaderboard unavailable.</div>';
+      el.leaderboard2pList.innerHTML = '<div class="lb-empty">COMMS OFFLINE.</div>';
     });
   }
 
@@ -1083,7 +1147,7 @@
     setScore(0);
     setHealth(100);
     difficulty = diff;
-    currentMode = modeFromDifficulty(diff);
+    currentMode = (localMultiplayer ? '2p_' : '') + modeFromDifficulty(diff);
     refreshHighScoreDisplays();
     buildModeStrip();
     try {
