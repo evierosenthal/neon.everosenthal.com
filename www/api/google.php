@@ -26,16 +26,26 @@ curl_close($ch);
 
 $claims = $response !== false ? json_decode($response, true) : null;
 if ($httpCode !== 200 || !is_array($claims)) {
+    neon_log('google', "tokeninfo call failed: http $httpCode, body: " . substr((string)$response, 0, 300));
     json_error('google_failed', 'Google sign-in could not be verified — try again.', 502);
 }
 
-$validIss = in_array($claims['iss'] ?? '', ['https://accounts.google.com', 'accounts.google.com'], true);
-if (!$validIss
-    || ($claims['aud'] ?? '') !== GOOGLE_CLIENT_ID
-    || (int)($claims['exp'] ?? 0) < time()
-    || ($claims['email_verified'] ?? '') !== 'true' // required: email-linking below is only safe with a verified email
-    || empty($claims['sub'])
-    || empty($claims['email'])) {
+// Check each claim separately so the log says exactly why a login was rejected.
+$reject = '';
+if (!in_array($claims['iss'] ?? '', ['https://accounts.google.com', 'accounts.google.com'], true)) {
+    $reject = 'bad iss: ' . ($claims['iss'] ?? '(missing)');
+} elseif (($claims['aud'] ?? '') !== GOOGLE_CLIENT_ID) {
+    $reject = 'aud mismatch: token is for ' . ($claims['aud'] ?? '(missing)') . ', expected ' . GOOGLE_CLIENT_ID;
+} elseif ((int)($claims['exp'] ?? 0) < time()) {
+    $reject = 'token expired at ' . ($claims['exp'] ?? '(missing)');
+} elseif (($claims['email_verified'] ?? '') !== 'true') {
+    // Required: the email-linking below is only safe with a verified email.
+    $reject = 'email not verified';
+} elseif (empty($claims['sub']) || empty($claims['email'])) {
+    $reject = 'missing sub or email claim';
+}
+if ($reject !== '') {
+    neon_log('google', 'sign-in rejected (' . $reject . ') for ' . ($claims['email'] ?? 'unknown email'));
     json_error('google_failed', 'Google sign-in was rejected.', 401);
 }
 
@@ -95,11 +105,12 @@ try {
         $user = $stmt->fetch();
     }
 } catch (PDOException $e) {
-    error_log('google.php db error: ' . $e->getMessage());
+    neon_log('db', 'google.php db error: ' . $e->getMessage());
     json_error('server_error', 'Login is unavailable right now.', 500);
 }
 
 establish_login($user);
+neon_log('google', 'sign-in ok for ' . $email . ' as ' . $user['username']);
 json_out([
     'loggedIn' => true,
     'user' => user_payload($user),

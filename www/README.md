@@ -5,11 +5,11 @@ no build step, no dependencies to install.
 
 ## Run it
 
-Open `index.html` in a browser, or serve the folder:
+Serve the folder with PHP (`index.php` computes cachebusting asset URLs):
 
 ```sh
 cd www
-python3 -m http.server 8000
+php -S localhost:8000
 # then visit http://localhost:8000
 ```
 
@@ -17,7 +17,7 @@ python3 -m http.server 8000
 
 | File | Contents |
 | --- | --- |
-| `index.html` | Markup for the menus, HUD, overlays and the game canvas (icons are inline SVG) |
+| `index.php` | Markup for the menus, HUD, overlays and the game canvas (icons are inline SVG) |
 | `styles.css` | The neon/frosted-glass design system |
 | `game.js` | Canvas game engine — physics, spawning, collisions, AI, rendering (`window.NeonNebula`) |
 | `auth.js` | Login/leaderboard API client (`window.NeonAuth`) — Google Sign-In, accounts, score submission |

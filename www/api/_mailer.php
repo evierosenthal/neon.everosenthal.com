@@ -7,8 +7,11 @@ defined('NEON_API') or exit;
 
 function send_smtp_mail(string $toEmail, string $toName, string $subject, string $html, string &$errorMessage = ''): bool
 {
+    neon_log('email', "attempting to send \"$subject\" to <$toEmail>");
+
     if (!defined('SMTP_HOST') || !defined('SMTP_PORT') || !defined('SMTP_USER') || !defined('SMTP_PASS')) {
         $errorMessage = 'SMTP configuration missing';
+        neon_log('email', "FAILED to send \"$subject\" to <$toEmail>: $errorMessage");
         return false;
     }
 
@@ -23,6 +26,7 @@ function send_smtp_mail(string $toEmail, string $toName, string $subject, string
     $fp = @stream_socket_client("$transport:$port", $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT);
     if (!$fp) {
         $errorMessage = "Failed to connect to $host:$port - $errstr ($errno)";
+        neon_log('email', "FAILED to send \"$subject\" to <$toEmail>: $errorMessage");
         return false;
     }
     stream_set_timeout($fp, $timeout);
@@ -44,8 +48,9 @@ function send_smtp_mail(string $toEmail, string $toName, string $subject, string
     $send = function (string $cmd) use ($fp): bool {
         return fwrite($fp, $cmd . "\r\n") !== false;
     };
-    $fail = function (string $step) use ($fp, &$errorMessage, &$lastResponse): bool {
+    $fail = function (string $step) use ($fp, &$errorMessage, &$lastResponse, $toEmail, $subject): bool {
         $errorMessage = "$step failed: $lastResponse";
+        neon_log('email', "FAILED to send \"$subject\" to <$toEmail>: $errorMessage");
         fclose($fp);
         return false;
     };
@@ -90,5 +95,6 @@ function send_smtp_mail(string $toEmail, string $toName, string $subject, string
 
     $send('QUIT');
     fclose($fp);
+    neon_log('email', "sent \"$subject\" to <$toEmail>");
     return true;
 }

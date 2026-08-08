@@ -1,4 +1,12 @@
-<!doctype html>
+<?php
+// Cachebusting: append each local asset's mtime so browsers pick up new
+// deploys immediately (same pattern as portal.bronxconservatory.org).
+function asset(string $path): string
+{
+    $version = @filemtime(__DIR__ . '/' . $path);
+    return htmlspecialchars($path . ($version ? '?v=' . $version : ''), ENT_QUOTES);
+}
+?><!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="<?= asset('styles.css') ?>" />
   </head>
   <body>
     <div class="app">
@@ -531,8 +539,8 @@
       <div class="grid-overlay"></div>
     </div>
 
-    <script src="game.js"></script>
-    <script src="auth.js"></script>
-    <script src="ui.js"></script>
+    <script src="<?= asset('game.js') ?>"></script>
+    <script src="<?= asset('auth.js') ?>"></script>
+    <script src="<?= asset('ui.js') ?>"></script>
   </body>
 </html>

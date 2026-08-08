@@ -28,6 +28,20 @@ if (empty($_SESSION['csrf'])) {
 
 // --- Helpers ---------------------------------------------------------------
 
+// Append a timestamped line to www/logs/app.log (gitignored; .htaccess denies
+// web access). Also mirrored to error_log so nothing is lost if the write fails.
+function neon_log(string $channel, string $message): void
+{
+    $line = '[' . date('Y-m-d H:i:s') . "] [$channel] $message";
+    $dir = dirname(__DIR__) . '/logs';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0775, true);
+    }
+    if (@file_put_contents($dir . '/app.log', $line . "\n", FILE_APPEND | LOCK_EX) === false) {
+        error_log('neon_log fallback: ' . $line);
+    }
+}
+
 function db(): PDO
 {
     static $pdo = null;

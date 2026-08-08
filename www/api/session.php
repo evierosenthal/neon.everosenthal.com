@@ -10,7 +10,7 @@ try {
 } catch (PDOException $e) {
     // Database down/unconfigured: report logged-out but still hand out the
     // CSRF token so the client can distinguish "offline" from "logged out".
-    error_log('session.php db error: ' . $e->getMessage());
+    neon_log('db', 'session.php db error: ' . $e->getMessage());
     json_out([
         'loggedIn' => false,
         'user' => null,
