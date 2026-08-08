@@ -2014,8 +2014,22 @@
 
     function handleKeyUp(e) {
       if (PREVENT_DEFAULT_KEYS.indexOf(e.key) !== -1) e.preventDefault();
+      // Clear every variant of the key. Pressing 'a' then releasing it with
+      // Shift or Caps Lock active reports the release as 'A' — without this,
+      // the stale lowercase entry keeps thrusting forever and pins the ship
+      // against a wall.
       keysPressed[e.key] = false;
+      if (e.key.length === 1) {
+        keysPressed[e.key.toLowerCase()] = false;
+        keysPressed[e.key.toUpperCase()] = false;
+      }
       keysPressed[e.code] = false;
+    }
+
+    // Releases outside the window never fire keyup — drop all held keys when
+    // focus leaves so no ghost thrust survives.
+    function handleWindowBlur() {
+      keysPressed = {};
     }
 
     function handleCanvasClick() {
@@ -2027,6 +2041,7 @@
     window.addEventListener('touchmove', handleTouchMove);
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleWindowBlur);
     canvas.addEventListener('click', handleCanvasClick);
 
     resizeCanvas();
@@ -2072,6 +2087,23 @@
 
       setSpeedFactor: function (factor) {
         config.speedFactor = Math.max(0.01, Math.min(3, Number(factor) || 1));
+      },
+
+      // Read-only ship telemetry (debug/testing)
+      getDebugPositions: function () {
+        if (!state) return null;
+        var out = { keys: Object.keys(keysPressed).filter(function (k) { return keysPressed[k]; }) };
+        [['p1', state.player], ['p2', state.player2]].forEach(function (pair) {
+          if (pair[1]) {
+            out[pair[0]] = {
+              x: Math.round(pair[1].x * 10) / 10,
+              y: Math.round(pair[1].y * 10) / 10,
+              vx: Math.round(pair[1].vx * 100) / 100,
+              vy: Math.round(pair[1].vy * 100) / 100
+            };
+          }
+        });
+        return out;
       }
     };
   }
