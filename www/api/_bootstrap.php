@@ -108,15 +108,20 @@ function require_user(): array
 
 function user_payload(array $user): array
 {
-    // Configured lead developers get their role on any login, so the very
-    // first sign-in with a listed email is already a lead account.
+    // Configured lead developers / developers get their role on any login, so
+    // the very first sign-in with a listed email already carries the role.
     $leads = defined('LEAD_DEVELOPER_EMAILS') ? LEAD_DEVELOPER_EMAILS : [];
+    $devs = defined('DEVELOPER_EMAILS') ? DEVELOPER_EMAILS : [];
     $role = $user['role'] ?? 'normal';
-    if ($role !== 'lead_developer'
-        && in_array(strtolower($user['email']), array_map('strtolower', $leads), true)) {
+    $email = strtolower($user['email']);
+    if ($role !== 'lead_developer' && in_array($email, array_map('strtolower', $leads), true)) {
         db()->prepare("UPDATE users SET role = 'lead_developer' WHERE id = ?")
             ->execute([(int)$user['id']]);
         $role = 'lead_developer';
+    } elseif ($role === 'normal' && in_array($email, array_map('strtolower', $devs), true)) {
+        db()->prepare("UPDATE users SET role = 'developer' WHERE id = ?")
+            ->execute([(int)$user['id']]);
+        $role = 'developer';
     }
 
     $bests = array_fill_keys(GAME_MODES, 0);

@@ -556,6 +556,59 @@ body {
   }
 }
 
+/* Distant ringed planet anchoring the backdrop */
+.menu-planet {
+  position: absolute;
+  left: 7%;
+  bottom: 10%;
+  width: 8.5rem;
+  opacity: 0.6;
+  pointer-events: none;
+  filter: drop-shadow(0 0 22px rgba(129, 140, 248, 0.35));
+  animation: planet-float 16s ease-in-out infinite alternate;
+}
+
+@keyframes planet-float {
+  from {
+    transform: translateY(0) rotate(-2deg);
+  }
+  to {
+    transform: translateY(-14px) rotate(2deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .menu-planet {
+    display: none;
+  }
+}
+
+/* Faint stardust slowly sinking for parallax depth */
+.dust {
+  position: absolute;
+  top: -2vh;
+  width: 2px;
+  height: 2px;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.45);
+  pointer-events: none;
+  animation: dust-fall var(--dur, 60s) linear infinite;
+}
+
+@keyframes dust-fall {
+  to {
+    transform: translateY(108vh);
+  }
+}
+
+/* Soft vignette pulls the eye toward the panel */
+.menu-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 52%, rgba(2, 6, 23, 0.55) 100%);
+}
+
 /* Daily bonus chest */
 .daily-chest {
   position: absolute;

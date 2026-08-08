@@ -510,6 +510,18 @@
       el.startStars.appendChild(node);
     });
 
+    // Sinking stardust layer for parallax depth (negative delays start
+    // each mote mid-flight so the sky is populated immediately)
+    for (var d = 0; d < 16; d++) {
+      var dust = document.createElement('span');
+      dust.className = 'dust';
+      dust.style.left = (Math.random() * 100) + '%';
+      dust.style.setProperty('--dur', (45 + Math.random() * 45) + 's');
+      dust.style.animationDelay = (-Math.random() * 60) + 's';
+      dust.style.opacity = (0.25 + Math.random() * 0.4).toFixed(2);
+      el.startStars.appendChild(dust);
+    }
+
     // Every so often the equipped rocket cruises across the backdrop
     setInterval(function () {
       if (gameState !== 'START') return;

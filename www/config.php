@@ -10,6 +10,10 @@ define('APP_BASE_URL', 'https://neon.everosenthal.com');
 // These emails are granted the lead_developer role automatically at login.
 define('LEAD_DEVELOPER_EMAILS', ['eve.esther.rosenthal@gmail.com']);
 
+// These emails are granted the developer role automatically at login
+// (all skins and other purchasables free). Add Dean Wong's email here.
+define('DEVELOPER_EMAILS', []);
+
 define('MAIL_SUBJECT_PREFIX', 'Neon Nebula');
 
 // Score submission sanity limits.
