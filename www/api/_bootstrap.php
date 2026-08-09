@@ -129,8 +129,59 @@ function require_user(): array
     return $user;
 }
 
+// Apply any migrations in www/db_migrations/ that have not run yet. Applied
+// names are tracked in schema_migrations; the files are idempotent by
+// convention, so a re-run is safe even if tracking is ever lost.
+function apply_all_migrations(): array
+{
+    $db = db();
+    $db->exec('CREATE TABLE IF NOT EXISTS schema_migrations (
+        name VARCHAR(80) PRIMARY KEY,
+        applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+    $done = $db->query('SELECT name FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN);
+
+    $results = [];
+    $files = glob(dirname(__DIR__) . '/db_migrations/*.sql') ?: [];
+    sort($files);
+    foreach ($files as $file) {
+        $name = basename($file);
+        if (in_array($name, $done, true)) {
+            $results[$name] = 'already applied';
+            continue;
+        }
+        // Strip "--" comment lines, then split into statements at semicolons
+        // (our migrations never quote a semicolon).
+        $lines = [];
+        foreach (explode("\n", (string)file_get_contents($file)) as $line) {
+            if (!preg_match('/^\s*--/', $line)) {
+                $lines[] = $line;
+            }
+        }
+        $statements = array_values(array_filter(array_map('trim', explode(';', implode("\n", $lines)))));
+        foreach ($statements as $statement) {
+            $db->exec($statement);
+        }
+        $db->prepare('INSERT IGNORE INTO schema_migrations (name) VALUES (?)')->execute([$name]);
+        $results[$name] = 'applied';
+        neon_log('db', "migration applied: $name");
+    }
+    return $results;
+}
+
 function user_payload(array $user): array
 {
+    // Self-healing schema: the first login of a session applies any pending
+    // migrations, so a deploy never leaves the database behind the code.
+    if (empty($_SESSION['migrations_checked'])) {
+        $_SESSION['migrations_checked'] = 1;
+        try {
+            apply_all_migrations();
+        } catch (PDOException $e) {
+            neon_log('db', 'auto-migration failed: ' . $e->getMessage());
+        }
+    }
+
     // Configured lead developers / developers get their role on any login, so
     // the very first sign-in with a listed email already carries the role.
     $leads = defined('LEAD_DEVELOPER_EMAILS') ? LEAD_DEVELOPER_EMAILS : [];
