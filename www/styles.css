@@ -2263,6 +2263,14 @@ body {
   white-space: nowrap;
 }
 
+.dev-console-row-stack {
+  margin-top: 0.5rem;
+}
+
+.dev-console-row-stack .btn {
+  flex: 1;
+}
+
 .dev-console-row + .auth-error,
 .dev-console-row + .auth-success {
   margin-top: 0.5rem;

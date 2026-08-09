@@ -520,6 +520,9 @@ function asset(string $path): string
               <button id="dev-make" class="btn btn-cyan btn-sm">MAKE DEV</button>
               <button id="dev-remove" class="btn btn-muted btn-sm">REMOVE</button>
             </div>
+            <div class="dev-console-row dev-console-row-stack">
+              <button id="dev-migrate" class="btn btn-ghost-cyan btn-sm">RUN DB MIGRATIONS</button>
+            </div>
             <p id="dev-console-msg" class="auth-error hidden"></p>
           </div>
 

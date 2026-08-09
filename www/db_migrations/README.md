@@ -13,3 +13,7 @@ Conventions:
   fresh, already-current database — is a safe no-op.
 - Apply with: `mysql -u USER -p neon_nebula < db_migrations/NN_name.sql`
   (or paste into phpMyAdmin's SQL tab), in ascending order.
+
+Lead developers can apply all pending migrations from inside the game:
+Settings → Developer Accounts → **RUN DB MIGRATIONS** (safe to click any
+time — every migration is a no-op once applied).

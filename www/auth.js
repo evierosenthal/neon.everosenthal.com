@@ -170,6 +170,10 @@
       return post('set-role.php', { username: username, role: role });
     },
 
+    runMigrations: function () {
+      return post('run-migrations.php', {});
+    },
+
     resetPassword: function (token, newPassword) {
       return post('reset-password.php', { token: token, newPassword: newPassword })
         .then(function (data) {

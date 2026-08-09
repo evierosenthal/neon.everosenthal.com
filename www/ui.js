@@ -184,6 +184,7 @@
     devUsername: document.getElementById('dev-username'),
     devMake: document.getElementById('dev-make'),
     devRemove: document.getElementById('dev-remove'),
+    devMigrate: document.getElementById('dev-migrate'),
     devConsoleMsg: document.getElementById('dev-console-msg'),
     logoutLink: document.getElementById('logout-link'),
     loginBtn: document.getElementById('login-btn'),
@@ -1299,6 +1300,23 @@
     }
     el.devMake.addEventListener('click', function () { devConsoleSet('developer'); });
     el.devRemove.addEventListener('click', function () { devConsoleSet('normal'); });
+
+    el.devMigrate.addEventListener('click', function () {
+      el.devConsoleMsg.className = 'auth-success';
+      el.devConsoleMsg.textContent = 'Running migrations…';
+      show(el.devConsoleMsg, true);
+      auth.runMigrations().then(function (data) {
+        var parts = [];
+        Object.keys(data.results).forEach(function (name) {
+          parts.push(name + ': ' + data.results[name]);
+        });
+        el.devConsoleMsg.className = 'auth-success';
+        el.devConsoleMsg.textContent = 'Database is up to date — ' + parts.join(' · ');
+      }).catch(function (err) {
+        el.devConsoleMsg.className = 'auth-error';
+        el.devConsoleMsg.textContent = err.message;
+      });
+    });
 
     auth.onGoogleReady = function () {
       if (gameState === 'NEWHIGH' && newhighPhase === 'offer') {

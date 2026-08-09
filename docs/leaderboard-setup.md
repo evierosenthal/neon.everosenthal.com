@@ -8,8 +8,8 @@ One-time manual steps to bring the login system and leaderboard live.
    SELECT / INSERT / UPDATE / DELETE privileges on it.
 2. Run `schema.sql` against the database (phpMyAdmin SQL tab, or
    `mysql -u USER -p neon_nebula < schema.sql`). If the database was created
-   from an older schema.sql, run the numbered upgrades in `db_migrations/`
-   instead (see `db_migrations/README.md`).
+   from an older schema.sql, run the numbered upgrades in `www/db_migrations/`
+   instead (see `www/db_migrations/README.md`).
 3. Append to the server's `config.local.php` (in the web root, next to
    `config.php` and `gitwebhook.php` — it already holds `GIT_WEBHOOK_SECRET`):
 

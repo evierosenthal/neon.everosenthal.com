@@ -34,4 +34,4 @@ CREATE TABLE password_resets (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Upgrading an existing database instead of creating a fresh one? Run the
--- numbered migrations in db_migrations/ (see db_migrations/README.md).
+-- numbered migrations in www/db_migrations/ (see its README; lead developers can also apply them with the RUN DB MIGRATIONS button in Settings).

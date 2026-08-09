@@ -46,7 +46,7 @@ try {
         $stmt = $db->prepare('SELECT COUNT(*) FROM scores WHERE user_id = ? AND mode = ?');
         $stmt->execute([(int)$user['id'], $mode]);
         if ((int)$stmt->fetchColumn() === 0) {
-            neon_log('db', "score write for mode '$mode' vanished — scores.mode enum out of date; run db_migrations/03_two_player_modes.sql");
+            neon_log('db', "score write for mode '$mode' vanished — scores.mode enum out of date; run migrations (Settings > RUN DB MIGRATIONS)");
             json_error('server_error', 'This game mode is not enabled on the server yet.', 500);
         }
     }
