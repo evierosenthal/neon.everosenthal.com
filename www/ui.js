@@ -148,16 +148,62 @@
   var FLAMES = [
     { id: 'classic', name: 'Classic Fire', price: 0, style: 'classic', power: null,
       powerLabel: 'NO POWER' },
+    { id: 'greenfire', name: 'Green Inferno', price: 250, style: 'classic', power: null,
+      powerLabel: 'NO POWER',
+      pal: ['rgba(22, 163, 74, 0.85)', 'rgba(74, 222, 128, 0.95)', 'rgba(240, 253, 244, 0.95)'], glow: '#4ade80' },
     { id: 'bluefire', name: 'Blue Blaze', price: 300, style: 'blue', power: null,
       powerLabel: 'NO POWER' },
+    { id: 'violetburn', name: 'Violet Burn', price: 350, style: 'classic', power: null,
+      powerLabel: 'NO POWER',
+      pal: ['rgba(126, 34, 206, 0.85)', 'rgba(192, 132, 252, 0.95)', 'rgba(250, 245, 255, 0.95)'], glow: '#c084fc' },
+    { id: 'pinkflare', name: 'Pink Flare', price: 350, style: 'classic', power: null,
+      powerLabel: 'NO POWER',
+      pal: ['rgba(219, 39, 119, 0.85)', 'rgba(244, 114, 182, 0.95)', 'rgba(253, 242, 248, 0.95)'], glow: '#f472b6' },
     { id: 'snail', name: 'Snail Smoke', price: 400, style: 'smoke', power: 'slow',
       powerLabel: 'POWER: SLOW-MO SHIP' },
+    { id: 'neonrings', name: 'Neon Rings', price: 450, style: 'rings', power: null,
+      powerLabel: 'NO POWER', ringColors: ['#22d3ee', '#67e8f9', '#a5f3fc'] },
+    { id: 'eggshell', name: 'Eggshell Flame', price: 450, style: 'classic', power: 'fragile',
+      powerLabel: 'POWER: DOUBLE DAMAGE',
+      pal: ['rgba(250, 240, 200, 0.85)', 'rgba(254, 249, 195, 0.95)', 'rgba(255, 255, 255, 0.95)'], glow: '#fef9c3' },
+    { id: 'whitenova', name: 'White Nova', price: 500, style: 'classic', power: null,
+      powerLabel: 'NO POWER',
+      pal: ['rgba(203, 213, 225, 0.85)', 'rgba(241, 245, 249, 0.95)', 'rgba(255, 255, 255, 0.98)'], glow: '#f8fafc' },
     { id: 'rings', name: 'Ring Burner', price: 600, style: 'rings', power: 'spin',
       powerLabel: 'POWER: ALWAYS SPINNING' },
+    { id: 'wobblesmoke', name: 'Wobble Smoke', price: 600, style: 'smoke', power: 'wobble',
+      powerLabel: 'POWER: WOBBLY FLIGHT', smokeColors: ['#a855f7', '#c4b5fd', '#ede9fe'] },
+    { id: 'voidfire', name: 'Void Fire', price: 650, style: 'classic', power: null,
+      powerLabel: 'NO POWER',
+      pal: ['rgba(15, 23, 42, 0.9)', 'rgba(88, 28, 135, 0.95)', 'rgba(192, 132, 252, 0.95)'], glow: '#581c87' },
+    { id: 'mirrorflame', name: 'Mirror Flame', price: 750, style: 'classic', power: 'mirror',
+      powerLabel: 'POWER: REVERSED KEYS',
+      pal: ['rgba(13, 148, 136, 0.85)', 'rgba(45, 212, 191, 0.95)', 'rgba(240, 253, 250, 0.95)'], glow: '#2dd4bf' },
+    { id: 'cyclonejet', name: 'Cyclone Jet', price: 800, style: 'jet', power: 'spin',
+      powerLabel: 'POWER: ALWAYS SPINNING',
+      pal: ['rgba(22, 163, 74, 0.85)', 'rgba(134, 239, 172, 0.95)', 'rgba(255, 255, 255, 0.95)'], glow: '#4ade80' },
+    { id: 'pocketrocket', name: 'Pocket Rocket', price: 800, style: 'jet', power: 'tiny',
+      powerLabel: 'POWER: TINY SHIP',
+      pal: ['rgba(219, 39, 119, 0.85)', 'rgba(249, 168, 212, 0.95)', 'rgba(255, 255, 255, 0.95)'], glow: '#f472b6' },
+    { id: 'megaburner', name: 'Mega Burner', price: 850, style: 'smoke', power: 'giant',
+      powerLabel: 'POWER: GIANT SHIP', smokeColors: ['#44403c', '#78716c', '#a8a29e'] },
     { id: 'turbo', name: 'Turbo Torch', price: 900, style: 'jet', power: 'fast',
       powerLabel: 'POWER: EXTRA SPEED' },
+    { id: 'bouncyblast', name: 'Bouncy Blast', price: 950, style: 'rings', power: 'bouncy',
+      powerLabel: 'POWER: BOUNCY WALLS', ringColors: ['#4ade80', '#86efac', '#bbf7d0'] },
+    { id: 'magnetmuzzle', name: 'Magnet Muzzle', price: 1000, style: 'rings', power: 'magnet',
+      powerLabel: 'POWER: TREAT MAGNET', ringColors: ['#c084fc', '#a855f7', '#ddd6fe'] },
+    { id: 'ironforge', name: 'Iron Forge', price: 1100, style: 'smoke', power: 'armor',
+      powerLabel: 'POWER: EXTRA ARMOR', smokeColors: ['#b91c1c', '#f87171', '#fecaca'] },
     { id: 'starfire', name: 'Star Fire', price: 1200, style: 'stars', power: 'lucky',
-      powerLabel: 'POWER: 2× COINS' }
+      powerLabel: 'POWER: 2× COINS' },
+    { id: 'cometfire', name: 'Comet Fire', price: 1400, style: 'jet', power: 'fast',
+      powerLabel: 'POWER: EXTRA SPEED',
+      pal: ['rgba(224, 242, 254, 0.9)', 'rgba(125, 211, 252, 0.95)', 'rgba(255, 255, 255, 0.98)'], glow: '#e0f2fe' },
+    { id: 'rainbowfire', name: 'Rainbow Fire', price: 1800, style: 'classic', power: null,
+      powerLabel: 'NO POWER', animatedPal: true },
+    { id: 'moneystorm', name: 'Money Storm', price: 2500, style: 'stars', power: 'jackpot',
+      powerLabel: 'POWER: 3× COINS', starColor: '#4ade80' }
   ];
 
   var ZAP_ICON = '<svg viewBox="0 0 24 24" class="icon icon-stroke">' +
@@ -867,6 +913,7 @@
     var earned = Math.max(0, Math.round(finalScore / COIN_SCORE_DIVISOR));
     if (beatRecord) earned *= RECORD_COIN_MULTIPLIER;
     if (getFlame(selectedFlame).power === 'lucky') earned *= 2;
+    if (getFlame(selectedFlame).power === 'jackpot') earned *= 3;
     if (earned > 0) {
       coins += earned;
       saveWallet();
@@ -1129,23 +1176,34 @@
   function flameSvg(flame) {
     var inner;
     if (flame.style === 'rings') {
-      inner = '<circle cx="20" cy="22" r="9" fill="none" stroke="#fb923c" stroke-width="3"/>' +
-        '<circle cx="20" cy="40" r="6.5" fill="none" stroke="#fbbf24" stroke-width="2.5" opacity="0.75"/>' +
-        '<circle cx="20" cy="54" r="4" fill="none" stroke="#fde68a" stroke-width="2" opacity="0.5"/>';
+      var rc = flame.ringColors || ['#fb923c', '#fbbf24', '#fde68a'];
+      inner = '<circle cx="20" cy="22" r="9" fill="none" stroke="' + rc[0] + '" stroke-width="3"/>' +
+        '<circle cx="20" cy="40" r="6.5" fill="none" stroke="' + rc[1 % rc.length] + '" stroke-width="2.5" opacity="0.75"/>' +
+        '<circle cx="20" cy="54" r="4" fill="none" stroke="' + rc[2 % rc.length] + '" stroke-width="2" opacity="0.5"/>';
     } else if (flame.style === 'smoke') {
-      inner = '<circle cx="20" cy="20" r="9" fill="#94a3b8" opacity="0.9"/>' +
-        '<circle cx="14" cy="36" r="7" fill="#cbd5e1" opacity="0.65"/>' +
-        '<circle cx="26" cy="50" r="5.5" fill="#e2e8f0" opacity="0.45"/>';
+      var sc = flame.smokeColors || ['#94a3b8', '#cbd5e1', '#e2e8f0'];
+      inner = '<circle cx="20" cy="20" r="9" fill="' + sc[0] + '" opacity="0.9"/>' +
+        '<circle cx="14" cy="36" r="7" fill="' + sc[1] + '" opacity="0.65"/>' +
+        '<circle cx="26" cy="50" r="5.5" fill="' + sc[2] + '" opacity="0.45"/>';
     } else if (flame.style === 'stars') {
+      var stc = flame.starColor || '#fde047';
       var star = function (x, y, r, o) {
         return '<path d="M' + (x - r) + ' ' + y + ' L' + (x + r) + ' ' + y +
           ' M' + x + ' ' + (y - r) + ' L' + x + ' ' + (y + r) +
-          '" stroke="#fde047" stroke-width="2.5" opacity="' + o + '" stroke-linecap="round"/>';
+          '" stroke="' + stc + '" stroke-width="2.5" opacity="' + o + '" stroke-linecap="round"/>';
       };
       inner = star(20, 20, 8, 1) + star(14, 38, 6, 0.7) + star(26, 52, 4.5, 0.5);
     } else {
-      var cols = flame.style === 'blue' ? ['#2563eb', '#60a5fa', '#e0f2fe']
-        : (flame.style === 'jet' ? ['#22d3ee', '#a5f3fc', '#ffffff'] : ['#f97316', '#fbbf24', '#fef9c3']);
+      var cols;
+      if (flame.animatedPal) {
+        cols = ['#f472b6', '#a855f7', '#22d3ee']; // rainbow snapshot for the card
+      } else if (flame.pal) {
+        // pal entries are rgba() strings for canvas; cards can use them directly
+        cols = flame.pal;
+      } else {
+        cols = flame.style === 'blue' ? ['#2563eb', '#60a5fa', '#e0f2fe']
+          : (flame.style === 'jet' ? ['#22d3ee', '#a5f3fc', '#ffffff'] : ['#f97316', '#fbbf24', '#fef9c3']);
+      }
       var w = flame.style === 'jet' ? 6 : 11;
       var len = flame.style === 'jet' ? 60 : 50;
       inner =

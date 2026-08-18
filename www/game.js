@@ -422,6 +422,10 @@
 
       mousePos = { x: w / 2, y: h / 2 };
 
+      // Fire powers that resize the hull (visuals and collisions both follow radius)
+      if (config.flame && config.flame.power === 'tiny') state.player.radius *= 0.7;
+      if (config.flame && config.flame.power === 'giant') state.player.radius *= 1.45;
+
       // Spawn initial 'W' weapon power-up so player can grab it to enable shooting right away
       state.powerUps.push({
         id: 'initial_weapon',
@@ -506,6 +510,8 @@
       if (keyboardDrives) {
         var kbAccel = accel * 2.0;
         var kbTopSpeed = moveSpeed * 2.0;
+        // Mirror Flame's power: keyboard steering is reversed
+        if (config.flame && config.flame.power === 'mirror') kbAccel = -kbAccel;
         if (keysPressed['KeyW'] || keysPressed['w'] || keysPressed['W'] || keysPressed['ArrowUp'] || keysPressed['Up']) {
           player.vy -= kbAccel;
         }
@@ -529,12 +535,20 @@
         player.y += player.vy;
       }
 
+      // Wobble Smoke's power: the ship sways like it's a little dizzy
+      if (config.flame && config.flame.power === 'wobble') {
+        player.x += Math.sin(Date.now() / 180) * 1.8;
+        player.y += Math.cos(Date.now() / 230) * 1.4;
+      }
+
       // Clamp Player 1 within screen boundaries (kill into-wall velocity so
-      // the ship slides freely along edges instead of sticking)
+      // the ship slides freely along edges instead of sticking — or bounce,
+      // if the Bouncy Blast fire is equipped)
+      var p1Bounce = config.flame && config.flame.power === 'bouncy';
       var clampedPX = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
       var clampedPY = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
-      if (clampedPX !== player.x) player.vx = 0;
-      if (clampedPY !== player.y) player.vy = 0;
+      if (clampedPX !== player.x) player.vx = p1Bounce ? -player.vx * 0.85 : 0;
+      if (clampedPY !== player.y) player.vy = p1Bounce ? -player.vy * 0.85 : 0;
       player.x = clampedPX;
       player.y = clampedPY;
     }
@@ -933,6 +947,9 @@
               break;
             } else {
               var damage = (config.isLocalMultiplayer || config.isCPUMultiplayer) ? 18 : 25;
+              // Fire powers: Iron Forge shrugs hits off, Eggshell doubles them
+              if (config.flame && config.flame.power === 'armor') damage = Math.round(damage * 0.6);
+              if (config.flame && config.flame.power === 'fragile') damage *= 2;
               state.health -= damage;
               handlers.onHealthUpdate(state.health);
               shake = 22;
@@ -1062,6 +1079,12 @@
       updateShooting();
       updateDifficulty();
 
+      // Magnet Muzzle: the treat magnet never switches off (kept one tick
+      // ahead of the per-frame decay below)
+      if (config.flame && config.flame.power === 'magnet' && state.activeEffects.magnet < 2) {
+        state.activeEffects.magnet = 2;
+      }
+
       // Update active effects
       var effectKeys = Object.keys(state.activeEffects);
       for (var e = 0; e < effectKeys.length; e++) {
@@ -1074,13 +1097,15 @@
       // otherwise the speed cap keeps normalizing against it and the ship
       // can barely slide along the edge.
       var players = [state.player, state.player2];
+      var p1Bouncy = config.flame && config.flame.power === 'bouncy';
       for (var b = 0; b < players.length; b++) {
         var p = players[b];
         if (!p) continue;
         var clampedX = Math.max(p.radius, Math.min(canvas.width - p.radius, p.x));
         var clampedY = Math.max(p.radius, Math.min(canvas.height - p.radius, p.y));
-        if (clampedX !== p.x) p.vx = 0;
-        if (clampedY !== p.y) p.vy = 0;
+        var bounce = p1Bouncy && p === state.player;
+        if (clampedX !== p.x) p.vx = bounce ? -p.vx * 0.85 : 0;
+        if (clampedY !== p.y) p.vy = bounce ? -p.vy * 0.85 : 0;
         p.x = clampedX;
         p.y = clampedY;
       }
@@ -1594,14 +1619,15 @@
 
           if (fStyle === 'rings') {
             // Expanding exhaust rings instead of a flame
+            var ringCols = (flameDef && flameDef.ringColors) || ['#fb923c', '#fbbf24', '#fde68a'];
             ctx.lineWidth = 3;
             for (var ri = 0; ri < 3; ri++) {
               ctx.beginPath();
               ctx.arc(0, R * (1.4 + ri * 0.5 * flick), R * (0.3 - ri * 0.06), 0, Math.PI * 2);
-              ctx.strokeStyle = ['#fb923c', '#fbbf24', '#fde68a'][ri];
+              ctx.strokeStyle = ringCols[ri % ringCols.length];
               ctx.globalAlpha = 1 - ri * 0.28;
               ctx.shadowBlur = 12;
-              ctx.shadowColor = '#fb923c';
+              ctx.shadowColor = ringCols[0];
               ctx.stroke();
             }
             ctx.globalAlpha = 1;
@@ -1612,7 +1638,7 @@
               ctx.beginPath();
               ctx.arc(Math.sin(Date.now() / 150 + si * 2) * R * 0.15,
                 R * (1.32 + si * 0.45), R * (0.28 + si * 0.05) * flick, 0, Math.PI * 2);
-              ctx.fillStyle = ['#94a3b8', '#cbd5e1', '#e2e8f0'][si];
+              ctx.fillStyle = ((flameDef && flameDef.smokeColors) || ['#94a3b8', '#cbd5e1', '#e2e8f0'])[si];
               ctx.globalAlpha = 0.75 - si * 0.22;
               ctx.fill();
             }
@@ -1620,15 +1646,16 @@
           } else if (fStyle === 'stars') {
             // Twinkling star sparks
             var sa = Date.now() / 250;
+            var starCol = (flameDef && flameDef.starColor) || '#fde047';
             for (var ti = 0; ti < 3; ti++) {
               var sr = R * (0.24 - ti * 0.04) * flick;
               ctx.save();
               ctx.translate(Math.sin(sa + ti * 2) * R * 0.14, R * (1.38 + ti * 0.5));
               ctx.rotate(sa + ti);
-              ctx.strokeStyle = '#fde047';
+              ctx.strokeStyle = starCol;
               ctx.lineWidth = 2;
               ctx.shadowBlur = 10;
-              ctx.shadowColor = '#fde047';
+              ctx.shadowColor = starCol;
               ctx.globalAlpha = 1 - ti * 0.25;
               ctx.beginPath();
               ctx.moveTo(-sr, 0);
@@ -1641,7 +1668,8 @@
             ctx.globalAlpha = 1;
             ctx.shadowBlur = 0;
           } else {
-            // Layered flame tongues: classic orange, blue, or the narrow jet
+            // Layered flame tongues: classic orange, blue, the narrow jet, or
+            // any custom palette (pal/glow) the equipped fire specifies.
             var pal, glow, wMul, lMul;
             if (fStyle === 'blue') {
               pal = ['rgba(37, 99, 235, 0.85)', 'rgba(96, 165, 250, 0.95)', 'rgba(224, 242, 254, 0.95)'];
@@ -1652,6 +1680,17 @@
             } else {
               pal = ['rgba(249, 115, 22, 0.85)', 'rgba(251, 191, 36, 0.95)', 'rgba(224, 242, 254, 0.95)'];
               glow = '#fb923c'; wMul = 1; lMul = 1;
+            }
+            if (flameDef && flameDef.animatedPal) {
+              var fh = Math.floor((Date.now() / 12) % 360);
+              pal = ['hsla(' + fh + ', 90%, 55%, 0.85)', 'hsla(' + ((fh + 45) % 360) + ', 90%, 65%, 0.95)', 'rgba(255, 255, 255, 0.95)'];
+              glow = 'hsl(' + fh + ', 90%, 60%)';
+            } else if (flameDef && flameDef.pal) {
+              pal = flameDef.pal;
+              glow = flameDef.glow || '#fb923c';
+            }
+            if (flameDef && flameDef.style === 'jet' && flameDef.pal) {
+              wMul = 0.55; lMul = 1.6;
             }
             var flameLen = R * 1.0 * flick * lMul;
             ctx.beginPath();
