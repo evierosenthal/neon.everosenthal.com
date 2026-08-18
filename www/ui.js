@@ -77,6 +77,20 @@
     { id: 'galaxy', name: 'Galaxy Prism', price: 3000, accent: '#22d3ee', animated: true }
   ];
 
+  // Thruster trails (Tailor's second rack). 'count: 2' trails burn denser.
+  var TRAIL_KEY = 'neon_nebula_trail';
+  var TRAILS_OWNED_KEY = 'neon_nebula_trails_owned';
+
+  var TRAILS = [
+    { id: 'classic', name: 'Classic Ion', price: 0, colors: ['#ff00ff'] },
+    { id: 'ember', name: 'Ember Burn', price: 300, colors: ['#f97316', '#fbbf24', '#ef4444'] },
+    { id: 'frost', name: 'Frost Wake', price: 400, colors: ['#7dd3fc', '#e0f2fe', '#38bdf8'] },
+    { id: 'venom', name: 'Venom Stream', price: 400, colors: ['#a3e635', '#4ade80'] },
+    { id: 'stardust', name: 'Stardust', price: 800, colors: ['#fef9c3', '#fde68a', '#ffffff'], count: 2 },
+    { id: 'rainbow', name: 'Rainbow Ribbon', price: 1500, animated: true,
+      colors: ['#f472b6', '#a855f7', '#22d3ee', '#4ade80', '#fbbf24'], count: 2 }
+  ];
+
   var ZAP_ICON = '<svg viewBox="0 0 24 24" class="icon icon-stroke">' +
     '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>';
 
@@ -149,6 +163,9 @@
   var coins = 0;
   var ownedSkins = ['cyan'];
   var selectedSkin = 'cyan';
+  var ownedTrails = ['classic'];
+  var selectedTrail = 'classic';
+  var tailorTab = 'skins'; // 'skins' | 'trails'
   var isResetOpen = false;
   var resetToken = null;
 
@@ -1014,7 +1031,37 @@
       localStorage.setItem(COINS_KEY, String(coins));
       localStorage.setItem(SKINS_OWNED_KEY, JSON.stringify(ownedSkins));
       localStorage.setItem(SKIN_KEY, selectedSkin);
+      localStorage.setItem(TRAILS_OWNED_KEY, JSON.stringify(ownedTrails));
+      localStorage.setItem(TRAIL_KEY, selectedTrail);
     } catch (err) { /* storage unavailable — session-only wallet */ }
+  }
+
+  function getTrail(id) {
+    for (var i = 0; i < TRAILS.length; i++) {
+      if (TRAILS[i].id === id) return TRAILS[i];
+    }
+    return TRAILS[0];
+  }
+
+  // Card preview: a nozzle with the trail's spark stream falling away below it.
+  function trailSvg(trail) {
+    var dots = '';
+    var ys = [16, 26, 36, 46, 56];
+    for (var i = 0; i < ys.length; i++) {
+      var color = trail.animated
+        ? trail.colors[i % trail.colors.length]
+        : trail.colors[i % trail.colors.length];
+      var r = 4.5 - i * 0.6;
+      dots += '<circle cx="' + (20 + (i % 2 ? 2.5 : -2.5)) + '" cy="' + ys[i] + '" r="' + r +
+        '" fill="' + color + '" opacity="' + (1 - i * 0.14) + '"/>';
+      if (trail.count > 1) {
+        dots += '<circle cx="' + (20 + (i % 2 ? -4 : 4)) + '" cy="' + (ys[i] + 4) + '" r="' + (r * 0.6) +
+          '" fill="' + trail.colors[(i + 1) % trail.colors.length] + '" opacity="' + (0.8 - i * 0.13) + '"/>';
+      }
+    }
+    return '<svg viewBox="0 0 40 64">' +
+      '<path d="M13 4 L27 4 L29 10 L11 10 Z" fill="#475569"/>' +
+      dots + '</svg>';
   }
 
   function skinSvg(skin) {
@@ -1072,7 +1119,52 @@
     }
     selectedSkin = skin.id;
     saveWallet();
-    renderSkinsGrid();
+    renderTailor();
+  }
+
+  function renderTrailsGrid() {
+    el.skinsCoins.textContent = formatNumber(coins);
+    el.skinsGrid.innerHTML = '';
+    TRAILS.forEach(function (trail) {
+      var owned = ownedTrails.indexOf(trail.id) !== -1;
+      var devFree = !owned && isDeveloper();
+      var card = document.createElement('button');
+      card.className = 'skin-card' + (selectedTrail === trail.id ? ' selected' : (owned || devFree ? '' : ' locked'));
+      var status;
+      if (selectedTrail === trail.id) status = '<span class="skin-status">EQUIPPED</span>';
+      else if (owned) status = '<span class="skin-status">TAP TO EQUIP</span>';
+      else if (devFree) status = '<span class="skin-status">FREE — DEV</span>';
+      else status = '<span class="skin-status price">' + formatNumber(trail.price) + '</span>';
+      card.innerHTML = trailSvg(trail) +
+        '<span class="skin-name">' + trail.name + '</span>' + status;
+      card.addEventListener('click', function () { handleTrailClick(trail); });
+      el.skinsGrid.appendChild(card);
+    });
+  }
+
+  function handleTrailClick(trail) {
+    setFormError(el.skinsError, '');
+    if (ownedTrails.indexOf(trail.id) === -1 && !isDeveloper()) {
+      if (coins < trail.price) {
+        setFormError(el.skinsError,
+          'Not enough coins — fly more missions! You need ' + formatNumber(trail.price - coins) + ' more.');
+        return;
+      }
+      coins -= trail.price;
+      ownedTrails.push(trail.id);
+    }
+    selectedTrail = trail.id;
+    saveWallet();
+    renderTailor();
+  }
+
+  // The Tailor has two racks; render whichever tab is active.
+  function renderTailor() {
+    Array.prototype.forEach.call(el.skinsModal.querySelectorAll('.tailor-tab'), function (tab) {
+      tab.classList.toggle('active', tab.getAttribute('data-tab') === tailorTab);
+    });
+    if (tailorTab === 'trails') renderTrailsGrid();
+    else renderSkinsGrid();
   }
 
   function renderLeaderboardTab() {
@@ -1165,7 +1257,8 @@
       isLocalMultiplayer: isLocalMultiplayer,
       isCPUMultiplayer: isCPUMultiplayer,
       controlModePreference: controlModePreference,
-      skin: getSkin(selectedSkin)
+      skin: getSkin(selectedSkin),
+      trail: getTrail(selectedTrail)
     });
   }
 
@@ -1202,6 +1295,14 @@
       }
       var savedSkin = localStorage.getItem(SKIN_KEY);
       if (savedSkin && ownedSkins.indexOf(savedSkin) !== -1) selectedSkin = savedSkin;
+
+      var savedOwnedTrails = JSON.parse(localStorage.getItem(TRAILS_OWNED_KEY) || '[]');
+      if (savedOwnedTrails instanceof Array && savedOwnedTrails.length) {
+        if (savedOwnedTrails.indexOf('classic') === -1) savedOwnedTrails.push('classic');
+        ownedTrails = savedOwnedTrails;
+      }
+      var savedTrail = localStorage.getItem(TRAIL_KEY);
+      if (savedTrail && ownedTrails.indexOf(savedTrail) !== -1) selectedTrail = savedTrail;
     } catch (err) { /* storage unavailable — start with defaults */ }
     refreshHighScoreDisplays();
     if (savedControl === 'mouse' || savedControl === 'keyboard' || savedControl === 'both') {
@@ -1272,10 +1373,12 @@
         if (gameState === 'NEWHIGH' && pendingScore != null) {
           submitPendingScore();
         }
-      } else if (ownedSkins.indexOf(selectedSkin) === -1) {
-        // Logged out while wearing a dev-only skin — back to something owned.
-        selectedSkin = 'cyan';
-        saveWallet();
+      } else {
+        // Logged out while wearing dev-only gear — back to something owned.
+        var changed = false;
+        if (ownedSkins.indexOf(selectedSkin) === -1) { selectedSkin = 'cyan'; changed = true; }
+        if (ownedTrails.indexOf(selectedTrail) === -1) { selectedTrail = 'classic'; changed = true; }
+        if (changed) saveWallet();
       }
       render();
     });
@@ -1454,13 +1557,20 @@
 
     el.skinsBtn.addEventListener('click', function () {
       setFormError(el.skinsError, '');
-      renderSkinsGrid();
+      renderTailor();
       isSkinsOpen = true;
       render();
     });
     el.skinsClose.addEventListener('click', function () {
       isSkinsOpen = false;
       render();
+    });
+    Array.prototype.forEach.call(el.skinsModal.querySelectorAll('.tailor-tab'), function (tab) {
+      tab.addEventListener('click', function () {
+        tailorTab = tab.getAttribute('data-tab');
+        setFormError(el.skinsError, '');
+        renderTailor();
+      });
     });
 
     el.settingsBtn.addEventListener('click', function () {

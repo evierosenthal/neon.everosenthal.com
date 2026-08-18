@@ -434,7 +434,7 @@ function asset(string $path): string
                 <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>
               </div>
               <div>
-                <h3 class="settings-title">SKIN HANGAR</h3>
+                <h3 class="settings-title">THE TAILOR</h3>
                 <p class="settings-subtitle">Earn coins by flying missions</p>
               </div>
             </div>
@@ -444,6 +444,10 @@ function asset(string $path): string
                 <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
+          </div>
+          <div class="lb-tabs tailor-tabs">
+            <button class="lb-tab tailor-tab active" data-tab="skins">ROCKET SKINS</button>
+            <button class="lb-tab tailor-tab" data-tab="trails">TRAILS</button>
           </div>
           <div id="skins-grid" class="skins-grid"></div>
           <p id="skins-error" class="auth-error hidden"></p>

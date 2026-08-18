@@ -1761,15 +1761,31 @@
 
         // Thruster effect (emitted outside the translated context so sparks trail in world space)
         if (!isPaused && !state.isGameOver) {
-          var thrusterCount = state.activeEffects.speedBoost > 0 ? 2 : 1;
-          var thrusterColor = state.activeEffects.speedBoost > 0
-            ? '#22c55e'
-            : (p.id === 'player1' ? '#ff00ff' : '#fb7185');
+          var trail = (p.id === 'player1' && config.trail) ? config.trail : null;
+          var thrusterCount = (state.activeEffects.speedBoost > 0 ? 2 : 1) +
+            (trail && trail.count > 1 ? 1 : 0);
           // Thrusters stream from ship tail
           var streamX = p.x - Math.sin(tilt) * (p.radius * 1.3);
           var streamY = p.y + Math.cos(tilt) * (p.radius * 1.3); // below the nozzle
           for (var i = 0; i < thrusterCount; i++) {
-            state.particles.push(createParticle(streamX, streamY, thrusterColor, true));
+            var thrusterColor;
+            if (trail && trail.animated) {
+              thrusterColor = 'hsl(' + Math.floor((Date.now() / 8 + Math.random() * 80) % 360) + ', 90%, 65%)';
+            } else if (trail) {
+              thrusterColor = trail.colors[Math.floor(Math.random() * trail.colors.length)];
+            } else {
+              thrusterColor = state.activeEffects.speedBoost > 0
+                ? '#22c55e'
+                : (p.id === 'player1' ? '#ff00ff' : '#fb7185');
+            }
+            var spark = createParticle(streamX, streamY, thrusterColor, true);
+            if (trail) {
+              // Bought trails burn brighter and linger longer than stock
+              spark.life *= 1.8;
+              spark.maxLife = spark.life;
+              spark.radius += 0.8;
+            }
+            state.particles.push(spark);
           }
         }
       });
@@ -2056,6 +2072,7 @@
         config.isCPUMultiplayer = !!options.isCPUMultiplayer;
         config.controlModePreference = options.controlModePreference || 'both';
         config.skin = options.skin || null; // player 1's rocket skin
+        config.trail = options.trail || null; // player 1's thruster trail
 
         resizeCanvas();
         reset();
