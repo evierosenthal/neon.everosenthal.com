@@ -448,6 +448,7 @@ function asset(string $path): string
           <div class="lb-tabs tailor-tabs">
             <button class="lb-tab tailor-tab active" data-tab="skins">ROCKET SKINS</button>
             <button class="lb-tab tailor-tab" data-tab="trails">TRAILS</button>
+            <button class="lb-tab tailor-tab" data-tab="flames">FIRE</button>
           </div>
           <div id="skins-grid" class="skins-grid"></div>
           <p id="skins-error" class="auth-error hidden"></p>

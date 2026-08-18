@@ -134,7 +134,8 @@
       isLocalMultiplayer: false,
       isCPUMultiplayer: false,
       controlModePreference: 'both',
-      speedFactor: 1 // 0.5-2.0, from the Settings rocket-speed slider
+      speedFactor: 1, // from the Settings rocket-speed slider
+      flameSpeedMult: 1 // from the equipped fire's power (fast/slow)
     };
 
     var state = null;
@@ -492,7 +493,7 @@
 
       // Mouse Follow Component
       if (mouseDrives) {
-        var followSpeed = Math.min(0.4, (state.activeEffects.speedBoost > 0 ? 0.15 : 0.08) * config.speedFactor);
+        var followSpeed = Math.min(0.4, (state.activeEffects.speedBoost > 0 ? 0.15 : 0.08) * config.speedFactor * config.flameSpeedMult);
         var prevX = player.x;
         var prevY = player.y;
         player.x += (mousePos.x - player.x) * followSpeed;
@@ -1045,8 +1046,8 @@
         if (stars[i].y > canvas.height) stars[i].y = 0;
       }
 
-      var moveSpeed = (state.activeEffects.speedBoost > 0 ? 8 : 5) * config.speedFactor;
-      var accel = 0.5 * config.speedFactor;
+      var moveSpeed = (state.activeEffects.speedBoost > 0 ? 8 : 5) * config.speedFactor * config.flameSpeedMult;
+      var accel = 0.5 * config.speedFactor * config.flameSpeedMult;
       var friction = 0.92;
 
       for (var m = 0; m < MOVE_KEYS.length; m++) {
@@ -1546,7 +1547,11 @@
 
         ctx.save();
         ctx.translate(p.x, p.y);
-        ctx.rotate(tilt);
+        // The Ring Burner's power: the ship pinwheels nonstop (visual only)
+        var flameSpin = (p.id === 'player1' && config.flame && config.flame.power === 'spin' &&
+          !isPaused && !state.isGameOver && !state.dying)
+          ? (Date.now() / 200) % (Math.PI * 2) : 0;
+        ctx.rotate(tilt + flameSpin);
 
         var R = p.radius;
 
@@ -1581,37 +1586,99 @@
         var hullStops = (skin && skin.hull) || ['#94a3b8', '#f1f5f9', '#e2e8f0', '#64748b'];
         var winStops = (skin && skin.window) || ['#e0f2fe', '#67e8f9', '#0e7490'];
 
-        // --- Rocket exhaust flame (behind the body) ---
+        // --- Rocket exhaust (behind the body); the fire style is Tailor gear ---
         if (!isPaused && !state.isGameOver && !state.dying) {
+          var flameDef = (p.id === 'player1' && config.flame) ? config.flame : null;
+          var fStyle = flameDef ? flameDef.style : 'classic';
           var flick = 0.8 + 0.35 * Math.abs(Math.sin(Date.now() / 47 + p.x)) + Math.random() * 0.15;
-          var flameLen = R * 1.0 * flick;
-          // outer orange tongue
-          ctx.beginPath();
-          ctx.moveTo(-R * 0.34, R * 1.1);
-          ctx.quadraticCurveTo(-R * 0.28, R * 1.1 + flameLen * 0.7, 0, R * 1.1 + flameLen);
-          ctx.quadraticCurveTo(R * 0.28, R * 1.1 + flameLen * 0.7, R * 0.34, R * 1.1);
-          ctx.closePath();
-          ctx.fillStyle = 'rgba(249, 115, 22, 0.85)';
-          ctx.shadowBlur = 18;
-          ctx.shadowColor = '#fb923c';
-          ctx.fill();
-          ctx.shadowBlur = 0;
-          // middle yellow tongue
-          ctx.beginPath();
-          ctx.moveTo(-R * 0.22, R * 1.1);
-          ctx.quadraticCurveTo(-R * 0.18, R * 1.1 + flameLen * 0.5, 0, R * 1.1 + flameLen * 0.68);
-          ctx.quadraticCurveTo(R * 0.18, R * 1.1 + flameLen * 0.5, R * 0.22, R * 1.1);
-          ctx.closePath();
-          ctx.fillStyle = 'rgba(251, 191, 36, 0.95)';
-          ctx.fill();
-          // hot white-blue core
-          ctx.beginPath();
-          ctx.moveTo(-R * 0.11, R * 1.1);
-          ctx.quadraticCurveTo(-R * 0.09, R * 1.1 + flameLen * 0.3, 0, R * 1.1 + flameLen * 0.4);
-          ctx.quadraticCurveTo(R * 0.09, R * 1.1 + flameLen * 0.3, R * 0.11, R * 1.1);
-          ctx.closePath();
-          ctx.fillStyle = 'rgba(224, 242, 254, 0.95)';
-          ctx.fill();
+
+          if (fStyle === 'rings') {
+            // Expanding exhaust rings instead of a flame
+            ctx.lineWidth = 3;
+            for (var ri = 0; ri < 3; ri++) {
+              ctx.beginPath();
+              ctx.arc(0, R * (1.4 + ri * 0.5 * flick), R * (0.3 - ri * 0.06), 0, Math.PI * 2);
+              ctx.strokeStyle = ['#fb923c', '#fbbf24', '#fde68a'][ri];
+              ctx.globalAlpha = 1 - ri * 0.28;
+              ctx.shadowBlur = 12;
+              ctx.shadowColor = '#fb923c';
+              ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+          } else if (fStyle === 'smoke') {
+            // Chuffing smoke puffs
+            for (var si = 0; si < 3; si++) {
+              ctx.beginPath();
+              ctx.arc(Math.sin(Date.now() / 150 + si * 2) * R * 0.15,
+                R * (1.32 + si * 0.45), R * (0.28 + si * 0.05) * flick, 0, Math.PI * 2);
+              ctx.fillStyle = ['#94a3b8', '#cbd5e1', '#e2e8f0'][si];
+              ctx.globalAlpha = 0.75 - si * 0.22;
+              ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+          } else if (fStyle === 'stars') {
+            // Twinkling star sparks
+            var sa = Date.now() / 250;
+            for (var ti = 0; ti < 3; ti++) {
+              var sr = R * (0.24 - ti * 0.04) * flick;
+              ctx.save();
+              ctx.translate(Math.sin(sa + ti * 2) * R * 0.14, R * (1.38 + ti * 0.5));
+              ctx.rotate(sa + ti);
+              ctx.strokeStyle = '#fde047';
+              ctx.lineWidth = 2;
+              ctx.shadowBlur = 10;
+              ctx.shadowColor = '#fde047';
+              ctx.globalAlpha = 1 - ti * 0.25;
+              ctx.beginPath();
+              ctx.moveTo(-sr, 0);
+              ctx.lineTo(sr, 0);
+              ctx.moveTo(0, -sr);
+              ctx.lineTo(0, sr);
+              ctx.stroke();
+              ctx.restore();
+            }
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+          } else {
+            // Layered flame tongues: classic orange, blue, or the narrow jet
+            var pal, glow, wMul, lMul;
+            if (fStyle === 'blue') {
+              pal = ['rgba(37, 99, 235, 0.85)', 'rgba(96, 165, 250, 0.95)', 'rgba(224, 242, 254, 0.95)'];
+              glow = '#60a5fa'; wMul = 1; lMul = 1;
+            } else if (fStyle === 'jet') {
+              pal = ['rgba(34, 211, 238, 0.85)', 'rgba(165, 243, 252, 0.95)', 'rgba(255, 255, 255, 0.95)'];
+              glow = '#22d3ee'; wMul = 0.55; lMul = 1.6;
+            } else {
+              pal = ['rgba(249, 115, 22, 0.85)', 'rgba(251, 191, 36, 0.95)', 'rgba(224, 242, 254, 0.95)'];
+              glow = '#fb923c'; wMul = 1; lMul = 1;
+            }
+            var flameLen = R * 1.0 * flick * lMul;
+            ctx.beginPath();
+            ctx.moveTo(-R * 0.34 * wMul, R * 1.1);
+            ctx.quadraticCurveTo(-R * 0.28 * wMul, R * 1.1 + flameLen * 0.7, 0, R * 1.1 + flameLen);
+            ctx.quadraticCurveTo(R * 0.28 * wMul, R * 1.1 + flameLen * 0.7, R * 0.34 * wMul, R * 1.1);
+            ctx.closePath();
+            ctx.fillStyle = pal[0];
+            ctx.shadowBlur = 18;
+            ctx.shadowColor = glow;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.beginPath();
+            ctx.moveTo(-R * 0.22 * wMul, R * 1.1);
+            ctx.quadraticCurveTo(-R * 0.18 * wMul, R * 1.1 + flameLen * 0.5, 0, R * 1.1 + flameLen * 0.68);
+            ctx.quadraticCurveTo(R * 0.18 * wMul, R * 1.1 + flameLen * 0.5, R * 0.22 * wMul, R * 1.1);
+            ctx.closePath();
+            ctx.fillStyle = pal[1];
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(-R * 0.11 * wMul, R * 1.1);
+            ctx.quadraticCurveTo(-R * 0.09 * wMul, R * 1.1 + flameLen * 0.3, 0, R * 1.1 + flameLen * 0.4);
+            ctx.quadraticCurveTo(R * 0.09 * wMul, R * 1.1 + flameLen * 0.3, R * 0.11 * wMul, R * 1.1);
+            ctx.closePath();
+            ctx.fillStyle = pal[2];
+            ctx.fill();
+          }
         }
 
         // --- Swept tail fins (tinted per player) ---
@@ -2073,6 +2140,10 @@
         config.controlModePreference = options.controlModePreference || 'both';
         config.skin = options.skin || null; // player 1's rocket skin
         config.trail = options.trail || null; // player 1's thruster trail
+        config.flame = options.flame || null; // player 1's fire style (may carry a power)
+        config.flameSpeedMult = 1;
+        if (config.flame && config.flame.power === 'fast') config.flameSpeedMult = 1.35;
+        if (config.flame && config.flame.power === 'slow') config.flameSpeedMult = 0.65;
 
         resizeCanvas();
         reset();

@@ -140,6 +140,26 @@
       colors: ['#f472b6', '#a855f7', '#22d3ee', '#4ade80', '#fbbf24'], count: 2 }
   ];
 
+  // Fire styles (Tailor's third rack). Plain fires are cosmetic; the rest
+  // carry a gameplay power that is active whenever the fire is equipped.
+  var FLAME_KEY = 'neon_nebula_flame';
+  var FLAMES_OWNED_KEY = 'neon_nebula_flames_owned';
+
+  var FLAMES = [
+    { id: 'classic', name: 'Classic Fire', price: 0, style: 'classic', power: null,
+      powerLabel: 'NO POWER' },
+    { id: 'bluefire', name: 'Blue Blaze', price: 300, style: 'blue', power: null,
+      powerLabel: 'NO POWER' },
+    { id: 'snail', name: 'Snail Smoke', price: 400, style: 'smoke', power: 'slow',
+      powerLabel: 'POWER: SLOW-MO SHIP' },
+    { id: 'rings', name: 'Ring Burner', price: 600, style: 'rings', power: 'spin',
+      powerLabel: 'POWER: ALWAYS SPINNING' },
+    { id: 'turbo', name: 'Turbo Torch', price: 900, style: 'jet', power: 'fast',
+      powerLabel: 'POWER: EXTRA SPEED' },
+    { id: 'starfire', name: 'Star Fire', price: 1200, style: 'stars', power: 'lucky',
+      powerLabel: 'POWER: 2× COINS' }
+  ];
+
   var ZAP_ICON = '<svg viewBox="0 0 24 24" class="icon icon-stroke">' +
     '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>';
 
@@ -214,7 +234,9 @@
   var selectedSkin = 'cyan';
   var ownedTrails = ['classic'];
   var selectedTrail = 'classic';
-  var tailorTab = 'skins'; // 'skins' | 'trails'
+  var ownedFlames = ['classic'];
+  var selectedFlame = 'classic';
+  var tailorTab = 'skins'; // 'skins' | 'trails' | 'flames'
   var isResetOpen = false;
   var resetToken = null;
 
@@ -841,8 +863,10 @@
     var beatRecord = finalScore > highScores[currentMode] && finalScore > 0;
 
     // Mission pay: coins scale with score, with a big bonus for a new record.
+    // Star Fire's power doubles the take.
     var earned = Math.max(0, Math.round(finalScore / COIN_SCORE_DIVISOR));
     if (beatRecord) earned *= RECORD_COIN_MULTIPLIER;
+    if (getFlame(selectedFlame).power === 'lucky') earned *= 2;
     if (earned > 0) {
       coins += earned;
       saveWallet();
@@ -1082,6 +1106,8 @@
       localStorage.setItem(SKIN_KEY, selectedSkin);
       localStorage.setItem(TRAILS_OWNED_KEY, JSON.stringify(ownedTrails));
       localStorage.setItem(TRAIL_KEY, selectedTrail);
+      localStorage.setItem(FLAMES_OWNED_KEY, JSON.stringify(ownedFlames));
+      localStorage.setItem(FLAME_KEY, selectedFlame);
     } catch (err) { /* storage unavailable — session-only wallet */ }
   }
 
@@ -1090,6 +1116,44 @@
       if (TRAILS[i].id === id) return TRAILS[i];
     }
     return TRAILS[0];
+  }
+
+  function getFlame(id) {
+    for (var i = 0; i < FLAMES.length; i++) {
+      if (FLAMES[i].id === id) return FLAMES[i];
+    }
+    return FLAMES[0];
+  }
+
+  // Card preview: a nozzle with the fire style burning below it.
+  function flameSvg(flame) {
+    var inner;
+    if (flame.style === 'rings') {
+      inner = '<circle cx="20" cy="22" r="9" fill="none" stroke="#fb923c" stroke-width="3"/>' +
+        '<circle cx="20" cy="40" r="6.5" fill="none" stroke="#fbbf24" stroke-width="2.5" opacity="0.75"/>' +
+        '<circle cx="20" cy="54" r="4" fill="none" stroke="#fde68a" stroke-width="2" opacity="0.5"/>';
+    } else if (flame.style === 'smoke') {
+      inner = '<circle cx="20" cy="20" r="9" fill="#94a3b8" opacity="0.9"/>' +
+        '<circle cx="14" cy="36" r="7" fill="#cbd5e1" opacity="0.65"/>' +
+        '<circle cx="26" cy="50" r="5.5" fill="#e2e8f0" opacity="0.45"/>';
+    } else if (flame.style === 'stars') {
+      var star = function (x, y, r, o) {
+        return '<path d="M' + (x - r) + ' ' + y + ' L' + (x + r) + ' ' + y +
+          ' M' + x + ' ' + (y - r) + ' L' + x + ' ' + (y + r) +
+          '" stroke="#fde047" stroke-width="2.5" opacity="' + o + '" stroke-linecap="round"/>';
+      };
+      inner = star(20, 20, 8, 1) + star(14, 38, 6, 0.7) + star(26, 52, 4.5, 0.5);
+    } else {
+      var cols = flame.style === 'blue' ? ['#2563eb', '#60a5fa', '#e0f2fe']
+        : (flame.style === 'jet' ? ['#22d3ee', '#a5f3fc', '#ffffff'] : ['#f97316', '#fbbf24', '#fef9c3']);
+      var w = flame.style === 'jet' ? 6 : 11;
+      var len = flame.style === 'jet' ? 60 : 50;
+      inner =
+        '<path d="M' + (20 - w) + ' 12 Q20 ' + len + ' ' + (20 + w) + ' 12 Q20 22 ' + (20 - w) + ' 12 Z" fill="' + cols[0] + '"/>' +
+        '<path d="M' + (20 - w * 0.62) + ' 12 Q20 ' + (len * 0.75) + ' ' + (20 + w * 0.62) + ' 12 Q20 20 ' + (20 - w * 0.62) + ' 12 Z" fill="' + cols[1] + '"/>' +
+        '<path d="M' + (20 - w * 0.3) + ' 12 Q20 ' + (len * 0.5) + ' ' + (20 + w * 0.3) + ' 12 Q20 18 ' + (20 - w * 0.3) + ' 12 Z" fill="' + cols[2] + '"/>';
+    }
+    return '<svg viewBox="0 0 40 64"><path d="M13 4 L27 4 L29 10 L11 10 Z" fill="#475569"/>' + inner + '</svg>';
   }
 
   // Card preview: a nozzle with the trail's spark stream falling away below it.
@@ -1207,12 +1271,51 @@
     renderTailor();
   }
 
-  // The Tailor has two racks; render whichever tab is active.
+  function renderFlamesGrid() {
+    el.skinsCoins.textContent = formatNumber(coins);
+    el.skinsGrid.innerHTML = '';
+    FLAMES.forEach(function (flame) {
+      var owned = ownedFlames.indexOf(flame.id) !== -1;
+      var devFree = !owned && isDeveloper();
+      var card = document.createElement('button');
+      card.className = 'skin-card' + (selectedFlame === flame.id ? ' selected' : (owned || devFree ? '' : ' locked'));
+      var status;
+      if (selectedFlame === flame.id) status = '<span class="skin-status">EQUIPPED</span>';
+      else if (owned) status = '<span class="skin-status">TAP TO EQUIP</span>';
+      else if (devFree) status = '<span class="skin-status">FREE — DEV</span>';
+      else status = '<span class="skin-status price">' + formatNumber(flame.price) + '</span>';
+      card.innerHTML = flameSvg(flame) +
+        '<span class="skin-name">' + flame.name + '</span>' +
+        '<span class="skin-power' + (flame.power ? ' has-power' : '') + '">' + flame.powerLabel + '</span>' +
+        status;
+      card.addEventListener('click', function () { handleFlameClick(flame); });
+      el.skinsGrid.appendChild(card);
+    });
+  }
+
+  function handleFlameClick(flame) {
+    setFormError(el.skinsError, '');
+    if (ownedFlames.indexOf(flame.id) === -1 && !isDeveloper()) {
+      if (coins < flame.price) {
+        setFormError(el.skinsError,
+          'Not enough coins — fly more missions! You need ' + formatNumber(flame.price - coins) + ' more.');
+        return;
+      }
+      coins -= flame.price;
+      ownedFlames.push(flame.id);
+    }
+    selectedFlame = flame.id;
+    saveWallet();
+    renderTailor();
+  }
+
+  // The Tailor has three racks; render whichever tab is active.
   function renderTailor() {
     Array.prototype.forEach.call(el.skinsModal.querySelectorAll('.tailor-tab'), function (tab) {
       tab.classList.toggle('active', tab.getAttribute('data-tab') === tailorTab);
     });
     if (tailorTab === 'trails') renderTrailsGrid();
+    else if (tailorTab === 'flames') renderFlamesGrid();
     else renderSkinsGrid();
   }
 
@@ -1307,7 +1410,8 @@
       isCPUMultiplayer: isCPUMultiplayer,
       controlModePreference: controlModePreference,
       skin: getSkin(selectedSkin),
-      trail: getTrail(selectedTrail)
+      trail: getTrail(selectedTrail),
+      flame: getFlame(selectedFlame)
     });
   }
 
@@ -1352,6 +1456,14 @@
       }
       var savedTrail = localStorage.getItem(TRAIL_KEY);
       if (savedTrail && ownedTrails.indexOf(savedTrail) !== -1) selectedTrail = savedTrail;
+
+      var savedOwnedFlames = JSON.parse(localStorage.getItem(FLAMES_OWNED_KEY) || '[]');
+      if (savedOwnedFlames instanceof Array && savedOwnedFlames.length) {
+        if (savedOwnedFlames.indexOf('classic') === -1) savedOwnedFlames.push('classic');
+        ownedFlames = savedOwnedFlames;
+      }
+      var savedFlame = localStorage.getItem(FLAME_KEY);
+      if (savedFlame && ownedFlames.indexOf(savedFlame) !== -1) selectedFlame = savedFlame;
     } catch (err) { /* storage unavailable — start with defaults */ }
     refreshHighScoreDisplays();
     if (savedControl === 'mouse' || savedControl === 'keyboard' || savedControl === 'both') {
@@ -1427,6 +1539,7 @@
         var changed = false;
         if (ownedSkins.indexOf(selectedSkin) === -1) { selectedSkin = 'cyan'; changed = true; }
         if (ownedTrails.indexOf(selectedTrail) === -1) { selectedTrail = 'classic'; changed = true; }
+        if (ownedFlames.indexOf(selectedFlame) === -1) { selectedFlame = 'classic'; changed = true; }
         if (changed) saveWallet();
       }
       render();

@@ -1936,6 +1936,18 @@ body {
   color: var(--cyan-400);
 }
 
+.skin-power {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--slate-500);
+}
+
+.skin-power.has-power {
+  color: var(--amber-400);
+  text-shadow: 0 0 6px rgba(251, 191, 36, 0.4);
+}
+
 .skin-status.price {
   display: inline-flex;
   align-items: center;
