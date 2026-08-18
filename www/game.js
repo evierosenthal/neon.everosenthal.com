@@ -1763,7 +1763,7 @@
         if (!isPaused && !state.isGameOver) {
           var trail = (p.id === 'player1' && config.trail) ? config.trail : null;
           var thrusterCount = (state.activeEffects.speedBoost > 0 ? 2 : 1) +
-            (trail && trail.count > 1 ? 1 : 0);
+            (trail && trail.count > 1 ? trail.count - 1 : 0);
           // Thrusters stream from ship tail
           var streamX = p.x - Math.sin(tilt) * (p.radius * 1.3);
           var streamY = p.y + Math.cos(tilt) * (p.radius * 1.3); // below the nozzle
