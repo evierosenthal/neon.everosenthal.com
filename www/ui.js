@@ -13,6 +13,20 @@
   var CONTROL_KEY = 'neon_nebula_control_mode';
   var SPEED_KEY = 'neon_nebula_speed'; // rocket speed percent, 1-300
   var HAS_ACCOUNT_KEY = 'neon_nebula_has_account'; // set after any successful login
+  var LAST_MISSION_KEY = 'neon_nebula_last_mission'; // {diff, mode} of the last launch
+
+  // Pilot ranks climb with the all-time best solo/duo score. Each rung's
+  // `min` is the score that unlocks it; the home screen shows progress to
+  // the next rung.
+  var RANKS = [
+    { name: 'CADET', min: 0 },
+    { name: 'ENSIGN', min: 1000 },
+    { name: 'LIEUTENANT', min: 3000 },
+    { name: 'CAPTAIN', min: 6000 },
+    { name: 'COMMANDER', min: 12000 },
+    { name: 'ADMIRAL', min: 25000 },
+    { name: 'LEGEND', min: 50000 }
+  ];
 
   // Solo and two-player records are tracked separately: a two-player run
   // records under '2p_<tier>' instead of '<tier>'.
@@ -285,6 +299,7 @@
   var tailorTab = 'skins'; // 'skins' | 'trails' | 'flames'
   var isResetOpen = false;
   var resetToken = null;
+  var lastMission = null; // {diff: number, mode: 'single'|'local'|'cpu'} — Enter replays it
 
   var el = {
     canvas: document.getElementById('game-canvas'),
@@ -388,6 +403,18 @@
     homeBest: document.getElementById('home-best'),
     homeCoins: document.getElementById('home-coins'),
     homePilot: document.getElementById('home-pilot'),
+    homePilotTile: document.getElementById('home-pilot-tile'),
+    homeRank: document.getElementById('home-rank'),
+    homeRankFill: document.getElementById('home-rank-fill'),
+    homeTicker: document.getElementById('home-ticker'),
+    homeHint: document.getElementById('home-hint'),
+    tailorBadge: document.getElementById('tailor-badge'),
+    loadoutSkinIcon: document.getElementById('loadout-skin-icon'),
+    loadoutSkin: document.getElementById('loadout-skin'),
+    loadoutTrailIcon: document.getElementById('loadout-trail-icon'),
+    loadoutTrail: document.getElementById('loadout-trail'),
+    loadoutFlameIcon: document.getElementById('loadout-flame-icon'),
+    loadoutFlame: document.getElementById('loadout-flame'),
     skinsBtn: document.getElementById('skins-btn'),
     skinsModal: document.getElementById('skins-modal'),
     skinsClose: document.getElementById('skins-close'),
@@ -623,6 +650,17 @@
     requestAnimationFrame(step);
   }
 
+  function rankFor(best) {
+    var idx = 0;
+    for (var i = 0; i < RANKS.length; i++) {
+      if (best >= RANKS[i].min) idx = i;
+    }
+    var rank = RANKS[idx];
+    var next = RANKS[idx + 1] || null;
+    var progress = next ? (best - rank.min) / (next.min - rank.min) : 1;
+    return { name: rank.name, next: next, progress: Math.max(0, Math.min(1, progress)) };
+  }
+
   function refreshHomeStats() {
     var best = 0;
     MODES.forEach(function (m) { best = Math.max(best, highScores[m]); });
@@ -631,13 +669,143 @@
     var user = window.NeonAuth ? window.NeonAuth.state.user : null;
     el.homePilot.textContent = user ? user.username : 'GUEST';
 
+    // Rank rung + progress bar toward the next one
+    var rank = rankFor(best);
+    el.homeRank.textContent = rank.name;
+    el.homeRankFill.style.width = (rank.progress * 100).toFixed(1) + '%';
+    el.homePilotTile.title = rank.next
+      ? formatNumber(rank.next.min - best) + ' more points to reach ' + rank.next.name
+      : 'Highest rank achieved';
+
     // The equipped skin poses beside the title; re-render only on change.
     if (el.homeRocket.getAttribute('data-skin') !== selectedSkin) {
       el.homeRocket.setAttribute('data-skin', selectedSkin);
       el.homeRocket.innerHTML = skinSvg(getSkin(selectedSkin));
     }
 
+    refreshLoadout();
+    refreshDifficultyBests();
+    refreshTailorBadge();
+    refreshHomeHint();
+    renderHomeTicker();
     refreshDailyChest();
+  }
+
+  // Loadout chips mirror whatever is equipped in the Tailor.
+  function refreshLoadout() {
+    var skin = getSkin(selectedSkin);
+    var trail = getTrail(selectedTrail);
+    var flame = getFlame(selectedFlame);
+    if (el.loadoutSkinIcon.getAttribute('data-id') !== skin.id) {
+      el.loadoutSkinIcon.setAttribute('data-id', skin.id);
+      el.loadoutSkinIcon.innerHTML = skinSvg(skin);
+    }
+    if (el.loadoutTrailIcon.getAttribute('data-id') !== trail.id) {
+      el.loadoutTrailIcon.setAttribute('data-id', trail.id);
+      el.loadoutTrailIcon.innerHTML = trailSvg(trail);
+    }
+    if (el.loadoutFlameIcon.getAttribute('data-id') !== flame.id) {
+      el.loadoutFlameIcon.setAttribute('data-id', flame.id);
+      el.loadoutFlameIcon.innerHTML = flameSvg(flame);
+    }
+    el.loadoutSkin.textContent = skin.name;
+    el.loadoutTrail.textContent = trail.name;
+    el.loadoutFlame.textContent = flame.name;
+  }
+
+  // Each difficulty button carries the record for that tier, and the tier
+  // launched most recently wears a LAST tag so Enter has a visible target.
+  function refreshDifficultyBests() {
+    var tags = document.querySelectorAll('.btn-best');
+    Array.prototype.forEach.call(tags, function (tag) {
+      var hs = highScores[tag.getAttribute('data-best-mode')] || 0;
+      tag.textContent = hs ? 'BEST ' + formatNumber(hs) : 'NO RECORD YET';
+      tag.classList.toggle('btn-best-empty', !hs);
+    });
+    var buttons = document.querySelectorAll('.difficulty-buttons .btn');
+    Array.prototype.forEach.call(buttons, function (button) {
+      var isLast = !!lastMission &&
+        parseFloat(button.getAttribute('data-diff')) === lastMission.diff &&
+        button.parentNode.getAttribute('data-mode') === lastMission.mode;
+      button.classList.toggle('last-played', isLast);
+    });
+  }
+
+  // Nudge toward the Tailor when the wallet can buy something new.
+  function refreshTailorBadge() {
+    var affordable = false;
+    if (!isDeveloper()) {
+      var racks = [
+        { items: SKINS, owned: ownedSkins },
+        { items: TRAILS, owned: ownedTrails },
+        { items: FLAMES, owned: ownedFlames }
+      ];
+      racks.forEach(function (rack) {
+        rack.items.forEach(function (item) {
+          if (rack.owned.indexOf(item.id) === -1 && item.price <= coins) affordable = true;
+        });
+      });
+    }
+    show(el.tailorBadge, affordable);
+  }
+
+  function missionLabel(mission) {
+    var tier = TIER_LABELS[modeFromDifficulty(mission.diff)];
+    if (mission.mode === 'local') return 'TWO PLAYER ' + tier;
+    if (mission.mode === 'cpu') return 'CO-PILOT ' + tier;
+    return tier;
+  }
+
+  function refreshHomeHint() {
+    el.homeHint.innerHTML = '';
+    var kbd = document.createElement('kbd');
+    kbd.textContent = 'ENTER';
+    if (lastMission) {
+      el.homeHint.appendChild(kbd);
+      el.homeHint.appendChild(document.createTextNode(' replay ' + missionLabel(lastMission)));
+    } else {
+      el.homeHint.appendChild(document.createTextNode('Pick a difficulty to launch'));
+    }
+  }
+
+  // Top score across the solo boards, shown under the menu once the
+  // leaderboard has loaded (usernames are inserted as text, never HTML).
+  function renderHomeTicker() {
+    var top = null;
+    if (leaderboards) {
+      SOLO_MODES.forEach(function (mode) {
+        (leaderboards[mode] || []).forEach(function (row) {
+          if (!top || row.score > top.score) top = { username: row.username, score: row.score, mode: mode };
+        });
+      });
+    }
+    show(el.homeTicker, !!top);
+    if (!top) return;
+    el.homeTicker.innerHTML = '';
+    var label = document.createElement('span');
+    label.className = 'ticker-label';
+    label.textContent = 'GALACTIC RECORD';
+    var name = document.createElement('span');
+    name.className = 'ticker-name';
+    name.textContent = top.username;
+    var scoreEl = document.createElement('span');
+    scoreEl.className = 'ticker-score';
+    scoreEl.textContent = formatNumber(top.score);
+    var mode = document.createElement('span');
+    mode.className = 'ticker-mode';
+    mode.textContent = TIER_LABELS[top.mode];
+    el.homeTicker.appendChild(label);
+    el.homeTicker.appendChild(name);
+    el.homeTicker.appendChild(scoreEl);
+    el.homeTicker.appendChild(mode);
+  }
+
+  function loadHomeTicker() {
+    if (!window.NeonAuth) return;
+    window.NeonAuth.getLeaderboards().then(function (boards) {
+      leaderboards = boards;
+      if (gameState === 'START') renderHomeTicker();
+    }).catch(function () { /* comms offline — ticker stays hidden */ });
   }
 
   function buildStartStars() {
@@ -741,11 +909,20 @@
     }
   }
 
+  function untilMidnightLabel() {
+    var now = new Date();
+    var midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    var mins = Math.max(1, Math.ceil((midnight - now) / 60000));
+    var h = Math.floor(mins / 60);
+    var m = mins % 60;
+    return h ? h + 'H ' + m + 'M' : m + 'M';
+  }
+
   function refreshDailyChest() {
     var claimed = dailyClaimed();
     el.dailyChest.classList.toggle('available', !claimed);
     el.dailyChest.classList.toggle('claimed', claimed);
-    el.dailyChestLabel.textContent = claimed ? 'COME BACK TOMORROW' : 'DAILY BONUS';
+    el.dailyChestLabel.textContent = claimed ? 'NEXT IN ' + untilMidnightLabel() : 'DAILY BONUS';
   }
 
   function claimDailyBonus() {
@@ -778,9 +955,13 @@
       dx = Math.max(-0.7, Math.min(0.7, dx));
       dy = Math.max(-0.7, Math.min(0.7, dy));
       panel.style.transform = 'perspective(1400px) rotateY(' + (dx * 4).toFixed(2) + 'deg) rotateX(' + (-dy * 3).toFixed(2) + 'deg)';
+      el.startScreen.style.setProperty('--px', dx.toFixed(3));
+      el.startScreen.style.setProperty('--py', dy.toFixed(3));
     });
     el.startScreen.addEventListener('mouseleave', function () {
       panel.style.transform = '';
+      el.startScreen.style.setProperty('--px', '0');
+      el.startScreen.style.setProperty('--py', '0');
     });
   }
 
@@ -844,10 +1025,15 @@
       DIFFICULTIES.forEach(function (diff) {
         var button = document.createElement('button');
         button.className = diff.className;
+        button.setAttribute('data-diff', diff.value);
+        var bestMode = (mode === 'local' ? '2p_' : '') + modeFromDifficulty(diff.value);
         button.innerHTML = '<span class="btn-sheen"></span>' +
-          (diff.zap ? ZAP_ICON : '') +
-          diff.label +
-          (diff.zap ? ZAP_ICON : '');
+          '<span class="btn-label">' +
+            (diff.zap ? ZAP_ICON : '') +
+            diff.label +
+            (diff.zap ? ZAP_ICON : '') +
+          '</span>' +
+          '<span class="btn-best" data-best-mode="' + bestMode + '"></span>';
         button.addEventListener('click', function () {
           startGame(diff.value, mode === 'local', mode === 'cpu');
         });
@@ -1367,6 +1553,14 @@
     renderTailor();
   }
 
+  function openTailor(tab) {
+    if (tab === 'skins' || tab === 'trails' || tab === 'flames') tailorTab = tab;
+    setFormError(el.skinsError, '');
+    renderTailor();
+    isSkinsOpen = true;
+    render();
+  }
+
   // The Tailor has three racks; render whichever tab is active.
   function renderTailor() {
     Array.prototype.forEach.call(el.skinsModal.querySelectorAll('.tailor-tab'), function (tab) {
@@ -1458,6 +1652,10 @@
     } catch (err) { /* metadata not loaded yet */ }
     isLocalMultiplayer = !!localMultiplayer;
     isCPUMultiplayer = !!cpuMultiplayer;
+    lastMission = { diff: diff, mode: localMultiplayer ? 'local' : (cpuMultiplayer ? 'cpu' : 'single') };
+    try {
+      localStorage.setItem(LAST_MISSION_KEY, JSON.stringify(lastMission));
+    } catch (err) { /* storage unavailable */ }
     gameState = 'PLAYING';
     isPaused = false;
     render();
@@ -1522,6 +1720,12 @@
       }
       var savedFlame = localStorage.getItem(FLAME_KEY);
       if (savedFlame && ownedFlames.indexOf(savedFlame) !== -1) selectedFlame = savedFlame;
+
+      var savedMission = JSON.parse(localStorage.getItem(LAST_MISSION_KEY) || 'null');
+      if (savedMission && typeof savedMission.diff === 'number' &&
+          ['single', 'local', 'cpu'].indexOf(savedMission.mode) !== -1) {
+        lastMission = savedMission;
+      }
     } catch (err) { /* storage unavailable — start with defaults */ }
     refreshHighScoreDisplays();
     if (savedControl === 'mouse' || savedControl === 'keyboard' || savedControl === 'both') {
@@ -1549,6 +1753,18 @@
     renderControlOptions();
     buildStartStars();
     wireStartParallax();
+    loadHomeTicker();
+
+    // Chest countdown ticks once a minute while the menu is up
+    setInterval(function () {
+      if (gameState === 'START') refreshDailyChest();
+    }, 60000);
+
+    Array.prototype.forEach.call(document.querySelectorAll('.loadout-chip'), function (chip) {
+      chip.addEventListener('click', function () {
+        openTailor(chip.getAttribute('data-tailor'));
+      });
+    });
 
     Array.prototype.forEach.call(document.querySelectorAll('[data-menu]'), function (button) {
       button.addEventListener('click', function () {
@@ -1775,12 +1991,7 @@
 
     el.dailyChest.addEventListener('click', claimDailyBonus);
 
-    el.skinsBtn.addEventListener('click', function () {
-      setFormError(el.skinsError, '');
-      renderTailor();
-      isSkinsOpen = true;
-      render();
-    });
+    el.skinsBtn.addEventListener('click', function () { openTailor(tailorTab); });
     el.skinsClose.addEventListener('click', function () {
       isSkinsOpen = false;
       render();
@@ -1815,6 +2026,16 @@
     el.settingsDone.addEventListener('click', closeSettings);
 
     document.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        var tag = (e.target && e.target.tagName || '').toLowerCase();
+        var typing = tag === 'input' || tag === 'textarea' || tag === 'select' || tag === 'button';
+        var modalOpen = isSettingsOpen || isAuthOpen || isLeaderboardOpen || isSkinsOpen || isResetOpen;
+        if (gameState === 'START' && lastMission && !typing && !modalOpen) {
+          e.preventDefault();
+          startGame(lastMission.diff, lastMission.mode === 'local', lastMission.mode === 'cpu');
+        }
+        return;
+      }
       if (e.key !== 'Escape') return;
       if (isSettingsOpen) closeSettings();
       else if (isAuthOpen) closeAuthModal();

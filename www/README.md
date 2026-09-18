@@ -58,6 +58,20 @@ In solo and CPU modes, Player 1's input scheme (mouse, keyboard, or both) is con
 Settings and is remembered in `localStorage`. In local co-op, Player 1 is always WASD so the
 arrow keys stay free for Player 2.
 
+## Home screen
+
+- Each difficulty button shows that tier's record; the tier launched most recently wears a
+  `LAST` tag and `Enter` replays it (ignored while a modal or text field has focus).
+- The pilot tile shows a rank (Cadet → Ensign → Lieutenant → Captain → Commander → Admiral →
+  Legend) earned by the all-time best score, with a progress bar to the next rung.
+- The loadout strip shows the equipped skin, trail and fire; each chip opens the Tailor on that
+  rack. The Tailor button wears a `NEW` badge whenever the wallet can afford an unowned item.
+- The galactic record (top solo leaderboard score) appears under the buttons once the
+  leaderboard API answers; it stays hidden when the database is offline.
+- The daily bonus chest counts down to local midnight after it has been claimed.
+- Ambient motion (starfield, parallax, flybys, shooting stars) is disabled under
+  `prefers-reduced-motion`.
+
 ## Power-ups
 
 | Orb | Effect |
