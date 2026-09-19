@@ -385,15 +385,43 @@
 
     // --- Setup ------------------------------------------------------------
 
+    // --- Phone layout -------------------------------------------------------
+    // A phone held upright gets the whole app rotated a quarter turn by CSS
+    // (html.rotated) so the game plays landscape. Canvas size and pointer
+    // coordinates pass through here so the engine always works in that
+    // rotated (landscape) space. Tablets and desktops are never rotated.
+    var layout = {
+      rotated: false,
+      width: function () { return layout.rotated ? window.innerHeight : window.innerWidth; },
+      height: function () { return layout.rotated ? window.innerWidth : window.innerHeight; },
+      // Screen point -> app point. The CSS transform is rotate(90deg)
+      // translateY(-100%) about the top-left corner, so screen x runs down
+      // the app's y axis and screen y runs along the app's x axis.
+      point: function (sx, sy) {
+        return layout.rotated ? { x: sy, y: window.innerWidth - sx } : { x: sx, y: sy };
+      },
+      update: function () {
+        var root = document.documentElement;
+        root.style.setProperty('--vw', window.innerWidth + 'px');
+        root.style.setProperty('--vh', window.innerHeight + 'px');
+        var touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        var phone = touch && Math.min(window.innerWidth, window.innerHeight) <= 600;
+        layout.rotated = !!phone && window.innerHeight > window.innerWidth;
+        root.classList.toggle('rotated', layout.rotated);
+      }
+    };
+    window.NeonLayout = layout;
+    layout.update();
+
     function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.width = layout.width();
+      canvas.height = layout.height();
     }
 
     function reset() {
       var hasPlayer2 = config.isLocalMultiplayer || config.isCPUMultiplayer;
-      var w = window.innerWidth;
-      var h = window.innerHeight;
+      var w = layout.width();
+      var h = layout.height();
 
       state = {
         player: createPlayer('player1', w / (hasPlayer2 ? 3 : 2), h / 2, '#00ffff'),
@@ -2117,17 +2145,18 @@
     // --- Input ------------------------------------------------------------
 
     function handleResize() {
+      layout.update();
       resizeCanvas();
     }
 
     function handleMouseMove(e) {
-      mousePos = { x: e.clientX, y: e.clientY };
+      mousePos = layout.point(e.clientX, e.clientY);
       controlMode = 'mouse';
     }
 
     function handleTouchMove(e) {
       if (e.touches[0]) {
-        mousePos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        mousePos = layout.point(e.touches[0].clientX, e.touches[0].clientY);
         controlMode = 'mouse';
       }
     }

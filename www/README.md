@@ -84,6 +84,9 @@ crash and the high-score fanfare.
   against the cursor for depth.
 - Ambient motion (starfield, parallax, flybys, shooting stars) is disabled under
   `prefers-reduced-motion`.
+- On a phone held upright the whole app is rotated a quarter turn so it plays landscape
+  (`html.rotated`, set by `game.js`, which also swaps the canvas size and maps touch
+  coordinates). The home screen scrolls by touch. Tablets and desktops are never rotated.
 
 ## Power-ups
 

@@ -54,11 +54,28 @@ body {
 .app {
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: var(--vh, 100vh); /* --vh tracks the visible height on phones */
   overflow: hidden;
   background: var(--slate-950);
   user-select: none;
   touch-action: none;
+}
+
+/* A phone held upright: turn the whole app a quarter turn clockwise so it
+   plays landscape (html.rotated is set by game.js). The app becomes
+   viewport-height wide and viewport-width tall, then swings into place. */
+html.rotated .app {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--vh);
+  height: var(--vw);
+  transform: rotate(90deg) translateY(-100%);
+  transform-origin: top left;
+}
+
+html.rotated .panel-settings {
+  max-height: calc(var(--vw) - 2rem);
 }
 
 /* --- Background --- */
@@ -401,6 +418,8 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   overflow-y: auto;
+  touch-action: pan-x pan-y; /* the app blocks touch gestures; the menu must scroll */
+  -webkit-overflow-scrolling: touch;
 }
 
 .overlay-gameover {
@@ -1043,8 +1062,11 @@ body {
   }
 }
 
-/* The menu panel rises in on load, then leans gently toward the cursor */
+/* The menu panel rises in on load, then leans gently toward the cursor.
+   flex: none keeps a taller-than-screen panel from being squashed (its
+   overflow is hidden, so it would otherwise shrink instead of scrolling). */
 .panel-start {
+  flex: none;
   transition: transform 0.2s ease-out;
   will-change: transform;
   animation: rise-in 0.45s ease backwards;
@@ -1445,6 +1467,7 @@ body {
 @media (max-width: 640px) {
   .overlay-start {
     flex-direction: column;
+    justify-content: flex-start; /* centering a too-tall panel would hide its top */
     padding-top: 4.75rem; /* clear the settings and account buttons */
     padding-bottom: 1.5rem;
   }
