@@ -1297,6 +1297,12 @@ body {
   color: var(--rose-400);
 }
 
+/* Only the duo record is shown here, so the single tile sits centered */
+#menu-two-player .home-stats {
+  grid-template-columns: minmax(0, 14rem);
+  justify-content: center;
+}
+
 #menu-two-player .home-loadout {
   margin-bottom: 1rem;
 }

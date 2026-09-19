@@ -423,8 +423,6 @@
     homeHint: document.getElementById('home-hint'),
     tailorBadge: document.getElementById('tailor-badge'),
     duoBest: document.getElementById('duo-best'),
-    duoCoins: document.getElementById('duo-coins'),
-    duoPilot: document.getElementById('duo-pilot'),
     duoHint: document.getElementById('duo-hint'),
     tailorPilots: document.getElementById('tailor-pilots'),
     tailorSubtitle: document.getElementById('tailor-subtitle'),
@@ -780,9 +778,6 @@
     var best = 0;
     DUO_MODES.forEach(function (m) { best = Math.max(best, highScores[m]); });
     animateStat(el.duoBest, best);
-    animateStat(el.duoCoins, coins);
-    var user = window.NeonAuth ? window.NeonAuth.state.user : null;
-    el.duoPilot.textContent = user ? user.username : 'GUEST';
     el.duoHint.innerHTML = '';
     if (lastMission && lastMission.mode === 'local') {
       var kbd = document.createElement('kbd');

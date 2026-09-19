@@ -304,14 +304,6 @@ function asset(string $path): string
                 <span id="duo-best" class="home-stat-value home-stat-cyan">0</span>
                 <span class="home-stat-label">Duo Best</span>
               </div>
-              <div class="home-stat">
-                <span id="duo-coins" class="home-stat-value home-stat-amber">0</span>
-                <span class="home-stat-label">Coins</span>
-              </div>
-              <div class="home-stat">
-                <span id="duo-pilot" class="home-stat-value home-stat-indigo">GUEST</span>
-                <span class="home-stat-label">Pilot 1</span>
-              </div>
             </div>
 
             <div class="loadout-row-label loadout-row-label-p1">Pilot 1 &middot; WASD</div>
