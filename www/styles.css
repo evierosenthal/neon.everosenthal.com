@@ -2355,6 +2355,18 @@ body {
   height: 1rem;
 }
 
+.lb-section-head-first {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.lb-tabs-2p {
+  max-width: 22rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .lb-level {
   flex: none;
   font-size: 0.5625rem;

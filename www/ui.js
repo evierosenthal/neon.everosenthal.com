@@ -287,7 +287,8 @@
   var newhighPhase = 'offer'; // 'offer' | 'register' | 'forgot' | 'submitting' | 'result' | 'none'
   var isLeaderboardOpen = false;
   var leaderboards = null; // {easy: [...], medium: [...], ...} cache for the modal
-  var leaderboardTab = 'easy';
+  var leaderboardTab = 'easy'; // one-player tier shown in the modal
+  var leaderboard2pTab = 'easy'; // two-player tier shown in the modal
   var isSkinsOpen = false;
   var isAuthOpen = false;
   var authModalPhase = 'login'; // 'login' | 'register' | 'forgot'
@@ -1198,13 +1199,13 @@
     show(node, !!message);
   }
 
-  function buildLeaderboardList(container, rows) {
+  function buildLeaderboardList(container, rows, emptyText) {
     var user = window.NeonAuth ? window.NeonAuth.state.user : null;
     container.innerHTML = '';
     if (!rows || !rows.length) {
       var empty = document.createElement('div');
       empty.className = 'lb-empty';
-      empty.textContent = 'No scores transmitted yet — be the first commander on the board.';
+      empty.textContent = emptyText || 'No scores transmitted yet — be the first commander on the board.';
       container.appendChild(empty);
       return;
     }
@@ -1642,64 +1643,34 @@
   }
 
   function renderLeaderboardTab() {
-    var tabs = el.leaderboardModal.querySelectorAll('.lb-tab');
+    var tabs = el.leaderboardModal.querySelectorAll('.lb-tabs-solo .lb-tab');
     Array.prototype.forEach.call(tabs, function (tab) {
       tab.classList.toggle('active', tab.getAttribute('data-mode') === leaderboardTab);
     });
     if (leaderboards) buildLeaderboardList(el.leaderboardList, leaderboards[leaderboardTab]);
   }
 
-  // Merge the four two-player boards into one list, best first, each row
-  // labeled with its level.
+  // Two-player boards get their own tier tabs, one board per level.
   function render2pSection() {
-    var rows = [];
-    DUO_MODES.forEach(function (mode) {
-      (leaderboards && leaderboards[mode] ? leaderboards[mode] : []).forEach(function (row) {
-        rows.push({ username: row.username, score: row.score, level: TIER_LABELS[tierOf(mode)] });
-      });
+    var tabs = el.leaderboardModal.querySelectorAll('.lb-tabs-2p .lb-tab');
+    Array.prototype.forEach.call(tabs, function (tab) {
+      tab.classList.toggle('active', tab.getAttribute('data-mode') === leaderboard2pTab);
     });
-    rows.sort(function (a, b) { return b.score - a.score; });
-    rows = rows.slice(0, 10);
-
-    var user = window.NeonAuth ? window.NeonAuth.state.user : null;
-    el.leaderboard2pList.innerHTML = '';
-    if (!rows.length) {
-      var empty = document.createElement('div');
-      empty.className = 'lb-empty';
-      empty.textContent = 'No two-player scores yet — grab a co-pilot!';
-      el.leaderboard2pList.appendChild(empty);
-      return;
+    if (leaderboards) {
+      buildLeaderboardList(el.leaderboard2pList, leaderboards['2p_' + leaderboard2pTab],
+        'No two-player scores on ' + TIER_LABELS[leaderboard2pTab] + ' yet — grab a co-pilot!');
     }
-    rows.forEach(function (row, i) {
-      var div = document.createElement('div');
-      div.className = 'lb-row' + (user && user.username === row.username ? ' lb-me' : '');
-      var rank = document.createElement('span');
-      rank.className = 'lb-rank';
-      rank.textContent = '#' + (i + 1);
-      var name = document.createElement('span');
-      name.className = 'lb-name';
-      name.textContent = row.username;
-      var level = document.createElement('span');
-      level.className = 'lb-level';
-      level.textContent = row.level;
-      var scoreEl = document.createElement('span');
-      scoreEl.className = 'lb-score';
-      scoreEl.textContent = formatNumber(row.score);
-      div.appendChild(rank);
-      div.appendChild(name);
-      div.appendChild(level);
-      div.appendChild(scoreEl);
-      el.leaderboard2pList.appendChild(div);
-    });
   }
 
   function openLeaderboard() {
     isLeaderboardOpen = true;
-    leaderboardTab = tierOf(currentMode); // tabs cover the solo tiers
+    leaderboardTab = tierOf(currentMode); // both sections open on the tier just played
+    leaderboard2pTab = leaderboardTab;
     el.leaderboardList.innerHTML = '<div class="lb-empty">Contacting command&hellip;</div>';
     el.leaderboard2pList.innerHTML = '<div class="lb-empty">Contacting command&hellip;</div>';
     render();
     renderLeaderboardTab();
+    render2pSection();
     window.NeonAuth.getLeaderboards().then(function (boards) {
       leaderboards = boards;
       renderLeaderboardTab();
@@ -2060,11 +2031,17 @@
     }
 
     el.seeHighscores.addEventListener('click', openLeaderboard);
+    Array.prototype.forEach.call(el.leaderboardModal.querySelectorAll('.lb-tabs-2p .lb-tab'), function (tab) {
+      tab.addEventListener('click', function () {
+        leaderboard2pTab = tab.getAttribute('data-mode');
+        render2pSection();
+      });
+    });
     el.leaderboardClose.addEventListener('click', function () {
       isLeaderboardOpen = false;
       render();
     });
-    Array.prototype.forEach.call(el.leaderboardModal.querySelectorAll('.lb-tab'), function (tab) {
+    Array.prototype.forEach.call(el.leaderboardModal.querySelectorAll('.lb-tabs-solo .lb-tab'), function (tab) {
       tab.addEventListener('click', function () {
         leaderboardTab = tab.getAttribute('data-mode');
         renderLeaderboardTab();

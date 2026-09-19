@@ -469,7 +469,11 @@ function asset(string $path): string
               <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
           </div>
-          <div class="lb-tabs">
+          <div class="lb-section-head lb-section-head-first">
+            <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            ONE PLAYER
+          </div>
+          <div class="lb-tabs lb-tabs-solo">
             <button class="lb-tab" data-mode="easy">EASY</button>
             <button class="lb-tab" data-mode="medium">MEDIUM</button>
             <button class="lb-tab" data-mode="hard">HARD</button>
@@ -480,6 +484,12 @@ function asset(string $path): string
           <div class="lb-section-head">
             <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             TWO PLAYER
+          </div>
+          <div class="lb-tabs lb-tabs-2p">
+            <button class="lb-tab" data-mode="easy">EASY</button>
+            <button class="lb-tab" data-mode="medium">MEDIUM</button>
+            <button class="lb-tab" data-mode="hard">HARD</button>
+            <button class="lb-tab" data-mode="super">SUPER</button>
           </div>
           <div id="leaderboard-2p-list" class="lb-list lb-list-compact"></div>
         </div>
