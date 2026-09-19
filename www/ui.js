@@ -784,8 +784,6 @@
       kbd.textContent = 'ENTER';
       el.duoHint.appendChild(kbd);
       el.duoHint.appendChild(document.createTextNode(' replay ' + missionLabel(lastMission)));
-    } else {
-      el.duoHint.appendChild(document.createTextNode('Dress both pilots, then pick a difficulty'));
     }
   }
 
