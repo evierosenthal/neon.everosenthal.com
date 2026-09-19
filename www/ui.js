@@ -57,6 +57,9 @@
   var DAILY_KEY = 'neon_nebula_daily_claim';
   var DAILY_BONUS = 150;
   var SKIN_KEY = 'neon_nebula_skin';
+  var SKIN2_KEY = 'neon_nebula_skin_p2'; // pilot 2's rocket (two-player mode)
+  var TRAIL2_KEY = 'neon_nebula_trail_p2';
+  var FLAME2_KEY = 'neon_nebula_flame_p2';
   var SKINS_OWNED_KEY = 'neon_nebula_skins_owned';
   var COIN_SCORE_DIVISOR = 50;
   var RECORD_COIN_MULTIPLIER = 5;
@@ -300,6 +303,10 @@
   var ownedFlames = ['classic'];
   var selectedFlame = 'classic';
   var tailorTab = 'skins'; // 'skins' | 'trails' | 'flames'
+  var tailorPilot = 1; // 1 | 2 — whose loadout the Tailor is dressing
+  var selectedSkin2 = 'cyan'; // pilot 2's gear, shared wallet & ownership
+  var selectedTrail2 = 'classic';
+  var selectedFlame2 = 'classic';
   var isResetOpen = false;
   var resetToken = null;
   var lastMission = null; // {diff: number, mode: 'single'|'local'|'cpu'} — Enter replays it
@@ -415,12 +422,12 @@
     homeRankFill: document.getElementById('home-rank-fill'),
     homeHint: document.getElementById('home-hint'),
     tailorBadge: document.getElementById('tailor-badge'),
-    loadoutSkinIcon: document.getElementById('loadout-skin-icon'),
-    loadoutSkin: document.getElementById('loadout-skin'),
-    loadoutTrailIcon: document.getElementById('loadout-trail-icon'),
-    loadoutTrail: document.getElementById('loadout-trail'),
-    loadoutFlameIcon: document.getElementById('loadout-flame-icon'),
-    loadoutFlame: document.getElementById('loadout-flame'),
+    duoBest: document.getElementById('duo-best'),
+    duoCoins: document.getElementById('duo-coins'),
+    duoPilot: document.getElementById('duo-pilot'),
+    duoHint: document.getElementById('duo-hint'),
+    tailorPilots: document.getElementById('tailor-pilots'),
+    tailorSubtitle: document.getElementById('tailor-subtitle'),
     skinsBtn: document.getElementById('skins-btn'),
     skinsModal: document.getElementById('skins-modal'),
     skinsClose: document.getElementById('skins-close'),
@@ -735,32 +742,56 @@
     }
 
     refreshLoadout();
+    refreshTwoPlayerMenu();
     refreshDifficultyBests();
     refreshTailorBadge();
     refreshHomeHint();
     refreshDailyChest();
   }
 
-  // Loadout chips mirror whatever is equipped in the Tailor.
+  // Loadout chips mirror whatever is equipped in the Tailor. Each
+  // .home-loadout row carries data-pilot, so the same code dresses the main
+  // menu (pilot 1) and both rows of the two-player menu.
+  function refreshLoadoutRow(row) {
+    var pilot = row.getAttribute('data-pilot') === '2' ? 2 : 1;
+    var items = {
+      skins: { def: getSkin(pilot === 2 ? selectedSkin2 : selectedSkin), svg: skinSvg },
+      trails: { def: getTrail(pilot === 2 ? selectedTrail2 : selectedTrail), svg: trailSvg },
+      flames: { def: getFlame(pilot === 2 ? selectedFlame2 : selectedFlame), svg: flameSvg }
+    };
+    Array.prototype.forEach.call(row.querySelectorAll('.loadout-chip'), function (chip) {
+      var item = items[chip.getAttribute('data-tailor')];
+      if (!item) return;
+      var icon = chip.querySelector('.loadout-icon');
+      if (icon.getAttribute('data-id') !== item.def.id) {
+        icon.setAttribute('data-id', item.def.id);
+        icon.innerHTML = item.svg(item.def);
+      }
+      chip.querySelector('.loadout-name').textContent = item.def.name;
+    });
+  }
+
   function refreshLoadout() {
-    var skin = getSkin(selectedSkin);
-    var trail = getTrail(selectedTrail);
-    var flame = getFlame(selectedFlame);
-    if (el.loadoutSkinIcon.getAttribute('data-id') !== skin.id) {
-      el.loadoutSkinIcon.setAttribute('data-id', skin.id);
-      el.loadoutSkinIcon.innerHTML = skinSvg(skin);
+    Array.prototype.forEach.call(document.querySelectorAll('.home-loadout'), refreshLoadoutRow);
+  }
+
+  // The two-player menu is a home screen of its own.
+  function refreshTwoPlayerMenu() {
+    var best = 0;
+    DUO_MODES.forEach(function (m) { best = Math.max(best, highScores[m]); });
+    animateStat(el.duoBest, best);
+    animateStat(el.duoCoins, coins);
+    var user = window.NeonAuth ? window.NeonAuth.state.user : null;
+    el.duoPilot.textContent = user ? user.username : 'GUEST';
+    el.duoHint.innerHTML = '';
+    if (lastMission && lastMission.mode === 'local') {
+      var kbd = document.createElement('kbd');
+      kbd.textContent = 'ENTER';
+      el.duoHint.appendChild(kbd);
+      el.duoHint.appendChild(document.createTextNode(' replay ' + missionLabel(lastMission)));
+    } else {
+      el.duoHint.appendChild(document.createTextNode('Dress both pilots, then pick a difficulty'));
     }
-    if (el.loadoutTrailIcon.getAttribute('data-id') !== trail.id) {
-      el.loadoutTrailIcon.setAttribute('data-id', trail.id);
-      el.loadoutTrailIcon.innerHTML = trailSvg(trail);
-    }
-    if (el.loadoutFlameIcon.getAttribute('data-id') !== flame.id) {
-      el.loadoutFlameIcon.setAttribute('data-id', flame.id);
-      el.loadoutFlameIcon.innerHTML = flameSvg(flame);
-    }
-    el.loadoutSkin.textContent = skin.name;
-    el.loadoutTrail.textContent = trail.name;
-    el.loadoutFlame.textContent = flame.name;
   }
 
   // Each difficulty button carries the record for that tier, and the tier
@@ -1393,6 +1424,9 @@
     if (ownedSkins.indexOf(selectedSkin) === -1) { selectedSkin = 'cyan'; changed = true; }
     if (ownedTrails.indexOf(selectedTrail) === -1) { selectedTrail = 'classic'; changed = true; }
     if (ownedFlames.indexOf(selectedFlame) === -1) { selectedFlame = 'classic'; changed = true; }
+    if (ownedSkins.indexOf(selectedSkin2) === -1) { selectedSkin2 = 'cyan'; changed = true; }
+    if (ownedTrails.indexOf(selectedTrail2) === -1) { selectedTrail2 = 'classic'; changed = true; }
+    if (ownedFlames.indexOf(selectedFlame2) === -1) { selectedFlame2 = 'classic'; changed = true; }
     if (changed) saveWallet();
   }
 
@@ -1412,6 +1446,9 @@
       localStorage.setItem(TRAIL_KEY, selectedTrail);
       localStorage.setItem(FLAMES_OWNED_KEY, JSON.stringify(ownedFlames));
       localStorage.setItem(FLAME_KEY, selectedFlame);
+      localStorage.setItem(SKIN2_KEY, selectedSkin2);
+      localStorage.setItem(TRAIL2_KEY, selectedTrail2);
+      localStorage.setItem(FLAME2_KEY, selectedFlame2);
     } catch (err) { /* storage unavailable — session-only wallet */ }
   }
 
@@ -1517,13 +1554,14 @@
   function renderSkinsGrid() {
     el.skinsCoins.textContent = formatNumber(coins);
     el.skinsGrid.innerHTML = '';
+    var skinNow = tailorPilot === 2 ? selectedSkin2 : selectedSkin;
     SKINS.forEach(function (skin) {
       var owned = ownedSkins.indexOf(skin.id) !== -1;
       var devFree = !owned && isDeveloper();
       var card = document.createElement('button');
-      card.className = 'skin-card' + (selectedSkin === skin.id ? ' selected' : (owned || devFree ? '' : ' locked'));
+      card.className = 'skin-card' + (skinNow === skin.id ? ' selected' : (owned || devFree ? '' : ' locked'));
       var status;
-      if (selectedSkin === skin.id) status = '<span class="skin-status">EQUIPPED</span>';
+      if (skinNow === skin.id) status = '<span class="skin-status">EQUIPPED</span>';
       else if (owned) status = '<span class="skin-status">TAP TO EQUIP</span>';
       else if (devFree) status = '<span class="skin-status price">' + formatNumber(skin.price) + '</span><span class="skin-status">FREE — DEV</span>';
       else status = '<span class="skin-status price">' + formatNumber(skin.price) + '</span>';
@@ -1545,7 +1583,7 @@
       coins -= skin.price;
       ownedSkins.push(skin.id);
     }
-    selectedSkin = skin.id;
+    if (tailorPilot === 2) selectedSkin2 = skin.id; else selectedSkin = skin.id;
     saveWallet();
     renderTailor();
   }
@@ -1553,13 +1591,14 @@
   function renderTrailsGrid() {
     el.skinsCoins.textContent = formatNumber(coins);
     el.skinsGrid.innerHTML = '';
+    var trailNow = tailorPilot === 2 ? selectedTrail2 : selectedTrail;
     TRAILS.forEach(function (trail) {
       var owned = ownedTrails.indexOf(trail.id) !== -1;
       var devFree = !owned && isDeveloper();
       var card = document.createElement('button');
-      card.className = 'skin-card' + (selectedTrail === trail.id ? ' selected' : (owned || devFree ? '' : ' locked'));
+      card.className = 'skin-card' + (trailNow === trail.id ? ' selected' : (owned || devFree ? '' : ' locked'));
       var status;
-      if (selectedTrail === trail.id) status = '<span class="skin-status">EQUIPPED</span>';
+      if (trailNow === trail.id) status = '<span class="skin-status">EQUIPPED</span>';
       else if (owned) status = '<span class="skin-status">TAP TO EQUIP</span>';
       else if (devFree) status = '<span class="skin-status price">' + formatNumber(trail.price) + '</span><span class="skin-status">FREE — DEV</span>';
       else status = '<span class="skin-status price">' + formatNumber(trail.price) + '</span>';
@@ -1581,7 +1620,7 @@
       coins -= trail.price;
       ownedTrails.push(trail.id);
     }
-    selectedTrail = trail.id;
+    if (tailorPilot === 2) selectedTrail2 = trail.id; else selectedTrail = trail.id;
     saveWallet();
     renderTailor();
   }
@@ -1589,13 +1628,14 @@
   function renderFlamesGrid() {
     el.skinsCoins.textContent = formatNumber(coins);
     el.skinsGrid.innerHTML = '';
+    var flameNow = tailorPilot === 2 ? selectedFlame2 : selectedFlame;
     FLAMES.forEach(function (flame) {
       var owned = ownedFlames.indexOf(flame.id) !== -1;
       var devFree = !owned && isDeveloper();
       var card = document.createElement('button');
-      card.className = 'skin-card' + (selectedFlame === flame.id ? ' selected' : (owned || devFree ? '' : ' locked'));
+      card.className = 'skin-card' + (flameNow === flame.id ? ' selected' : (owned || devFree ? '' : ' locked'));
       var status;
-      if (selectedFlame === flame.id) status = '<span class="skin-status">EQUIPPED</span>';
+      if (flameNow === flame.id) status = '<span class="skin-status">EQUIPPED</span>';
       else if (owned) status = '<span class="skin-status">TAP TO EQUIP</span>';
       else if (devFree) status = '<span class="skin-status price">' + formatNumber(flame.price) + '</span><span class="skin-status">FREE — DEV</span>';
       else status = '<span class="skin-status price">' + formatNumber(flame.price) + '</span>';
@@ -1619,24 +1659,34 @@
       coins -= flame.price;
       ownedFlames.push(flame.id);
     }
-    selectedFlame = flame.id;
+    if (tailorPilot === 2) selectedFlame2 = flame.id; else selectedFlame = flame.id;
     saveWallet();
     renderTailor();
   }
 
-  function openTailor(tab) {
+  function openTailor(tab, pilot) {
     if (tab === 'skins' || tab === 'trails' || tab === 'flames') tailorTab = tab;
+    var duo = menuMode === 'two-player';
+    tailorPilot = duo && String(pilot) === '2' ? 2 : 1;
+    show(el.tailorPilots, duo);
     setFormError(el.skinsError, '');
     renderTailor();
     isSkinsOpen = true;
     render();
   }
 
-  // The Tailor has three racks; render whichever tab is active.
+  // The Tailor has three racks; render whichever tab is active, for
+  // whichever pilot is being dressed.
   function renderTailor() {
     Array.prototype.forEach.call(el.skinsModal.querySelectorAll('.tailor-tab'), function (tab) {
       tab.classList.toggle('active', tab.getAttribute('data-tab') === tailorTab);
     });
+    Array.prototype.forEach.call(el.skinsModal.querySelectorAll('.tailor-pilot'), function (tab) {
+      tab.classList.toggle('active', tab.getAttribute('data-pilot') === String(tailorPilot));
+    });
+    el.tailorSubtitle.textContent = tailorPilot === 2
+      ? 'Dressing Pilot 2 — gear is shared with Pilot 1'
+      : 'Earn coins by flying missions';
     if (tailorTab === 'trails') renderTrailsGrid();
     else if (tailorTab === 'flames') renderFlamesGrid();
     else renderSkinsGrid();
@@ -1708,7 +1758,10 @@
       controlModePreference: controlModePreference,
       skin: getSkin(selectedSkin),
       trail: getTrail(selectedTrail),
-      flame: getFlame(selectedFlame)
+      flame: getFlame(selectedFlame),
+      skin2: localMultiplayer ? getSkin(selectedSkin2) : null,
+      trail2: localMultiplayer ? getTrail(selectedTrail2) : null,
+      flame2: localMultiplayer ? getFlame(selectedFlame2) : null
     });
   }
 
@@ -1761,6 +1814,13 @@
       }
       var savedFlame = localStorage.getItem(FLAME_KEY);
       if (savedFlame && flameExists(savedFlame)) selectedFlame = savedFlame;
+
+      var savedSkin2 = localStorage.getItem(SKIN2_KEY);
+      if (savedSkin2 && skinExists(savedSkin2)) selectedSkin2 = savedSkin2;
+      var savedTrail2 = localStorage.getItem(TRAIL2_KEY);
+      if (savedTrail2 && trailExists(savedTrail2)) selectedTrail2 = savedTrail2;
+      var savedFlame2 = localStorage.getItem(FLAME2_KEY);
+      if (savedFlame2 && flameExists(savedFlame2)) selectedFlame2 = savedFlame2;
 
       var savedMission = JSON.parse(localStorage.getItem(LAST_MISSION_KEY) || 'null');
       if (savedMission && typeof savedMission.diff === 'number' &&
@@ -1819,7 +1879,20 @@
 
     Array.prototype.forEach.call(document.querySelectorAll('.loadout-chip'), function (chip) {
       chip.addEventListener('click', function () {
-        openTailor(chip.getAttribute('data-tailor'));
+        var row = chip.parentNode;
+        openTailor(chip.getAttribute('data-tailor'), row.getAttribute('data-pilot'));
+      });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.tailor-open'), function (button) {
+      button.addEventListener('click', function () {
+        openTailor(tailorTab, button.getAttribute('data-pilot'));
+      });
+    });
+    Array.prototype.forEach.call(el.skinsModal.querySelectorAll('.tailor-pilot'), function (tab) {
+      tab.addEventListener('click', function () {
+        tailorPilot = tab.getAttribute('data-pilot') === '2' ? 2 : 1;
+        setFormError(el.skinsError, '');
+        renderTailor();
       });
     });
 
@@ -2050,7 +2123,7 @@
 
     el.dailyChest.addEventListener('click', claimDailyBonus);
 
-    el.skinsBtn.addEventListener('click', function () { openTailor(tailorTab); });
+    el.skinsBtn.addEventListener('click', function () { openTailor(tailorTab, 1); });
     el.skinsClose.addEventListener('click', function () {
       isSkinsOpen = false;
       render();

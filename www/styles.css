@@ -1276,6 +1276,51 @@ body {
   text-overflow: ellipsis;
 }
 
+/* Two-player menu: one loadout row per pilot, labeled */
+.loadout-row-label {
+  width: 100%;
+  padding: 0 0.75rem;
+  margin-bottom: 0.35rem;
+  text-align: left;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--slate-500);
+}
+
+.loadout-row-label-p1 {
+  color: var(--cyan-400);
+}
+
+.loadout-row-label-p2 {
+  color: var(--rose-400);
+}
+
+#menu-two-player .home-loadout {
+  margin-bottom: 1rem;
+}
+
+#menu-two-player .home-loadout[data-pilot="2"] {
+  margin-bottom: 1.5rem;
+}
+
+#menu-two-player .home-loadout[data-pilot="2"] .loadout-chip:hover {
+  background: rgba(244, 63, 94, 0.12);
+  border-color: rgba(251, 113, 133, 0.4);
+}
+
+/* Tailor: which pilot is being dressed */
+.tailor-pilots {
+  max-width: 16rem;
+  margin: -0.5rem auto 0.75rem;
+}
+
+.tailor-pilot.active[data-pilot="2"] {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: var(--rose-400);
+}
+
 /* Footer under the buttons: a keyboard hint */
 .home-footer {
   display: flex;

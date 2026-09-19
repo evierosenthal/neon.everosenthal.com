@@ -72,6 +72,11 @@ crash and the high-score fanfare.
   Legend) earned by the all-time best score, with a progress bar to the next rung.
 - The loadout strip shows the equipped skin, trail and fire; each chip opens the Tailor on that
   rack. The Tailor button wears a `NEW` badge whenever the wallet can afford an unowned item.
+- Two Player has its own home screen with a loadout row per pilot. Pilot 2's skin, trail and
+  fire are chosen in the Tailor via a Pilot 1 / Pilot 2 switch (shown only from that menu) and
+  remembered separately; coins and ownership are shared. In the engine, pilot 2's gear is drawn
+  and the tiny / giant, armor / eggshell and spinning powers apply to that ship. Steering,
+  magnet, speed and coin powers stay with Pilot 1.
 - The daily bonus chest counts down to local midnight after it has been claimed.
 - The backdrop is a layered space scene: nebula clouds, an aurora sweep, a spiral galaxy, a
   banded gas giant with an orbiting moon, a ringed planet, drifting rocks and treats, twinkling

@@ -425,6 +425,8 @@
       // Fire powers that resize the hull (visuals and collisions both follow radius)
       if (config.flame && config.flame.power === 'tiny') state.player.radius *= 0.7;
       if (config.flame && config.flame.power === 'giant') state.player.radius *= 1.45;
+      if (state.player2 && config.flame2 && config.flame2.power === 'tiny') state.player2.radius *= 0.7;
+      if (state.player2 && config.flame2 && config.flame2.power === 'giant') state.player2.radius *= 1.45;
 
       // Spawn initial 'W' weapon power-up so player can grab it to enable shooting right away
       state.powerUps.push({
@@ -948,8 +950,9 @@
             } else {
               var damage = (config.isLocalMultiplayer || config.isCPUMultiplayer) ? 18 : 25;
               // Fire powers: Iron Forge shrugs hits off, Eggshell doubles them
-              if (config.flame && config.flame.power === 'armor') damage = Math.round(damage * 0.6);
-              if (config.flame && config.flame.power === 'fragile') damage *= 2;
+              var hitFlame = p.id === 'player1' ? config.flame : config.flame2;
+              if (hitFlame && hitFlame.power === 'armor') damage = Math.round(damage * 0.6);
+              if (hitFlame && hitFlame.power === 'fragile') damage *= 2;
               state.health -= damage;
               handlers.onHealthUpdate(state.health);
               shake = 22;
@@ -1573,15 +1576,17 @@
         ctx.save();
         ctx.translate(p.x, p.y);
         // The Ring Burner's power: the ship pinwheels nonstop (visual only)
-        var flameSpin = (p.id === 'player1' && config.flame && config.flame.power === 'spin' &&
+        var ownFlame = p.id === 'player1' ? config.flame : config.flame2;
+        var flameSpin = (ownFlame && ownFlame.power === 'spin' &&
           !isPaused && !state.isGameOver && !state.dying)
           ? (Date.now() / 200) % (Math.PI * 2) : 0;
         ctx.rotate(tilt + flameSpin);
 
         var R = p.radius;
 
-        // Player 1 flies the equipped skin; player 2 keeps its own colors.
-        var skin = (p.id === 'player1' && config.skin) ? config.skin : null;
+        // Each pilot flies their own Tailor skin (player 2 only has one in
+        // local two-player; the CPU wingman keeps stock colors).
+        var skin = (p.id === 'player1' ? config.skin : config.skin2) || null;
         var accent = skin ? skin.accent : p.color;
         if (skin && skin.animated) {
           accent = 'hsl(' + Math.floor((Date.now() / 15) % 360) + ', 85%, 65%)';
@@ -1613,7 +1618,7 @@
 
         // --- Rocket exhaust (behind the body); the fire style is Tailor gear ---
         if (!isPaused && !state.isGameOver && !state.dying) {
-          var flameDef = (p.id === 'player1' && config.flame) ? config.flame : null;
+          var flameDef = ownFlame || null;
           var fStyle = flameDef ? flameDef.style : 'classic';
           var flick = 0.8 + 0.35 * Math.abs(Math.sin(Date.now() / 47 + p.x)) + Math.random() * 0.15;
 
@@ -1867,7 +1872,7 @@
 
         // Thruster effect (emitted outside the translated context so sparks trail in world space)
         if (!isPaused && !state.isGameOver) {
-          var trail = (p.id === 'player1' && config.trail) ? config.trail : null;
+          var trail = (p.id === 'player1' ? config.trail : config.trail2) || null;
           var thrusterCount = (state.activeEffects.speedBoost > 0 ? 2 : 1) +
             (trail && trail.count > 1 ? trail.count - 1 : 0);
           // Thrusters stream from ship tail
@@ -2180,6 +2185,9 @@
         config.skin = options.skin || null; // player 1's rocket skin
         config.trail = options.trail || null; // player 1's thruster trail
         config.flame = options.flame || null; // player 1's fire style (may carry a power)
+        config.skin2 = options.skin2 || null; // player 2's gear (local two-player only)
+        config.trail2 = options.trail2 || null;
+        config.flame2 = options.flame2 || null;
         config.flameSpeedMult = 1;
         if (config.flame && config.flame.power === 'fast') config.flameSpeedMult = 1.35;
         if (config.flame && config.flame.power === 'slow') config.flameSpeedMult = 0.65;

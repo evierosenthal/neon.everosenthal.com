@@ -234,27 +234,18 @@ function asset(string $path): string
             </div>
 
             <!-- Equipped loadout: each chip opens the Tailor on its rack -->
-            <div class="home-loadout">
+            <div class="home-loadout" data-pilot="1">
               <button class="loadout-chip" data-tailor="skins" title="Change rocket skin">
-                <span id="loadout-skin-icon" class="loadout-icon"></span>
-                <span class="loadout-text">
-                  <span class="loadout-kind">Skin</span>
-                  <span id="loadout-skin" class="loadout-name"></span>
-                </span>
+                <span class="loadout-icon"></span>
+                <span class="loadout-text"><span class="loadout-kind">Skin</span><span class="loadout-name"></span></span>
               </button>
               <button class="loadout-chip" data-tailor="trails" title="Change thruster trail">
-                <span id="loadout-trail-icon" class="loadout-icon"></span>
-                <span class="loadout-text">
-                  <span class="loadout-kind">Trail</span>
-                  <span id="loadout-trail" class="loadout-name"></span>
-                </span>
+                <span class="loadout-icon"></span>
+                <span class="loadout-text"><span class="loadout-kind">Trail</span><span class="loadout-name"></span></span>
               </button>
               <button class="loadout-chip" data-tailor="flames" title="Change fire">
-                <span id="loadout-flame-icon" class="loadout-icon"></span>
-                <span class="loadout-text">
-                  <span class="loadout-kind">Fire</span>
-                  <span id="loadout-flame" class="loadout-name"></span>
-                </span>
+                <span class="loadout-icon"></span>
+                <span class="loadout-text"><span class="loadout-kind">Fire</span><span class="loadout-name"></span></span>
               </button>
             </div>
 
@@ -296,19 +287,83 @@ function asset(string $path): string
             </div>
           </div>
 
-          <!-- Two Player Menu -->
+          <!-- Two Player Menu: the home screen for the duo, with a loadout per pilot -->
           <div id="menu-two-player" class="menu hidden">
             <button class="back-btn" data-menu="main">
               <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
               MAIN MENU
             </button>
             <div class="title-block">
-              <h1 class="title title-sm">TWO PLAYER MODE</h1>
+              <h1 class="title title-sm">TWO PLAYER</h1>
               <div class="title-rule title-rule-indigo"></div>
             </div>
-            <p class="subtitle">Select Co-op Difficulty</p>
+            <p class="subtitle">Co-op on one keyboard</p>
+
+            <div class="home-stats">
+              <div class="home-stat">
+                <span id="duo-best" class="home-stat-value home-stat-cyan">0</span>
+                <span class="home-stat-label">Duo Best</span>
+              </div>
+              <div class="home-stat">
+                <span id="duo-coins" class="home-stat-value home-stat-amber">0</span>
+                <span class="home-stat-label">Coins</span>
+              </div>
+              <div class="home-stat">
+                <span id="duo-pilot" class="home-stat-value home-stat-indigo">GUEST</span>
+                <span class="home-stat-label">Pilot 1</span>
+              </div>
+            </div>
+
+            <div class="loadout-row-label loadout-row-label-p1">Pilot 1 &middot; WASD</div>
+            <div class="home-loadout" data-pilot="1">
+              <button class="loadout-chip" data-tailor="skins" title="Change rocket skin">
+                <span class="loadout-icon"></span>
+                <span class="loadout-text"><span class="loadout-kind">Skin</span><span class="loadout-name"></span></span>
+              </button>
+              <button class="loadout-chip" data-tailor="trails" title="Change thruster trail">
+                <span class="loadout-icon"></span>
+                <span class="loadout-text"><span class="loadout-kind">Trail</span><span class="loadout-name"></span></span>
+              </button>
+              <button class="loadout-chip" data-tailor="flames" title="Change fire">
+                <span class="loadout-icon"></span>
+                <span class="loadout-text"><span class="loadout-kind">Fire</span><span class="loadout-name"></span></span>
+              </button>
+            </div>
+            <div class="loadout-row-label loadout-row-label-p2">Pilot 2 &middot; Arrow keys</div>
+            <div class="home-loadout" data-pilot="2">
+              <button class="loadout-chip" data-tailor="skins" title="Change rocket skin">
+                <span class="loadout-icon"></span>
+                <span class="loadout-text"><span class="loadout-kind">Skin</span><span class="loadout-name"></span></span>
+              </button>
+              <button class="loadout-chip" data-tailor="trails" title="Change thruster trail">
+                <span class="loadout-icon"></span>
+                <span class="loadout-text"><span class="loadout-kind">Trail</span><span class="loadout-name"></span></span>
+              </button>
+              <button class="loadout-chip" data-tailor="flames" title="Change fire">
+                <span class="loadout-icon"></span>
+                <span class="loadout-text"><span class="loadout-kind">Fire</span><span class="loadout-name"></span></span>
+              </button>
+            </div>
+
             <div class="btn-stack">
               <div class="difficulty-buttons" data-mode="local"></div>
+
+              <div class="btn-duo">
+                <button class="btn btn-ghost-indigo tailor-open" data-pilot="1">
+                  <span class="btn-sheen"></span>
+                  <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                  PILOT 1 TAILOR
+                </button>
+                <button class="btn btn-ghost-rose tailor-open" data-pilot="2">
+                  <span class="btn-sheen"></span>
+                  <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                  PILOT 2 TAILOR
+                </button>
+              </div>
+            </div>
+
+            <div class="home-footer">
+              <p id="duo-hint" class="home-hint"></p>
             </div>
           </div>
 
@@ -505,7 +560,7 @@ function asset(string $path): string
               </div>
               <div>
                 <h3 class="settings-title">THE TAILOR</h3>
-                <p class="settings-subtitle">Earn coins by flying missions</p>
+                <p id="tailor-subtitle" class="settings-subtitle">Earn coins by flying missions</p>
               </div>
             </div>
             <div class="skins-header-right">
@@ -514,6 +569,10 @@ function asset(string $path): string
                 <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
+          </div>
+          <div id="tailor-pilots" class="lb-tabs tailor-pilots hidden">
+            <button class="lb-tab tailor-pilot active" data-pilot="1">PILOT 1</button>
+            <button class="lb-tab tailor-pilot" data-pilot="2">PILOT 2</button>
           </div>
           <div class="lb-tabs tailor-tabs">
             <button class="lb-tab tailor-tab active" data-tab="skins">ROCKET SKINS</button>
