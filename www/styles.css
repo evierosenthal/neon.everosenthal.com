@@ -543,8 +543,28 @@ body {
   background: #be185d;
   top: 40%;
   left: 55%;
-  opacity: 0.3;
+  opacity: 0.4;
   --t: 40s;
+}
+
+.mn-4 {
+  width: 36vw;
+  height: 36vw;
+  background: #b45309;
+  top: -12%;
+  right: -8%;
+  opacity: 0.28;
+  --t: 38s;
+}
+
+.mn-5 {
+  width: 28vw;
+  height: 28vw;
+  background: #0d9488;
+  bottom: -8%;
+  left: 18%;
+  opacity: 0.32;
+  --t: 30s;
 }
 
 @keyframes mn-drift {
@@ -556,13 +576,159 @@ body {
   }
 }
 
+/* Soft aurora band that sweeps and wavers across the top of the sky */
+.menu-aurora {
+  position: absolute;
+  left: -20%;
+  top: -35%;
+  width: 140%;
+  height: 65%;
+  pointer-events: none;
+  background: linear-gradient(100deg,
+    transparent 0%,
+    rgba(45, 212, 191, 0.4) 18%,
+    rgba(168, 85, 247, 0.34) 42%,
+    rgba(244, 114, 182, 0.28) 64%,
+    rgba(34, 211, 238, 0.24) 80%,
+    transparent 95%);
+  filter: blur(70px);
+  mix-blend-mode: screen;
+  opacity: 0.55;
+  animation: aurora-sweep 26s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-sweep {
+  from {
+    transform: translateX(-7%) skewY(-6deg);
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.65;
+  }
+  to {
+    transform: translateX(7%) skewY(4deg);
+    opacity: 0.45;
+  }
+}
+
+/* Faint spiral galaxy turning slowly at the top left */
+.menu-galaxy {
+  position: absolute;
+  top: 4%;
+  left: 14%;
+  width: 24rem;
+  height: 24rem;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.5;
+  background: conic-gradient(from 0deg,
+    transparent 0%,
+    rgba(165, 180, 252, 0.5) 12%,
+    transparent 26%,
+    transparent 48%,
+    rgba(103, 232, 249, 0.45) 60%,
+    transparent 76%,
+    rgba(244, 114, 182, 0.3) 88%,
+    transparent 100%);
+  filter: blur(12px);
+  -webkit-mask-image: radial-gradient(circle, #000 20%, rgba(0, 0, 0, 0.5) 42%, transparent 66%);
+  mask-image: radial-gradient(circle, #000 20%, rgba(0, 0, 0, 0.5) 42%, transparent 66%);
+  translate: calc(var(--px, 0) * -10px) calc(var(--py, 0) * -8px);
+  animation: galaxy-spin 140s linear infinite;
+}
+
+.menu-galaxy::after {
+  content: "";
+  position: absolute;
+  inset: 34%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, rgba(199, 210, 254, 0.7) 30%, transparent 70%);
+}
+
+@keyframes galaxy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Banded gas giant, upper right, with a moon on a tilted orbit */
+.menu-giant {
+  position: absolute;
+  top: 6%;
+  right: 5%;
+  width: 17rem;
+  height: 17rem;
+  pointer-events: none;
+  opacity: 0.72;
+  filter: drop-shadow(0 0 40px rgba(245, 158, 11, 0.28));
+  translate: calc(var(--px, 0) * -34px) calc(var(--py, 0) * -24px);
+  transition: translate 0.35s ease-out;
+  animation: giant-float 22s ease-in-out infinite alternate;
+}
+
+.menu-giant svg {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes giant-float {
+  from {
+    transform: translateY(0) rotate(-3deg);
+  }
+  to {
+    transform: translateY(-18px) rotate(3deg);
+  }
+}
+
+.giant-orbit {
+  position: absolute;
+  inset: -12%;
+  border-radius: 50%;
+  animation: moon-orbit 26s linear infinite;
+}
+
+.giant-moon {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-left: -0.55rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f8fafc, #94a3b8 55%, #334155);
+  box-shadow: 0 0 10px rgba(226, 232, 240, 0.5);
+}
+
+@keyframes moon-orbit {
+  from {
+    transform: rotateX(68deg) rotate(0deg);
+  }
+  to {
+    transform: rotateX(68deg) rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .menu-galaxy {
+    display: none;
+  }
+
+  .menu-giant {
+    width: 10rem;
+    height: 10rem;
+    top: 3%;
+    right: -3%;
+    opacity: 0.5;
+  }
+}
+
 /* Distant ringed planet anchoring the backdrop */
 .menu-planet {
   position: absolute;
-  left: 7%;
-  bottom: 10%;
-  width: 8.5rem;
-  opacity: 0.6;
+  left: 6%;
+  bottom: 8%;
+  width: 13rem;
+  opacity: 0.7;
   pointer-events: none;
   filter: drop-shadow(0 0 22px rgba(129, 140, 248, 0.35));
   animation: planet-float 16s ease-in-out infinite alternate;
@@ -755,6 +921,85 @@ body {
   50% {
     opacity: 0.9;
     transform: scale(1.15);
+  }
+}
+
+/* Bright four-point flare stars */
+.star-flare {
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+  pointer-events: none;
+  animation: flare-twinkle 6s ease-in-out infinite;
+}
+
+.star-flare::before,
+.star-flare::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 1.5px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(90deg, transparent, #fff 45%, #fff 55%, transparent);
+}
+
+.star-flare::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+@keyframes flare-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.7) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(20deg);
+  }
+}
+
+/* Comets: a bright head leading a long glowing tail across the whole sky */
+.comet {
+  position: absolute;
+  width: 260px;
+  height: 3px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, transparent, rgba(129, 140, 248, 0.3) 40%, rgba(165, 243, 252, 0.8) 85%, #fff);
+  box-shadow: 0 0 16px rgba(165, 243, 252, 0.45);
+  rotate: var(--angle);
+  animation: comet-fly var(--t) ease-in forwards;
+  pointer-events: none;
+}
+
+.comet::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  top: -5px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 20%, rgba(165, 243, 252, 0.7) 50%, transparent 75%);
+}
+
+@keyframes comet-fly {
+  from {
+    translate: 0 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  to {
+    translate: var(--dx) var(--dy);
+    opacity: 0;
   }
 }
 
@@ -1031,7 +1276,7 @@ body {
   text-overflow: ellipsis;
 }
 
-/* Footer under the buttons: the galactic record, then a keyboard hint */
+/* Footer under the buttons: a keyboard hint */
 .home-footer {
   display: flex;
   flex-direction: column;
@@ -1039,53 +1284,6 @@ body {
   gap: 0.5rem;
   margin-top: 1.5rem;
   width: 100%;
-}
-
-.home-ticker {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  max-width: 100%;
-  padding: 0.35rem 0.9rem;
-  border-radius: 9999px;
-  background: rgba(251, 191, 36, 0.07);
-  border: 1px solid rgba(251, 191, 36, 0.2);
-  font-size: 0.6875rem;
-  letter-spacing: 0.06em;
-  color: var(--slate-300);
-}
-
-.ticker-label {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.5625rem;
-  letter-spacing: 0.14em;
-  color: var(--amber-400);
-  white-space: nowrap;
-}
-
-.ticker-name {
-  font-weight: 600;
-  color: #fff;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 10rem;
-}
-
-.ticker-score {
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--cyan-400);
-  white-space: nowrap;
-}
-
-.ticker-mode {
-  font-size: 0.5625rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--slate-500);
-  white-space: nowrap;
 }
 
 .home-hint {
@@ -1157,16 +1355,6 @@ body {
   .btn-duo .btn .icon {
     width: 1rem;
     height: 1rem;
-  }
-
-  .home-ticker {
-    gap: 0.4rem;
-    padding: 0.3rem 0.6rem;
-    font-size: 0.625rem;
-  }
-
-  .ticker-mode {
-    display: none;
   }
 
   .subtitle {
@@ -2723,6 +2911,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .mn,
   .menu-planet,
+  .menu-aurora,
+  .menu-galaxy,
+  .menu-giant,
+  .giant-orbit,
+  .star-flare,
   .dust,
   .drifter,
   .start-star,
@@ -2735,7 +2928,8 @@ body {
   }
 
   .flyby,
-  .shooting-star {
+  .shooting-star,
+  .comet {
     display: none;
   }
 
@@ -2747,7 +2941,9 @@ body {
     translate: 0 0;
   }
 
-  .menu-planet {
+  .menu-planet,
+  .menu-galaxy,
+  .menu-giant {
     translate: 0 0;
   }
 }

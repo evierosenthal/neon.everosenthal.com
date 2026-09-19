@@ -406,7 +406,6 @@
     homePilotTile: document.getElementById('home-pilot-tile'),
     homeRank: document.getElementById('home-rank'),
     homeRankFill: document.getElementById('home-rank-fill'),
-    homeTicker: document.getElementById('home-ticker'),
     homeHint: document.getElementById('home-hint'),
     tailorBadge: document.getElementById('tailor-badge'),
     loadoutSkinIcon: document.getElementById('loadout-skin-icon'),
@@ -687,7 +686,6 @@
     refreshDifficultyBests();
     refreshTailorBadge();
     refreshHomeHint();
-    renderHomeTicker();
     refreshDailyChest();
   }
 
@@ -768,49 +766,9 @@
     }
   }
 
-  // Top score across the solo boards, shown under the menu once the
-  // leaderboard has loaded (usernames are inserted as text, never HTML).
-  function renderHomeTicker() {
-    var top = null;
-    if (leaderboards) {
-      SOLO_MODES.forEach(function (mode) {
-        (leaderboards[mode] || []).forEach(function (row) {
-          if (!top || row.score > top.score) top = { username: row.username, score: row.score, mode: mode };
-        });
-      });
-    }
-    show(el.homeTicker, !!top);
-    if (!top) return;
-    el.homeTicker.innerHTML = '';
-    var label = document.createElement('span');
-    label.className = 'ticker-label';
-    label.textContent = 'GALACTIC RECORD';
-    var name = document.createElement('span');
-    name.className = 'ticker-name';
-    name.textContent = top.username;
-    var scoreEl = document.createElement('span');
-    scoreEl.className = 'ticker-score';
-    scoreEl.textContent = formatNumber(top.score);
-    var mode = document.createElement('span');
-    mode.className = 'ticker-mode';
-    mode.textContent = TIER_LABELS[top.mode];
-    el.homeTicker.appendChild(label);
-    el.homeTicker.appendChild(name);
-    el.homeTicker.appendChild(scoreEl);
-    el.homeTicker.appendChild(mode);
-  }
-
-  function loadHomeTicker() {
-    if (!window.NeonAuth) return;
-    window.NeonAuth.getLeaderboards().then(function (boards) {
-      leaderboards = boards;
-      if (gameState === 'START') renderHomeTicker();
-    }).catch(function () { /* comms offline — ticker stays hidden */ });
-  }
-
   function buildStartStars() {
-    var palette = ['#ffffff', '#ffffff', '#a5f3fc', '#c7d2fe'];
-    for (var i = 0; i < 42; i++) {
+    var palette = ['#ffffff', '#ffffff', '#a5f3fc', '#c7d2fe', '#fde68a'];
+    for (var i = 0; i < 110; i++) {
       var star = document.createElement('span');
       star.className = 'start-star';
       var size = 1 + Math.random() * 1.8;
@@ -822,6 +780,18 @@
       star.style.animationDelay = (Math.random() * 4) + 's';
       star.style.animationDuration = (2.2 + Math.random() * 3) + 's';
       el.startStars.appendChild(star);
+    }
+
+    // A handful of bright stars with a four-point flare, twinkling slowly
+    for (var f = 0; f < 7; f++) {
+      var flare = document.createElement('span');
+      flare.className = 'star-flare';
+      flare.style.left = (Math.random() * 100) + '%';
+      flare.style.top = (Math.random() * 100) + '%';
+      flare.style.setProperty('--s', (14 + Math.random() * 16) + 'px');
+      flare.style.animationDelay = (Math.random() * 6) + 's';
+      flare.style.animationDuration = (4 + Math.random() * 4) + 's';
+      el.startStars.appendChild(flare);
     }
 
     // Slow drifting treats & rocks behind the panel, for depth
@@ -838,7 +808,11 @@
       { html: DONUT_SVG, size: 32, top: '16%', left: '10%', dur: 26 },
       { html: GRAY_ROCK_SVG, size: 46, top: '72%', left: '7%', dur: 36 },
       { html: BLUE_ROCK_SVG, size: 30, top: '26%', left: '87%', dur: 30 },
-      { html: DONUT_SVG, size: 22, top: '80%', left: '86%', dur: 22 }
+      { html: DONUT_SVG, size: 22, top: '80%', left: '86%', dur: 22 },
+      { html: GRAY_ROCK_SVG, size: 26, top: '8%', left: '30%', dur: 40 },
+      { html: BLUE_ROCK_SVG, size: 18, top: '58%', left: '22%', dur: 28 },
+      { html: GRAY_ROCK_SVG, size: 34, top: '40%', left: '93%', dur: 44 },
+      { html: BLUE_ROCK_SVG, size: 14, top: '90%', left: '45%', dur: 24 }
     ].forEach(function (d) {
       var node = document.createElement('span');
       node.className = 'drifter';
@@ -874,6 +848,26 @@
       el.startStars.appendChild(fly);
       setTimeout(function () { fly.remove(); }, 8500);
     }, 17000);
+
+    // Now and then a comet arcs across the whole sky, slower and brighter
+    // than the shooting stars
+    setInterval(function () {
+      if (gameState !== 'START') return;
+      var c = document.createElement('span');
+      c.className = 'comet';
+      var fromLeft = Math.random() < 0.5;
+      var angleDeg = 18 + Math.random() * 20;
+      var rad = angleDeg * Math.PI / 180;
+      var dist = window.innerWidth * 1.3;
+      c.style.left = fromLeft ? '-260px' : 'calc(100% + 260px)';
+      c.style.top = (Math.random() * 30) + '%';
+      c.style.setProperty('--angle', (fromLeft ? angleDeg : 180 - angleDeg) + 'deg');
+      c.style.setProperty('--dx', (Math.cos(rad) * dist * (fromLeft ? 1 : -1)) + 'px');
+      c.style.setProperty('--dy', (Math.sin(rad) * dist) + 'px');
+      c.style.setProperty('--t', (6 + Math.random() * 3) + 's');
+      el.startStars.appendChild(c);
+      setTimeout(function () { c.remove(); }, 10000);
+    }, 21000);
 
     // A shooting star streaks by every few seconds while on the menu
     setInterval(function () {
@@ -1753,7 +1747,6 @@
     renderControlOptions();
     buildStartStars();
     wireStartParallax();
-    loadHomeTicker();
 
     // Chest countdown ticks once a minute while the menu is up
     setInterval(function () {

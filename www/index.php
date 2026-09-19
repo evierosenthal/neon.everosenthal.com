@@ -144,6 +144,35 @@ function asset(string $path): string
           <span class="mn mn-1"></span>
           <span class="mn mn-2"></span>
           <span class="mn mn-3"></span>
+          <span class="mn mn-4"></span>
+          <span class="mn mn-5"></span>
+        </div>
+        <div class="menu-aurora"></div>
+        <div class="menu-galaxy"></div>
+
+        <!-- Banded gas giant with an orbiting moon, upper right -->
+        <div class="menu-giant">
+          <svg viewBox="0 0 200 200">
+            <defs>
+              <radialGradient id="giant-g" cx="32%" cy="28%" r="80%">
+                <stop offset="0" stop-color="#fde68a"/>
+                <stop offset="45%" stop-color="#f59e0b"/>
+                <stop offset="80%" stop-color="#9a3412"/>
+                <stop offset="100%" stop-color="#431407"/>
+              </radialGradient>
+              <clipPath id="giant-clip"><circle cx="100" cy="100" r="86"/></clipPath>
+            </defs>
+            <circle cx="100" cy="100" r="86" fill="url(#giant-g)"/>
+            <g clip-path="url(#giant-clip)" class="giant-bands">
+              <path d="M0 52 Q100 40 200 52 L200 62 Q100 74 0 62 Z" fill="rgba(255,255,255,0.14)"/>
+              <path d="M0 84 Q100 96 200 84 L200 98 Q100 110 0 98 Z" fill="rgba(67,20,7,0.35)"/>
+              <path d="M0 120 Q100 108 200 120 L200 126 Q100 138 0 126 Z" fill="rgba(255,255,255,0.1)"/>
+              <path d="M0 146 Q100 158 200 146 L200 160 Q100 172 0 160 Z" fill="rgba(67,20,7,0.4)"/>
+              <ellipse cx="128" cy="112" rx="18" ry="9" fill="rgba(254,202,202,0.45)"/>
+            </g>
+            <circle cx="100" cy="100" r="86" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+          </svg>
+          <span class="giant-orbit"><span class="giant-moon"></span></span>
         </div>
         <div class="menu-planet">
           <svg viewBox="0 0 130 120">
@@ -263,7 +292,6 @@ function asset(string $path): string
             </div>
 
             <div class="home-footer">
-              <p id="home-ticker" class="home-ticker hidden"></p>
               <p id="home-hint" class="home-hint"></p>
             </div>
           </div>

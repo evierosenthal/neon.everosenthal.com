@@ -66,9 +66,11 @@ arrow keys stay free for Player 2.
   Legend) earned by the all-time best score, with a progress bar to the next rung.
 - The loadout strip shows the equipped skin, trail and fire; each chip opens the Tailor on that
   rack. The Tailor button wears a `NEW` badge whenever the wallet can afford an unowned item.
-- The galactic record (top solo leaderboard score) appears under the buttons once the
-  leaderboard API answers; it stays hidden when the database is offline.
 - The daily bonus chest counts down to local midnight after it has been claimed.
+- The backdrop is a layered space scene: nebula clouds, an aurora sweep, a spiral galaxy, a
+  banded gas giant with an orbiting moon, a ringed planet, drifting rocks and treats, twinkling
+  and flaring stars, shooting stars, comets, and flybys of the equipped rocket. Layers slide
+  against the cursor for depth.
 - Ambient motion (starfield, parallax, flybys, shooting stars) is disabled under
   `prefers-reduced-motion`.
 
