@@ -60,6 +60,10 @@ In solo and CPU modes, Player 1's input scheme (mouse, keyboard, or both) is con
 Settings and is remembered in `localStorage`. In local co-op, Player 1 is always WASD so the
 arrow keys stay free for Player 2.
 
+Settings also has separate Music and Sound Effects sliders (down to off), remembered in
+`localStorage`. Music covers the home and gameplay loops; Sound Effects covers hits, the
+crash and the high-score fanfare.
+
 ## Home screen
 
 - Each difficulty button shows that tier's record; the tier launched most recently wears a

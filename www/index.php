@@ -603,6 +603,30 @@ function asset(string $path): string
             </div>
           </div>
 
+          <div class="settings-section">
+            <label class="settings-label">
+              Music
+              <span id="music-value" class="speed-value">100%</span>
+            </label>
+            <div class="speed-row">
+              <span class="speed-end">OFF</span>
+              <input type="range" id="music-slider" class="speed-slider" min="0" max="100" step="1" value="100" />
+              <span class="speed-end">LOUD</span>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <label class="settings-label">
+              Sound Effects
+              <span id="sfx-value" class="speed-value">100%</span>
+            </label>
+            <div class="speed-row">
+              <span class="speed-end">OFF</span>
+              <input type="range" id="sfx-slider" class="speed-slider" min="0" max="100" step="1" value="100" />
+              <span class="speed-end">LOUD</span>
+            </div>
+          </div>
+
           <div class="settings-footer">
             <button id="settings-done" class="btn btn-cyan btn-sm">DONE</button>
           </div>

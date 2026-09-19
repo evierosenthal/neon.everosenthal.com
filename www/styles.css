@@ -2637,6 +2637,8 @@ body {
   padding: 2rem;
   max-width: 32rem;
   width: 100%;
+  max-height: calc(100vh - 2rem); /* taller than a short screen? scroll inside */
+  overflow-y: auto;
   animation: rise-in 0.25s ease both;
 }
 

@@ -12,6 +12,8 @@
   var HIGHSCORE_PREFIX = 'neon_nebula_highscore_'; // + mode
   var CONTROL_KEY = 'neon_nebula_control_mode';
   var SPEED_KEY = 'neon_nebula_speed'; // rocket speed percent, 1-300
+  var MUSIC_KEY = 'neon_nebula_music'; // music volume percent, 0-100 (0 = off)
+  var SFX_KEY = 'neon_nebula_sfx'; // sound effects volume percent, 0-100 (0 = off)
   var HAS_ACCOUNT_KEY = 'neon_nebula_has_account'; // set after any successful login
   var LAST_MISSION_KEY = 'neon_nebula_last_mission'; // {diff, mode} of the last launch
 
@@ -318,6 +320,10 @@
     settingsClose: document.getElementById('settings-close'),
     speedSlider: document.getElementById('speed-slider'),
     speedValue: document.getElementById('speed-value'),
+    musicSlider: document.getElementById('music-slider'),
+    musicValue: document.getElementById('music-value'),
+    sfxSlider: document.getElementById('sfx-slider'),
+    sfxValue: document.getElementById('sfx-value'),
     settingsDone: document.getElementById('settings-done'),
     controlOptions: document.getElementById('control-options'),
     finalScore: document.getElementById('final-score'),
@@ -441,13 +447,15 @@
   var bgMusic = new Audio('sounds/background-music.m4a');
   bgMusic.preload = 'auto';
   bgMusic.loop = true;
-  bgMusic.volume = 0.35;
+  var BG_MUSIC_LEVEL = 0.35;
+  bgMusic.volume = BG_MUSIC_LEVEL;
 
   // Home screen loop: original chiptune-pop, plays whenever the menu is up.
   var homeMusic = new Audio('sounds/home-music.m4a');
   homeMusic.preload = 'auto';
   homeMusic.loop = true;
-  homeMusic.volume = 0.22; // the loop is denser than the gameplay track, so it sits a little lower
+  var HOME_MUSIC_LEVEL = 0.22; // the loop is denser than the gameplay track, so it sits a little lower
+  homeMusic.volume = HOME_MUSIC_LEVEL;
   var homeMusicWanted = false;
 
   function setHomeMusicPlaying(playing) {
@@ -480,7 +488,8 @@
   // when the new-high-score screen opens.
   var newHighSound = new Audio('sounds/new-high-score.mp3');
   newHighSound.preload = 'auto';
-  newHighSound.volume = 0.8;
+  var NEW_HIGH_LEVEL = 0.8;
+  newHighSound.volume = NEW_HIGH_LEVEL;
 
   // "Spacecraft crashing" by freesound_community (pixabay.com, sound #88048) —
   // only its final seconds play, on the asteroid hit that destroys the ship
@@ -488,7 +497,8 @@
   var DEATH_SOUND_TAIL_SEC = 3;
   var deathSound = new Audio('sounds/crash-death.mp3');
   deathSound.preload = 'auto';
-  deathSound.volume = 0.9;
+  var DEATH_LEVEL = 0.9;
+  deathSound.volume = DEATH_LEVEL;
 
   // "Sci-fi whoosh spectral glide" by Rescopic Sound (pixabay.com, sound
   // #228310) — its final 2 seconds play on asteroid hits that hurt but don't
@@ -496,7 +506,23 @@
   var HIT_SOUND_TAIL_SEC = 2;
   var hitSound = new Audio('sounds/asteroid-hit.mp3');
   hitSound.preload = 'auto';
-  hitSound.volume = 0.7;
+  var HIT_LEVEL = 0.7;
+  hitSound.volume = HIT_LEVEL;
+
+  // Settings sliders scale every sound from its mixed level down to silence.
+  function applyAudioSettings() {
+    var music = (parseInt(el.musicSlider.value, 10) || 0) / 100;
+    var sfx = (parseInt(el.sfxSlider.value, 10) || 0) / 100;
+    el.musicValue.textContent = music === 0 ? 'OFF' : Math.round(music * 100) + '%';
+    el.sfxValue.textContent = sfx === 0 ? 'OFF' : Math.round(sfx * 100) + '%';
+    bgMusic.volume = BG_MUSIC_LEVEL * music;
+    homeMusic.volume = HOME_MUSIC_LEVEL * music;
+    bgMusic.muted = homeMusic.muted = music === 0;
+    newHighSound.volume = NEW_HIGH_LEVEL * sfx;
+    deathSound.volume = DEATH_LEVEL * sfx;
+    hitSound.volume = HIT_LEVEL * sfx;
+    newHighSound.muted = deathSound.muted = hitSound.muted = sfx === 0;
+  }
 
   function playHitSound() {
     try {
@@ -1767,6 +1793,23 @@
         localStorage.setItem(SPEED_KEY, el.speedSlider.value);
       } catch (err) { /* storage unavailable — keep for this session */ }
     });
+
+    [[el.musicSlider, MUSIC_KEY], [el.sfxSlider, SFX_KEY]].forEach(function (pair) {
+      var slider = pair[0];
+      var key = pair[1];
+      var saved = null;
+      try {
+        saved = parseInt(localStorage.getItem(key), 10);
+      } catch (err) { /* storage unavailable */ }
+      if (saved >= 0 && saved <= 100) slider.value = saved;
+      slider.addEventListener('input', function () {
+        applyAudioSettings();
+        try {
+          localStorage.setItem(key, slider.value);
+        } catch (err) { /* storage unavailable — keep for this session */ }
+      });
+    });
+    applyAudioSettings();
 
     buildDifficultyButtons();
     buildControlOptions();
