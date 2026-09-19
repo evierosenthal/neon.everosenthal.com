@@ -443,6 +443,31 @@
   bgMusic.loop = true;
   bgMusic.volume = 0.35;
 
+  // Home screen loop: original chiptune-pop, plays whenever the menu is up.
+  var homeMusic = new Audio('sounds/home-music.m4a');
+  homeMusic.preload = 'auto';
+  homeMusic.loop = true;
+  homeMusic.volume = 0.22; // the loop is denser than the gameplay track, so it sits a little lower
+  var homeMusicWanted = false;
+
+  function setHomeMusicPlaying(playing) {
+    homeMusicWanted = playing;
+    if (playing) {
+      if (homeMusic.paused) homeMusic.play().catch(function () { /* autoplay blocked until first tap */ });
+    } else if (!homeMusic.paused) {
+      homeMusic.pause();
+    }
+  }
+
+  // Browsers refuse audio before the first interaction, so retry on it.
+  ['pointerdown', 'keydown'].forEach(function (evt) {
+    document.addEventListener(evt, function () {
+      if (homeMusicWanted && homeMusic.paused) {
+        homeMusic.play().catch(function () { /* still blocked */ });
+      }
+    });
+  });
+
   function setMusicPlaying(playing) {
     if (playing) {
       bgMusic.play().catch(function () { /* file missing or autoplay blocked */ });
@@ -974,6 +999,7 @@
     show(el.resetModal, isResetOpen);
 
     setMusicPlaying(playing && !isPaused);
+    setHomeMusicPlaying(gameState === 'START');
 
     var user = window.NeonAuth ? window.NeonAuth.state.user : null;
     show(el.userChip, !!user && !playing);

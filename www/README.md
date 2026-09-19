@@ -39,6 +39,8 @@ Sound effects (from [Pixabay](https://pixabay.com/)):
   the final 2 seconds play on non-fatal asteroid hits
 - `sounds/background-music.m4a` — original synthwave loop composed for this game
   (8 bars, 112 BPM, Am-F-C-G); loops during gameplay, pauses with the game
+- `sounds/home-music.m4a` — original chiptune-pop loop composed for the home screen
+  (16 bars, 104 BPM, E-B-C#m-A); loops while the menu is up and stops when a mission starts
 
 ## Modes
 
