@@ -1371,6 +1371,30 @@
     return !!user && (user.role === 'developer' || user.role === 'lead_developer');
   }
 
+  function skinExists(id) {
+    return SKINS.some(function (s) { return s.id === id; });
+  }
+
+  function trailExists(id) {
+    return TRAILS.some(function (t) { return t.id === id; });
+  }
+
+  function flameExists(id) {
+    return FLAMES.some(function (f) { return f.id === id; });
+  }
+
+  // The saved loadout is restored as-is on load so a developer's free gear
+  // (Galaxy Prism, say) survives a reload. Once we know who is logged in,
+  // anyone who isn't a developer is dropped back to gear they actually own.
+  function enforceOwnedGear() {
+    if (isDeveloper()) return;
+    var changed = false;
+    if (ownedSkins.indexOf(selectedSkin) === -1) { selectedSkin = 'cyan'; changed = true; }
+    if (ownedTrails.indexOf(selectedTrail) === -1) { selectedTrail = 'classic'; changed = true; }
+    if (ownedFlames.indexOf(selectedFlame) === -1) { selectedFlame = 'classic'; changed = true; }
+    if (changed) saveWallet();
+  }
+
   function getSkin(id) {
     for (var i = 0; i < SKINS.length; i++) {
       if (SKINS[i].id === id) return SKINS[i];
@@ -1749,7 +1773,7 @@
         ownedSkins = savedOwned;
       }
       var savedSkin = localStorage.getItem(SKIN_KEY);
-      if (savedSkin && ownedSkins.indexOf(savedSkin) !== -1) selectedSkin = savedSkin;
+      if (savedSkin && skinExists(savedSkin)) selectedSkin = savedSkin;
 
       var savedOwnedTrails = JSON.parse(localStorage.getItem(TRAILS_OWNED_KEY) || '[]');
       if (savedOwnedTrails instanceof Array && savedOwnedTrails.length) {
@@ -1757,7 +1781,7 @@
         ownedTrails = savedOwnedTrails;
       }
       var savedTrail = localStorage.getItem(TRAIL_KEY);
-      if (savedTrail && ownedTrails.indexOf(savedTrail) !== -1) selectedTrail = savedTrail;
+      if (savedTrail && trailExists(savedTrail)) selectedTrail = savedTrail;
 
       var savedOwnedFlames = JSON.parse(localStorage.getItem(FLAMES_OWNED_KEY) || '[]');
       if (savedOwnedFlames instanceof Array && savedOwnedFlames.length) {
@@ -1765,7 +1789,7 @@
         ownedFlames = savedOwnedFlames;
       }
       var savedFlame = localStorage.getItem(FLAME_KEY);
-      if (savedFlame && ownedFlames.indexOf(savedFlame) !== -1) selectedFlame = savedFlame;
+      if (savedFlame && flameExists(savedFlame)) selectedFlame = savedFlame;
 
       var savedMission = JSON.parse(localStorage.getItem(LAST_MISSION_KEY) || 'null');
       if (savedMission && typeof savedMission.diff === 'number' &&
@@ -1855,6 +1879,7 @@
     var auth = window.NeonAuth;
 
     auth.init(function (authState) {
+      enforceOwnedGear();
       // New-device sync: the server bests may beat this browser's localStorage.
       syncServerBests(authState.user);
       render();
@@ -1870,14 +1895,9 @@
         if (gameState === 'NEWHIGH' && pendingScore != null) {
           submitPendingScore();
         }
-      } else {
-        // Logged out while wearing dev-only gear — back to something owned.
-        var changed = false;
-        if (ownedSkins.indexOf(selectedSkin) === -1) { selectedSkin = 'cyan'; changed = true; }
-        if (ownedTrails.indexOf(selectedTrail) === -1) { selectedTrail = 'classic'; changed = true; }
-        if (ownedFlames.indexOf(selectedFlame) === -1) { selectedFlame = 'classic'; changed = true; }
-        if (changed) saveWallet();
       }
+      enforceOwnedGear(); // logged out, or in as a non-developer, while wearing dev-only gear
+      if (isSkinsOpen) renderTailor();
       render();
     });
 
