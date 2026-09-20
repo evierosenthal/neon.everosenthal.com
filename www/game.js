@@ -135,8 +135,35 @@
       isCPUMultiplayer: false,
       controlModePreference: 'both',
       speedFactor: 1, // from the Settings rocket-speed slider
-      flameSpeedMult: 1 // from the equipped fire's power (fast/slow)
+      flameSpeedMult: 1, // from the equipped fire's power (fast/slow)
+      online: null // {role: 'host'|'guest', send: fn(obj)} for an internet two-player game
     };
+
+    // --- Online play ----------------------------------------------------------
+    // The host runs the real simulation and streams compact snapshots; the
+    // guest steers player 2 by sending a direction vector and draws whatever
+    // the latest snapshot says. Nothing here runs for local games.
+    var remoteInput = { dx: 0, dy: 0 }; // host: the guest's latest steering
+    var pendingSnapshot = null;         // guest: newest snapshot not yet applied
+    var sentIds = {};                   // host: entities the guest already has in full
+    var knownEntities = {};             // guest: id -> full entity object
+    var netFrame = 0;
+    var finalSnapshotSent = false;
+    var lastInputSent = 0;
+    var lastInput = { dx: 0, dy: 0 };
+    var reported = { score: null, health: null, hit: 0, dying: false, over: false };
+
+    function resetNet() {
+      remoteInput = { dx: 0, dy: 0 };
+      pendingSnapshot = null;
+      sentIds = {};
+      knownEntities = {};
+      netFrame = 0;
+      finalSnapshotSent = false;
+      lastInputSent = 0;
+      lastInput = { dx: 0, dy: 0 };
+      reported = { score: null, health: null, hit: 0, dying: false, over: false };
+    }
 
     var state = null;
     var keysPressed = {};
@@ -419,7 +446,7 @@
     }
 
     function reset() {
-      var hasPlayer2 = config.isLocalMultiplayer || config.isCPUMultiplayer;
+      var hasPlayer2 = config.isLocalMultiplayer || config.isCPUMultiplayer || !!config.online;
       var w = layout.width();
       var h = layout.height();
 
@@ -439,6 +466,7 @@
         dying: false,
         deathTimer: 0,
         shipsDestroyed: false,
+        hitCount: 0,
         difficulty: config.initialDifficulty,
         activeEffects: {
           shield: 0,
@@ -586,6 +614,23 @@
     function updatePlayer2(accel, friction, moveSpeed) {
       var p2 = state.player2;
       if (!p2) return;
+
+      if (config.online) {
+        // Online: the guest's ship follows the direction they sent (unit
+        // vector), with the same feel as the local arrow keys.
+        p2.vx += remoteInput.dx * accel;
+        p2.vy += remoteInput.dy * accel;
+        p2.vx *= friction;
+        p2.vy *= friction;
+        var speedNet = Math.sqrt(p2.vx * p2.vx + p2.vy * p2.vy);
+        if (speedNet > moveSpeed) {
+          p2.vx = (p2.vx / speedNet) * moveSpeed;
+          p2.vy = (p2.vy / speedNet) * moveSpeed;
+        }
+        p2.x += p2.vx;
+        p2.y += p2.vy;
+        return;
+      }
 
       if (config.isLocalMultiplayer) {
         // Arrow Controls for Player 2 (Local Co-op ONLY)
@@ -894,7 +939,7 @@
           // Expanded pickup radius (+10px) for smooth collection without pixel precision frustration
           if (distance < c.radius + p.radius + 10) {
             state.score += 100;
-            var healAmount = (config.isLocalMultiplayer || config.isCPUMultiplayer) ? 7 : 5;
+            var healAmount = (config.isLocalMultiplayer || config.isCPUMultiplayer || config.online) ? 7 : 5;
             state.health = Math.min(100, state.health + healAmount);
             handlers.onScoreUpdate(state.score);
             handlers.onHealthUpdate(state.health);
@@ -976,7 +1021,7 @@
               asteroidDestroyed = true;
               break;
             } else {
-              var damage = (config.isLocalMultiplayer || config.isCPUMultiplayer) ? 18 : 25;
+              var damage = (config.isLocalMultiplayer || config.isCPUMultiplayer || config.online) ? 18 : 25;
               // Fire powers: Iron Forge shrugs hits off, Eggshell doubles them
               var hitFlame = p.id === 'player1' ? config.flame : config.flame2;
               if (hitFlame && hitFlame.power === 'armor') damage = Math.round(damage * 0.6);
@@ -992,6 +1037,7 @@
               if (state.health <= 0) {
                 startDeathSequence(p, asteroid); // fatal hit has its own crash sound
               } else {
+                state.hitCount++;
                 handlers.onHit();
               }
               break;
@@ -1083,6 +1129,25 @@
 
     function update() {
       if (isPaused || !state || state.isGameOver) return;
+
+      if (config.online && config.online.role === 'guest') {
+        // The host simulates; we mirror it. Keep the star parallax local so
+        // the backdrop stays smooth between snapshots.
+        for (var gs = 0; gs < stars.length; gs++) {
+          stars[gs].y += stars[gs].s * 0.5;
+          if (stars[gs].y > canvas.height) stars[gs].y = 0;
+        }
+        for (var gm = 0; gm < MOVE_KEYS.length; gm++) {
+          if (keysPressed[MOVE_KEYS[gm]]) { controlMode = 'keyboard'; break; }
+        }
+        if (pendingSnapshot) {
+          var snap = pendingSnapshot;
+          pendingSnapshot = null;
+          applySnapshot(snap);
+        }
+        return;
+      }
+
       if (state.dying) {
         updateDeathSequence();
         return;
@@ -1594,7 +1659,7 @@
 
         // Calculate tilt based on horizontal speed
         var tilt;
-        if (config.isLocalMultiplayer || config.isCPUMultiplayer || p.id === 'player2' || controlMode === 'keyboard') {
+        if (config.isLocalMultiplayer || config.isCPUMultiplayer || config.online || p.id === 'player2' || controlMode === 'keyboard') {
           tilt = p.vx * 0.04;
         } else {
           tilt = (mousePos.x - p.x) * 0.01;
@@ -2136,10 +2201,169 @@
       ctx.restore();
     }
 
+    // --- Online: snapshots (host -> guest) and steering (guest -> host) --------
+
+    function r1(v) { return Math.round(v * 10) / 10; }
+
+    function packPlayer(p) {
+      return [r1(p.x), r1(p.y), r1(p.vx), r1(p.vy), r1(p.radius)];
+    }
+
+    function buildSnapshot() {
+      var snap = {
+        t: 's',
+        sc: Math.round(state.score),
+        h: r1(state.health),
+        d: state.difficulty,
+        dy: state.dying ? 1 : 0,
+        go: state.isGameOver ? 1 : 0,
+        sd: state.shipsDestroyed ? 1 : 0,
+        sh: r1(shake),
+        hc: state.hitCount,
+        fx: [state.activeEffects.shield, state.activeEffects.speedBoost,
+          state.activeEffects.weaponUpgrade, state.activeEffects.magnet],
+        p: packPlayer(state.player),
+        p2: state.player2 ? packPlayer(state.player2) : null,
+        a: [], an: [], c: [], cn: [], u: [], un: [], j: [], pt: [], ft: []
+      };
+      // Asteroids, treats and orbs travel in full once (shape, colors...) and
+      // as id + position afterwards.
+      state.asteroids.forEach(function (a) {
+        if (!sentIds[a.id]) { sentIds[a.id] = 1; snap.an.push(a); }
+        snap.a.push([a.id, r1(a.x), r1(a.y), Math.round(a.rotation * 1000) / 1000]);
+      });
+      state.collectibles.forEach(function (c) {
+        if (!sentIds[c.id]) { sentIds[c.id] = 1; snap.cn.push(c); }
+        snap.c.push([c.id, r1(c.x), r1(c.y)]);
+      });
+      state.powerUps.forEach(function (u) {
+        if (!sentIds[u.id]) { sentIds[u.id] = 1; snap.un.push(u); }
+        snap.u.push([u.id, r1(u.x), r1(u.y), u.life]);
+      });
+      state.projectiles.forEach(function (j) {
+        snap.j.push([r1(j.x), r1(j.y), j.radius, j.color]);
+      });
+      var particles = state.particles.length > 60 ? state.particles.slice(-60) : state.particles;
+      particles.forEach(function (pt) {
+        snap.pt.push([r1(pt.x), r1(pt.y), r1(pt.radius), pt.color, Math.round(pt.life), Math.round(pt.maxLife)]);
+      });
+      state.floatingTexts.forEach(function (ft) {
+        snap.ft.push([r1(ft.x), r1(ft.y), ft.text, ft.color, r1(ft.alpha), ft.scale]);
+      });
+      // Forget ids that are gone so the "already sent" set stays small.
+      if (netFrame % 300 === 0) {
+        var live = {};
+        state.asteroids.concat(state.collectibles, state.powerUps).forEach(function (e) { live[e.id] = 1; });
+        sentIds = live;
+      }
+      return snap;
+    }
+
+    function maybeSendSnapshot() {
+      netFrame++;
+      if (state.isGameOver) {
+        if (finalSnapshotSent) return;
+        finalSnapshotSent = true; // the last word: score + game over
+      } else if (netFrame % 3 !== 0) {
+        return; // 20 snapshots a second is plenty
+      }
+      config.online.send(buildSnapshot());
+    }
+
+    function unpackPlayer(p, row) {
+      p.x = row[0]; p.y = row[1]; p.vx = row[2]; p.vy = row[3]; p.radius = row[4];
+    }
+
+    function rebuildList(rows, fullList, apply) {
+      (fullList || []).forEach(function (e) { knownEntities[e.id] = e; });
+      var out = [];
+      for (var i = 0; i < rows.length; i++) {
+        var e = knownEntities[rows[i][0]];
+        if (!e) continue; // its full record hasn't arrived yet
+        apply(e, rows[i]);
+        out.push(e);
+      }
+      return out;
+    }
+
+    function applySnapshot(s) {
+      state.score = s.sc;
+      state.health = s.h;
+      state.difficulty = s.d;
+      state.dying = !!s.dy;
+      state.isGameOver = !!s.go;
+      state.shipsDestroyed = !!s.sd;
+      shake = s.sh;
+      state.activeEffects = { shield: s.fx[0], speedBoost: s.fx[1], weaponUpgrade: s.fx[2], magnet: s.fx[3] };
+      unpackPlayer(state.player, s.p);
+      if (s.p2) {
+        if (!state.player2) state.player2 = createPlayer('player2', s.p2[0], s.p2[1], '#fb7185');
+        unpackPlayer(state.player2, s.p2);
+      }
+      state.asteroids = rebuildList(s.a, s.an, function (a, row) { a.x = row[1]; a.y = row[2]; a.rotation = row[3]; });
+      state.collectibles = rebuildList(s.c, s.cn, function (c, row) { c.x = row[1]; c.y = row[2]; });
+      state.powerUps = rebuildList(s.u, s.un, function (u, row) { u.x = row[1]; u.y = row[2]; u.life = row[3]; });
+      state.projectiles = s.j.map(function (row) {
+        return { x: row[0], y: row[1], radius: row[2], color: row[3], type: 'projectile' };
+      });
+      state.particles = s.pt.map(function (row) {
+        return { x: row[0], y: row[1], radius: row[2], color: row[3], life: row[4], maxLife: row[5], type: 'particle' };
+      });
+      state.floatingTexts = s.ft.map(function (row) {
+        return { x: row[0], y: row[1], text: row[2], color: row[3], alpha: row[4], scale: row[5] };
+      });
+      if (netFrame++ % 300 === 0) {
+        var live = {};
+        state.asteroids.concat(state.collectibles, state.powerUps).forEach(function (e) { live[e.id] = e; });
+        knownEntities = live;
+      }
+
+      // Mirror the host's callbacks so the HUD, sounds and game-over flow match.
+      if (s.sc !== reported.score) { reported.score = s.sc; handlers.onScoreUpdate(s.sc); }
+      if (s.h !== reported.health) { reported.health = s.h; handlers.onHealthUpdate(s.h); }
+      if (s.hc > reported.hit) { reported.hit = s.hc; handlers.onHit(); }
+      if (state.dying && !reported.dying) { reported.dying = true; handlers.onDeath(); }
+      handlers.onDifficultyUpdate(s.d);
+      if (state.isGameOver && !reported.over) { reported.over = true; handlers.onGameOver(state.score); }
+    }
+
+    function maybeSendInput() {
+      var dx = 0;
+      var dy = 0;
+      var pref = config.controlModePreference || 'both';
+      var keyboardDrives = pref === 'keyboard' || (pref === 'both' && controlMode === 'keyboard');
+      var mouseDrives = pref === 'mouse' || (pref === 'both' && controlMode === 'mouse');
+      if (keyboardDrives) {
+        if (keysPressed['KeyW'] || keysPressed['w'] || keysPressed['W'] || keysPressed['ArrowUp'] || keysPressed['Up']) dy -= 1;
+        if (keysPressed['KeyS'] || keysPressed['s'] || keysPressed['S'] || keysPressed['ArrowDown'] || keysPressed['Down']) dy += 1;
+        if (keysPressed['KeyA'] || keysPressed['a'] || keysPressed['A'] || keysPressed['ArrowLeft'] || keysPressed['Left']) dx -= 1;
+        if (keysPressed['KeyD'] || keysPressed['d'] || keysPressed['D'] || keysPressed['ArrowRight'] || keysPressed['Right']) dx += 1;
+        var len = Math.sqrt(dx * dx + dy * dy);
+        if (len > 1) { dx /= len; dy /= len; }
+      } else if (mouseDrives && state.player2) {
+        var ddx = mousePos.x - state.player2.x;
+        var ddy = mousePos.y - state.player2.y;
+        var dist = Math.sqrt(ddx * ddx + ddy * ddy);
+        if (dist > 14) { dx = ddx / dist; dy = ddy / dist; }
+      }
+      dx = Math.round(dx * 100) / 100;
+      dy = Math.round(dy * 100) / 100;
+      var now = Date.now();
+      if (dx !== lastInput.dx || dy !== lastInput.dy || now - lastInputSent > 250) {
+        lastInput = { dx: dx, dy: dy };
+        lastInputSent = now;
+        config.online.send({ t: 'in', x: dx, y: dy });
+      }
+    }
+
     function loop() {
       update();
       draw();
-      animationId = requestAnimationFrame(loop);
+      if (config.online && state) {
+        if (config.online.role === 'host') maybeSendSnapshot();
+        else if (!state.isGameOver) maybeSendInput();
+      }
+      if (running) animationId = requestAnimationFrame(loop);
     }
 
     // --- Input ------------------------------------------------------------
@@ -2220,6 +2444,8 @@
         config.flameSpeedMult = 1;
         if (config.flame && config.flame.power === 'fast') config.flameSpeedMult = 1.35;
         if (config.flame && config.flame.power === 'slow') config.flameSpeedMult = 0.65;
+        config.online = options.online || null; // {role, send} for internet play
+        resetNet();
 
         resizeCanvas();
         reset();
@@ -2251,6 +2477,25 @@
 
       setSpeedFactor: function (factor) {
         config.speedFactor = Math.max(0.01, Math.min(3, Number(factor) || 1));
+      },
+
+      // Online play: hand a message from the other side to the engine.
+      // Host takes steering ({t:'in'}); guest takes snapshots ({t:'s'}).
+      receive: function (msg) {
+        if (!config.online || !msg) return;
+        if (config.online.role === 'host' && msg.t === 'in') {
+          remoteInput = {
+            dx: Math.max(-1, Math.min(1, Number(msg.x) || 0)),
+            dy: Math.max(-1, Math.min(1, Number(msg.y) || 0))
+          };
+        } else if (config.online.role === 'guest' && msg.t === 's') {
+          pendingSnapshot = msg;
+        }
+      },
+
+      // Score of the round in progress (used when a connection drops).
+      getScore: function () {
+        return state ? state.score : 0;
       },
 
       // Read-only ship telemetry (debug/testing)

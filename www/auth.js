@@ -89,6 +89,15 @@
   window.NeonAuth = {
     state: state,
 
+    // Raw API access for other modules (net.js): same session cookie and
+    // CSRF token as the auth calls.
+    api: {
+      get: function (path) {
+        return request(path, { credentials: 'same-origin' });
+      },
+      post: post
+    },
+
     // Hooks ui.js can assign: onGoogleReady(), onGoogleError(err)
     onGoogleReady: null,
     onGoogleError: null,

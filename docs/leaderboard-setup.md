@@ -56,6 +56,16 @@ The session cookie is set with the `Secure` flag, so the site must be served
 over HTTPS (it already is in production). For local testing over plain HTTP,
 the API detects the missing HTTPS and drops the Secure flag automatically.
 
+## Online two-player
+
+`api/games.php` (lobbies, invites, WebRTC signaling) needs the tables from
+`www/db_migrations/05_online_games.sql`. They are created automatically the
+next time someone logs in (the self-healing migration runner), or from
+Settings → RUN DB MIGRATIONS. No other server setup: the game data itself
+flows browser-to-browser, and the public Google STUN servers handle NAT
+discovery. There is no TURN relay, so two players on very strict networks may
+not be able to link up.
+
 ## Local testing
 
 ```sh

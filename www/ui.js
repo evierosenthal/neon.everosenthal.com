@@ -311,6 +311,22 @@
   var resetToken = null;
   var lastMission = null; // {diff: number, mode: 'single'|'local'|'cpu'} — Enter replays it
 
+  // Online two-player (friends, invites, lobbies — see net.js)
+  var LOBBY_TIER_DIFF = { easy: 0.3, medium: 0.62, hard: 1.3 };
+  var isFriendsOpen = false;
+  var isLobbyOpen = false;
+  var lobbyPhase = 'setup'; // 'setup' | 'wait' | 'connecting'
+  var lobbyModeChoice = 'medium';
+  var online = null; // {code, mode, role: 'host'|'guest', status, game} while in a lobby / online round
+  var onlineSession = null; // NeonNet session once the two browsers are linked
+  var peerHello = null; // the other pilot's name + gear
+  var isOnlineGame = false; // an internet round is in progress
+  var lastGameWasOnline = false;
+  var connectionLost = false;
+  var pendingInvites = [];
+  var lobbyPollTimer = null;
+  var inboxPollTimer = null;
+
   var el = {
     canvas: document.getElementById('game-canvas'),
     hud: document.getElementById('hud'),
@@ -426,6 +442,37 @@
     duoHint: document.getElementById('duo-hint'),
     tailorPilots: document.getElementById('tailor-pilots'),
     tailorSubtitle: document.getElementById('tailor-subtitle'),
+    gameoverSub: document.getElementById('gameover-sub'),
+    friendsBtn: document.getElementById('friends-btn'),
+    friendsBadge: document.getElementById('friends-badge'),
+    friendsModal: document.getElementById('friends-modal'),
+    friendsClose: document.getElementById('friends-close'),
+    inviteForm: document.getElementById('invite-form'),
+    inviteUsername: document.getElementById('invite-username'),
+    inviteCode: document.getElementById('invite-code'),
+    inviteMsg: document.getElementById('invite-msg'),
+    joinForm: document.getElementById('join-form'),
+    joinCode: document.getElementById('join-code'),
+    joinMsg: document.getElementById('join-msg'),
+    invitesList: document.getElementById('invites-list'),
+    createGameBtn: document.getElementById('create-game-btn'),
+    lobbyModal: document.getElementById('lobby-modal'),
+    lobbyClose: document.getElementById('lobby-close'),
+    lobbySubtitle: document.getElementById('lobby-subtitle'),
+    lobbySetup: document.getElementById('lobby-setup'),
+    lobbyWait: document.getElementById('lobby-wait'),
+    lobbyCodeInput: document.getElementById('lobby-code-input'),
+    lobbyShuffle: document.getElementById('lobby-shuffle'),
+    lobbySetupMsg: document.getElementById('lobby-setup-msg'),
+    lobbyOpen: document.getElementById('lobby-open'),
+    lobbyCode: document.getElementById('lobby-code'),
+    lobbyMode: document.getElementById('lobby-mode'),
+    lobbyPlayers: document.getElementById('lobby-players'),
+    lobbyStatus: document.getElementById('lobby-status'),
+    lobbyMsg: document.getElementById('lobby-msg'),
+    lobbyLeave: document.getElementById('lobby-leave'),
+    lobbyInvite: document.getElementById('lobby-invite'),
+    lobbyStart: document.getElementById('lobby-start'),
     skinsBtn: document.getElementById('skins-btn'),
     skinsModal: document.getElementById('skins-modal'),
     skinsClose: document.getElementById('skins-close'),
@@ -1048,6 +1095,9 @@
     show(el.leaderboardModal, isLeaderboardOpen);
     show(el.skinsModal, isSkinsOpen);
     show(el.resetModal, isResetOpen);
+    show(el.friendsModal, isFriendsOpen);
+    show(el.lobbyModal, isLobbyOpen);
+    show(el.pauseBtn, !isOnlineGame); // two screens can't pause together
 
     setMusicPlaying(playing && !isPaused);
     setHomeMusicPlaying(gameState === 'START');
@@ -1163,6 +1213,12 @@
 
   function handleGameOver(finalScore) {
     game.stop();
+    lastGameWasOnline = isOnlineGame;
+    if (isOnlineGame) endOnlineGame();
+    el.gameoverSub.textContent = connectionLost
+      ? 'Connection to your co-pilot was lost'
+      : 'Critical Hull Failure Detected';
+    connectionLost = false;
     var beatRecord = finalScore > highScores[currentMode] && finalScore > 0;
 
     // Mission pay: coins scale with score, with a big bonus for a new record.
@@ -1767,9 +1823,441 @@
   }
 
   function setPaused(value) {
+    if (isOnlineGame) return; // the host can't freeze the guest's screen
     isPaused = value;
     game.setPaused(value);
     render();
+  }
+
+  // --- Online play: friends, invites, lobbies ------------------------------
+  // The server (api/games.php) matches two accounts under a game code; the
+  // round itself runs browser-to-browser through net.js. The host's engine
+  // simulates and streams snapshots, the guest steers player 2.
+
+  function currentUser() {
+    return window.NeonAuth ? window.NeonAuth.state.user : null;
+  }
+
+  function netReady() {
+    return !!window.NeonNet && window.NeonNet.supported();
+  }
+
+  function noop() {}
+
+  function randomCode() {
+    var alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    var code = '';
+    for (var i = 0; i < 5; i++) code += alphabet[Math.floor(Math.random() * alphabet.length)];
+    return code;
+  }
+
+  function cleanCode(raw) {
+    return String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+  }
+
+  function setNotice(node, text, ok) {
+    node.className = ok ? 'auth-success' : 'auth-error';
+    node.textContent = text || '';
+    show(node, !!text);
+  }
+
+  // -- Friends page --
+
+  function openFriends() {
+    if (!currentUser()) { openAuthModal(); return; }
+    isFriendsOpen = true;
+    setNotice(el.inviteMsg, '');
+    setNotice(el.joinMsg, '');
+    if (online && online.role === 'host' && online.status === 'open' && !el.inviteCode.value) {
+      el.inviteCode.value = online.code;
+    }
+    refreshInbox();
+    startInboxPolling(5000);
+    renderInvites();
+    render();
+  }
+
+  function closeFriends() {
+    isFriendsOpen = false;
+    startInboxPolling(20000);
+    render();
+  }
+
+  function startInboxPolling(ms) {
+    if (inboxPollTimer) clearInterval(inboxPollTimer);
+    inboxPollTimer = null;
+    if (!currentUser() || !netReady()) return;
+    inboxPollTimer = setInterval(function () {
+      if (gameState === 'START') refreshInbox();
+    }, ms);
+  }
+
+  function refreshInbox() {
+    if (!currentUser() || !netReady()) return;
+    window.NeonNet.lobby.inbox().then(function (data) {
+      pendingInvites = data.invites || [];
+      // A lobby this account is already sitting in (say, after a reload)
+      if (!online && data.game && data.game.status === 'open' && data.game.you) {
+        online = { code: data.game.code, mode: data.game.mode, role: data.game.you, status: 'open', game: data.game };
+      }
+      renderInvites();
+      renderFriendsBadge();
+    }).catch(noop);
+  }
+
+  function renderFriendsBadge() {
+    var n = pendingInvites.length;
+    el.friendsBadge.textContent = String(n);
+    show(el.friendsBadge, n > 0 && !!currentUser());
+  }
+
+  function renderInvites() {
+    el.invitesList.innerHTML = '';
+    var user = currentUser();
+    if (!pendingInvites.length) {
+      var empty = document.createElement('div');
+      empty.className = 'lb-empty';
+      empty.textContent = user
+        ? 'No invites right now. Friends invite you by your call sign: ' + user.username
+        : 'Log in to see your invites.';
+      el.invitesList.appendChild(empty);
+      return;
+    }
+    pendingInvites.forEach(function (inv) {
+      var row = document.createElement('div');
+      row.className = 'lb-row invite-row';
+      var name = document.createElement('span');
+      name.className = 'lb-name';
+      var from = document.createElement('span');
+      from.textContent = inv.from;
+      var code = document.createElement('span');
+      code.className = 'invite-chip';
+      code.textContent = inv.code;
+      var mode = document.createElement('span');
+      mode.className = 'invite-chip';
+      mode.textContent = TIER_LABELS[inv.mode] || inv.mode;
+      name.appendChild(from);
+      name.appendChild(code);
+      name.appendChild(mode);
+      var actions = document.createElement('span');
+      actions.className = 'invite-actions';
+      var join = document.createElement('button');
+      join.className = 'btn btn-cyan';
+      join.textContent = 'JOIN';
+      join.addEventListener('click', function () { joinByCode(inv.code, el.joinMsg); });
+      var decline = document.createElement('button');
+      decline.className = 'btn btn-muted';
+      decline.textContent = 'NO THANKS';
+      decline.addEventListener('click', function () {
+        window.NeonNet.lobby.decline(inv.id).catch(noop);
+        pendingInvites = pendingInvites.filter(function (i) { return i.id !== inv.id; });
+        renderInvites();
+        renderFriendsBadge();
+      });
+      actions.appendChild(join);
+      actions.appendChild(decline);
+      row.appendChild(name);
+      row.appendChild(actions);
+      el.invitesList.appendChild(row);
+    });
+  }
+
+  function sendInvite(e) {
+    e.preventDefault();
+    setNotice(el.inviteMsg, '');
+    var username = el.inviteUsername.value.trim();
+    var code = cleanCode(el.inviteCode.value);
+    el.inviteCode.value = code;
+    if (!username) { setNotice(el.inviteMsg, "Type your friend's username."); return; }
+    if (code.length < 4) { setNotice(el.inviteMsg, 'Game codes are 4 to 12 letters or numbers.'); return; }
+    window.NeonNet.lobby.invite(username, code).then(function (data) {
+      setNotice(el.inviteMsg, 'Invite sent to ' + data.to + ' for game ' + data.code + '. They will see it on their Friends page.', true);
+    }).catch(function (err) {
+      setNotice(el.inviteMsg, err.message);
+    });
+  }
+
+  function joinByCode(rawCode, msgNode) {
+    var code = cleanCode(rawCode);
+    if (code.length < 4) { setNotice(msgNode, 'Game codes are 4 to 12 letters or numbers.'); return; }
+    if (!netReady()) { setNotice(msgNode, 'This browser cannot play online (no WebRTC).'); return; }
+    window.NeonNet.lobby.join(code).then(function (game) {
+      online = { code: game.code, mode: game.mode, role: 'guest', status: game.status, game: game };
+      isFriendsOpen = false;
+      menuMode = 'two-player';
+      openLobbyWait();
+    }).catch(function (err) {
+      setNotice(msgNode, err.message);
+    });
+  }
+
+  // -- Lobby (host creates, both wait, host starts) --
+
+  function openLobby() {
+    if (!currentUser()) { openAuthModal(); return; }
+    isLobbyOpen = true;
+    setNotice(el.lobbySetupMsg, '');
+    setNotice(el.lobbyMsg, '');
+    if (online && online.status === 'open') { openLobbyWait(); return; }
+    lobbyPhase = 'setup';
+    el.lobbyCodeInput.value = randomCode();
+    if (!netReady()) setNotice(el.lobbySetupMsg, 'This browser cannot play online (no WebRTC support).');
+    renderLobbyModes();
+    renderLobby();
+    render();
+  }
+
+  function renderLobbyModes() {
+    Array.prototype.forEach.call(el.lobbyModal.querySelectorAll('.lobby-mode'), function (tab) {
+      tab.classList.toggle('active', tab.getAttribute('data-mode') === lobbyModeChoice);
+    });
+  }
+
+  function createLobby() {
+    setNotice(el.lobbySetupMsg, '');
+    var code = cleanCode(el.lobbyCodeInput.value);
+    el.lobbyCodeInput.value = code;
+    if (code.length < 4) { setNotice(el.lobbySetupMsg, 'Game codes are 4 to 12 letters or numbers.'); return; }
+    if (!netReady()) { setNotice(el.lobbySetupMsg, 'This browser cannot play online (no WebRTC support).'); return; }
+    el.lobbyOpen.disabled = true;
+    window.NeonNet.lobby.create(code, lobbyModeChoice).then(function (game) {
+      el.lobbyOpen.disabled = false;
+      online = { code: game.code, mode: game.mode, role: 'host', status: 'open', game: game };
+      openLobbyWait();
+    }).catch(function (err) {
+      el.lobbyOpen.disabled = false;
+      setNotice(el.lobbySetupMsg, err.message);
+    });
+  }
+
+  function openLobbyWait() {
+    isLobbyOpen = true;
+    lobbyPhase = 'wait';
+    setNotice(el.lobbyMsg, '');
+    renderLobby();
+    startLobbyPolling();
+    render();
+  }
+
+  function playerRow(label, name, isYou, isOnline, waiting) {
+    var row = document.createElement('div');
+    row.className = 'lb-row player-row';
+    var rank = document.createElement('span');
+    rank.className = 'lb-rank';
+    rank.textContent = label;
+    var who = document.createElement('span');
+    who.className = 'lb-name' + (waiting ? ' waiting' : '');
+    who.textContent = waiting ? 'Waiting for a friend to join…' : name + (isYou ? ' (you)' : '');
+    var dot = document.createElement('span');
+    dot.className = 'online-dot' + (isOnline ? ' on' : '');
+    row.appendChild(rank);
+    row.appendChild(who);
+    row.appendChild(dot);
+    return row;
+  }
+
+  function renderLobby() {
+    show(el.lobbySetup, lobbyPhase === 'setup');
+    show(el.lobbyWait, lobbyPhase !== 'setup');
+    if (!online) return;
+    var g = online.game || {};
+    var me = currentUser() ? currentUser().username : '';
+    el.lobbyCode.textContent = online.code;
+    el.lobbyMode.textContent = (TIER_LABELS[online.mode] || online.mode) + ' MODE';
+    el.lobbyPlayers.innerHTML = '';
+    el.lobbyPlayers.appendChild(playerRow('PILOT 1', g.host || me, g.host === me, g.hostOnline !== false, false));
+    el.lobbyPlayers.appendChild(playerRow('PILOT 2', g.guest || '', g.guest === me, !!g.guestOnline, !g.guest));
+
+    var host = online.role === 'host';
+    var ready = !!g.guest && !!g.guestOnline;
+    if (lobbyPhase === 'connecting') {
+      el.lobbySubtitle.textContent = 'Linking the two screens';
+      el.lobbyStatus.textContent = 'Connecting to your friend…';
+    } else if (host) {
+      el.lobbySubtitle.textContent = 'You are the host';
+      el.lobbyStatus.textContent = ready
+        ? 'Your friend is in. Press START when you are both ready.'
+        : 'Share the code ' + online.code + ' or invite a friend. The game starts when you say so.';
+    } else {
+      el.lobbySubtitle.textContent = 'You are Pilot 2';
+      el.lobbyStatus.textContent = 'Hosted by ' + (g.host || '?') + '. The host starts the game — hang tight.';
+    }
+    show(el.lobbyStart, host);
+    show(el.lobbyInvite, host);
+    el.lobbyStart.disabled = !ready || lobbyPhase === 'connecting';
+    el.lobbyInvite.disabled = lobbyPhase === 'connecting';
+    el.lobbyLeave.disabled = lobbyPhase === 'connecting';
+  }
+
+  function startLobbyPolling() {
+    stopLobbyPolling();
+    lobbyPollTimer = setInterval(pollLobby, 2000);
+    pollLobby();
+  }
+
+  function stopLobbyPolling() {
+    if (lobbyPollTimer) clearInterval(lobbyPollTimer);
+    lobbyPollTimer = null;
+  }
+
+  function pollLobby() {
+    if (!online || lobbyPhase !== 'wait') return;
+    window.NeonNet.lobby.status(online.code).then(function (game) {
+      if (!online) return;
+      online.game = game;
+      online.status = game.status;
+      if (game.status === 'started' && online.role === 'guest') { beginOnlineGame(); return; }
+      if (game.status === 'finished') { leaveLobby(false, 'The host closed the game.'); return; }
+      if (online.role === 'guest' && !game.hostOnline) { leaveLobby(false, 'The host left.'); return; }
+      renderLobby();
+    }).catch(function (err) {
+      if (err && (err.code === 'not_found' || err.code === 'forbidden')) leaveLobby(false, 'That game is gone.');
+    });
+  }
+
+  // Leave the lobby. notifyServer=false when the server already knows.
+  function leaveLobby(notifyServer, message) {
+    var code = online ? online.code : null;
+    stopLobbyPolling();
+    if (code && notifyServer) window.NeonNet.lobby.leave(code).catch(noop);
+    online = null;
+    peerHello = null;
+    lobbyPhase = 'setup';
+    if (message) {
+      isLobbyOpen = true;
+      el.lobbyCodeInput.value = randomCode();
+      renderLobbyModes();
+      renderLobby();
+      setNotice(el.lobbySetupMsg, message);
+    } else {
+      isLobbyOpen = false;
+    }
+    render();
+  }
+
+  function hostStart() {
+    if (!online || online.role !== 'host') return;
+    el.lobbyStart.disabled = true;
+    window.NeonNet.lobby.start(online.code).then(function (game) {
+      online.game = game;
+      online.status = 'started';
+      beginOnlineGame();
+    }).catch(function (err) {
+      el.lobbyStart.disabled = false;
+      setNotice(el.lobbyMsg, err.message);
+    });
+  }
+
+  // -- The round: link the browsers, swap loadouts, launch --
+
+  function myGear() {
+    return { skin: selectedSkin, trail: selectedTrail, flame: selectedFlame };
+  }
+
+  function beginOnlineGame() {
+    if (!online) return;
+    stopLobbyPolling();
+    lobbyPhase = 'connecting';
+    renderLobby();
+    render();
+    var code = online.code;
+    var role = online.role;
+    window.NeonNet.connect(code, role).then(function (session) {
+      if (!online || online.code !== code) { session.close(); return; }
+      onlineSession = session;
+      peerHello = null;
+      session.onMessage = handleNetMessage;
+      session.onClose = handleNetClosed;
+      var gear = myGear();
+      session.send({ t: 'hello', name: currentUser().username, skin: gear.skin, trail: gear.trail, flame: gear.flame });
+    }).catch(function (err) {
+      window.NeonNet.lobby.leave(code).catch(noop);
+      leaveLobby(false, err.message || 'Could not connect.');
+    });
+  }
+
+  // Handshake over the data channel (ordered, so hello always precedes go):
+  //   guest -> hello          host -> hello, go       guest launches -> ready
+  //   host launches on ready, so its first snapshot lands on a live guest.
+  function handleNetMessage(msg) {
+    if (!msg || !online) return;
+    if (msg.t === 'hello') {
+      peerHello = msg;
+      if (online.role === 'host' && onlineSession) onlineSession.send({ t: 'go' });
+      return;
+    }
+    if (msg.t === 'go') {
+      if (online.role === 'guest' && peerHello && !isOnlineGame) launchOnlineGame();
+      return;
+    }
+    if (msg.t === 'ready') {
+      if (online.role === 'host' && peerHello && !isOnlineGame) launchOnlineGame();
+      return;
+    }
+    if (isOnlineGame) game.receive(msg);
+  }
+
+  function launchOnlineGame() {
+    var role = online.role;
+    var hello = peerHello || {};
+    var mine = myGear();
+    isLobbyOpen = false;
+    isFriendsOpen = false;
+    lobbyPhase = 'setup';
+    isOnlineGame = true;
+
+    var diff = LOBBY_TIER_DIFF[online.mode] || 0.62;
+    setScore(0);
+    setHealth(100);
+    difficulty = diff;
+    currentMode = '2p_' + online.mode;
+    refreshHighScoreDisplays();
+    buildModeStrip();
+    try { bgMusic.currentTime = 0; } catch (err) { /* metadata not loaded yet */ }
+    isLocalMultiplayer = false;
+    isCPUMultiplayer = false;
+    gameState = 'PLAYING';
+    isPaused = false;
+    render();
+
+    // Host flies as pilot 1 in its own gear; the guest is pilot 2 in theirs.
+    var p1 = role === 'host' ? mine : hello;
+    var p2 = role === 'host' ? hello : mine;
+    game.start({
+      initialDifficulty: diff,
+      isLocalMultiplayer: false,
+      isCPUMultiplayer: false,
+      controlModePreference: controlModePreference,
+      skin: getSkin(p1.skin), trail: getTrail(p1.trail), flame: getFlame(p1.flame),
+      skin2: getSkin(p2.skin), trail2: getTrail(p2.trail), flame2: getFlame(p2.flame),
+      online: {
+        role: role,
+        send: function (m) { return !!onlineSession && onlineSession.send(m); }
+      }
+    });
+    if (role === 'guest' && onlineSession) onlineSession.send({ t: 'ready' });
+  }
+
+  function handleNetClosed(reason) {
+    var session = onlineSession;
+    onlineSession = null;
+    if (isOnlineGame && gameState === 'PLAYING') {
+      connectionLost = true;
+      handleGameOver(game.getScore());
+    } else if (lobbyPhase === 'connecting' || (online && online.status === 'started' && !isOnlineGame)) {
+      if (online) window.NeonNet.lobby.leave(online.code).catch(noop);
+      leaveLobby(false, 'The connection dropped (' + reason + ').');
+    }
+    if (session) session.close();
+  }
+
+  // Tidy up after an online round (called from handleGameOver).
+  function endOnlineGame() {
+    if (online) window.NeonNet.lobby.finish(online.code).catch(noop);
+    if (onlineSession) { onlineSession.close(); onlineSession = null; }
+    online = null;
+    peerHello = null;
+    isOnlineGame = false;
   }
 
   // --- Wiring ------------------------------------------------------------
@@ -1901,6 +2389,12 @@
     el.pauseHome.addEventListener('click', returnToStart);
     el.gameoverHome.addEventListener('click', returnToStart);
     el.gameoverRestart.addEventListener('click', function () {
+      if (lastGameWasOnline) {
+        returnToStart();
+        menuMode = 'two-player';
+        render();
+        return;
+      }
       startGame(difficulty, isLocalMultiplayer, isCPUMultiplayer);
     });
     el.newhighHome.addEventListener('click', returnToStart);
@@ -1917,6 +2411,10 @@
 
     auth.init(function (authState) {
       enforceOwnedGear();
+      if (authState.user) {
+        refreshInbox();
+        startInboxPolling(20000);
+      }
       // New-device sync: the server bests may beat this browser's localStorage.
       syncServerBests(authState.user);
       render();
@@ -1932,6 +2430,14 @@
         if (gameState === 'NEWHIGH' && pendingScore != null) {
           submitPendingScore();
         }
+        refreshInbox();
+        startInboxPolling(20000);
+      } else {
+        startInboxPolling(0);
+        pendingInvites = [];
+        renderFriendsBadge();
+        if (online && !isOnlineGame) leaveLobby(false);
+        isFriendsOpen = false;
       }
       enforceOwnedGear(); // logged out, or in as a non-developer, while wearing dev-only gear
       if (isSkinsOpen) renderTailor();
@@ -2117,6 +2623,47 @@
     el.dailyChest.addEventListener('click', claimDailyBonus);
 
     el.skinsBtn.addEventListener('click', function () { openTailor(tailorTab, 1); });
+
+    // Friends page + online lobby
+    el.friendsBtn.addEventListener('click', openFriends);
+    el.friendsClose.addEventListener('click', closeFriends);
+    el.inviteForm.addEventListener('submit', sendInvite);
+    el.joinForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      setNotice(el.joinMsg, '');
+      joinByCode(el.joinCode.value, el.joinMsg);
+    });
+    [el.inviteCode, el.joinCode, el.lobbyCodeInput].forEach(function (input) {
+      input.addEventListener('input', function () {
+        var pos = input.selectionStart;
+        input.value = cleanCode(input.value);
+        try { input.setSelectionRange(pos, pos); } catch (err) { /* not focused */ }
+      });
+    });
+    el.createGameBtn.addEventListener('click', openLobby);
+    el.lobbyClose.addEventListener('click', function () {
+      if (lobbyPhase === 'connecting') return;
+      leaveLobby(true);
+    });
+    el.lobbyLeave.addEventListener('click', function () { leaveLobby(true); });
+    el.lobbyShuffle.addEventListener('click', function () { el.lobbyCodeInput.value = randomCode(); });
+    el.lobbyOpen.addEventListener('click', createLobby);
+    el.lobbyStart.addEventListener('click', hostStart);
+    el.lobbyInvite.addEventListener('click', function () {
+      isLobbyOpen = false;
+      stopLobbyPolling();
+      el.inviteCode.value = online ? online.code : '';
+      openFriends();
+    });
+    Array.prototype.forEach.call(el.lobbyModal.querySelectorAll('.lobby-mode'), function (tab) {
+      tab.addEventListener('click', function () {
+        lobbyModeChoice = tab.getAttribute('data-mode');
+        renderLobbyModes();
+      });
+    });
+    window.addEventListener('beforeunload', function () {
+      if (online && !isOnlineGame && window.NeonNet) window.NeonNet.lobby.leave(online.code).catch(noop);
+    });
     el.skinsClose.addEventListener('click', function () {
       isSkinsOpen = false;
       render();
@@ -2154,7 +2701,8 @@
       if (e.key === 'Enter') {
         var tag = (e.target && e.target.tagName || '').toLowerCase();
         var typing = tag === 'input' || tag === 'textarea' || tag === 'select' || tag === 'button';
-        var modalOpen = isSettingsOpen || isAuthOpen || isLeaderboardOpen || isSkinsOpen || isResetOpen;
+        var modalOpen = isSettingsOpen || isAuthOpen || isLeaderboardOpen || isSkinsOpen || isResetOpen ||
+          isFriendsOpen || isLobbyOpen;
         if (gameState === 'START' && lastMission && !typing && !modalOpen) {
           e.preventDefault();
           startGame(lastMission.diff, lastMission.mode === 'local', lastMission.mode === 'cpu');
@@ -2166,6 +2714,8 @@
       else if (isAuthOpen) closeAuthModal();
       else if (isLeaderboardOpen) { isLeaderboardOpen = false; render(); }
       else if (isSkinsOpen) { isSkinsOpen = false; render(); }
+      else if (isFriendsOpen) closeFriends();
+      else if (isLobbyOpen) { if (lobbyPhase === 'connecting') return; leaveLobby(true); }
       else if (isResetOpen) { isResetOpen = false; render(); }
       else if (gameState === 'PLAYING') setPaused(!isPaused);
     });

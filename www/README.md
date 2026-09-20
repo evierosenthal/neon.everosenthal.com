@@ -21,8 +21,9 @@ php -S localhost:8000
 | `styles.css` | The neon/frosted-glass design system |
 | `game.js` | Canvas game engine — physics, spawning, collisions, AI, rendering (`window.NeonNebula`) |
 | `auth.js` | Login/leaderboard API client (`window.NeonAuth`) — Google Sign-In, accounts, score submission |
+| `net.js` | Online two-player client (`window.NeonNet`) — lobby calls and the WebRTC data channel between host and guest |
 | `ui.js` | Screen flow, menus, HUD updates, settings persistence, new-high-score/login flow |
-| `api/` | PHP endpoints: sessions, register/login/Google, score submit, top-10 leaderboard, password reset (see `docs/leaderboard-setup.md`) |
+| `api/` | PHP endpoints: sessions, register/login/Google, score submit, top-10 leaderboard, password reset, online lobbies (`games.php`) (see `docs/leaderboard-setup.md`) |
 
 The only external asset is the Orbitron + Inter webfont from Google Fonts; without a network
 connection the game still runs and falls back to system fonts.
@@ -46,7 +47,32 @@ Sound effects (from [Pixabay](https://pixabay.com/)):
 
 - **Easy / Medium / Hard / Super Hard** — solo, initial difficulty `0.3 / 0.62 / 1.3 / 6.0`
 - **Two Player Mode** — local co-op on one keyboard, shared score and hull
+- **Online Two Player** — two accounts on two screens; see "Playing online" below
 - **CPU Co-Pilot Mode** — an AI wingman that dodges hazards and harvests pickups
+
+## Playing online
+
+Both players need an account (the server has to know who is who).
+
+1. **Host:** Two Player → **CREATE GAME · PLAY ONLINE**, pick Easy / Medium / Hard, keep or
+   edit the game code, **OPEN LOBBY**. The lobby shows the code and who has joined.
+2. **Guest:** on the home screen open **FRIENDS & INVITES** and either accept an invite
+   (the host sends one from the Friends page by typing your call sign and the code) or type
+   the code under *Join with a code*. The guest then waits in the lobby.
+3. The host presses **START** once Pilot 2 is seated. The two browsers link peer-to-peer
+   over a WebRTC data channel (the server only relays the connection offer and answer),
+   then the round begins on both screens.
+
+The host's browser runs the simulation and streams about twenty snapshots a second; the
+guest's browser draws them and sends back which way Pilot 2 is steering (keys or mouse,
+per its own Settings). Both pilots fly their own equipped skin, trail and fire. Scores count
+under the two-player leaderboard for the chosen level. Pausing is disabled online; if the
+link drops, the round ends with the score so far.
+
+Server side: `api/games.php` with the `games`, `game_invites` and `game_signals` tables
+(migration `05_online_games.sql`, applied automatically on the next login like the others).
+Lobbies expire when the host stops polling for 45 seconds. Two players behind very strict
+networks (symmetric NAT) may fail to connect, since there is no TURN relay.
 
 ## Controls
 

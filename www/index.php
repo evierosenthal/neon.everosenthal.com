@@ -280,6 +280,13 @@ function asset(string $path): string
                   <span id="tailor-badge" class="btn-badge hidden">NEW</span>
                 </button>
               </div>
+
+              <button id="friends-btn" class="btn btn-ghost-cyan btn-wide">
+                <span class="btn-sheen"></span>
+                <svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                FRIENDS &amp; INVITES
+                <span id="friends-badge" class="btn-badge hidden">1</span>
+              </button>
             </div>
 
             <div class="home-footer">
@@ -340,6 +347,12 @@ function asset(string $path): string
             <div class="btn-stack">
               <div class="difficulty-buttons" data-mode="local"></div>
 
+              <button id="create-game-btn" class="btn btn-ghost-cyan btn-wide">
+                <span class="btn-sheen"></span>
+                <svg viewBox="0 0 24 24" class="icon icon-stroke"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                CREATE GAME &middot; PLAY ONLINE
+              </button>
+
               <div class="btn-duo">
                 <button class="btn btn-ghost-indigo tailor-open" data-pilot="1">
                   <span class="btn-sheen"></span>
@@ -382,7 +395,7 @@ function asset(string $path): string
         <div class="panel panel-gameover">
           <div class="panel-topline"></div>
           <h2 class="gameover-title">SECTOR LOST</h2>
-          <p class="gameover-sub">Critical Hull Failure Detected</p>
+          <p id="gameover-sub" class="gameover-sub">Critical Hull Failure Detected</p>
 
           <div class="score-card">
             <div class="score-card-label">Efficiency Rating</div>
@@ -576,6 +589,104 @@ function asset(string $path): string
         </div>
       </div>
 
+      <!-- Friends: invite a pilot by username, join a game by code -->
+      <div id="friends-modal" class="overlay overlay-settings hidden">
+        <div class="panel panel-settings">
+          <div class="settings-header">
+            <div class="settings-header-left">
+              <div class="settings-header-icon"><svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div>
+                <h3 class="settings-title">FRIENDS</h3>
+                <p class="settings-subtitle">Invite a pilot to an online two player game</p>
+              </div>
+            </div>
+            <button id="friends-close" class="close-btn"><svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+          </div>
+
+          <form id="invite-form" class="invite-form">
+            <label class="field">
+              <span class="field-label">Friend username</span>
+              <input type="text" id="invite-username" class="text-input" placeholder="Their call sign" autocomplete="off" maxlength="20" />
+            </label>
+            <label class="field">
+              <span class="field-label">Game code</span>
+              <input type="text" id="invite-code" class="text-input code-input" placeholder="e.g. NEBULA" autocomplete="off" maxlength="12" />
+            </label>
+            <button type="submit" class="btn btn-cyan btn-sm">SEND INVITE</button>
+          </form>
+          <p id="invite-msg" class="auth-error hidden"></p>
+          <p class="lobby-help">The code is the one from your lobby (Two Player &rarr; Create Game).</p>
+
+          <div class="lb-section-head"><svg viewBox="0 0 24 24" class="icon icon-stroke"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> JOIN WITH A CODE</div>
+          <form id="join-form" class="invite-form invite-form-join">
+            <label class="field">
+              <span class="field-label">Game code</span>
+              <input type="text" id="join-code" class="text-input code-input" placeholder="Type the code" autocomplete="off" maxlength="12" />
+            </label>
+            <button type="submit" class="btn btn-ghost-cyan btn-sm">JOIN GAME</button>
+          </form>
+          <p id="join-msg" class="auth-error hidden"></p>
+
+          <div class="lb-section-head"><svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> INVITES FOR YOU</div>
+          <div id="invites-list" class="lb-list lb-list-compact"></div>
+        </div>
+      </div>
+
+      <!-- Online lobby: pick a mode and a code, watch who joins, start -->
+      <div id="lobby-modal" class="overlay overlay-settings hidden">
+        <div class="panel panel-settings">
+          <div class="settings-header">
+            <div class="settings-header-left">
+              <div class="settings-header-icon"><svg viewBox="0 0 24 24" class="icon icon-stroke"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+              <div>
+                <h3 class="settings-title">ONLINE GAME</h3>
+                <p id="lobby-subtitle" class="settings-subtitle">Two pilots, two screens, one score</p>
+              </div>
+            </div>
+            <button id="lobby-close" class="close-btn"><svg viewBox="0 0 24 24" class="icon icon-stroke"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+          </div>
+
+          <div id="lobby-setup" class="lobby-phase">
+            <div class="settings-section">
+              <label class="settings-label">Mode</label>
+              <div class="lb-tabs lobby-modes">
+                <button type="button" class="lb-tab lobby-mode" data-mode="easy">EASY MODE</button>
+                <button type="button" class="lb-tab lobby-mode active" data-mode="medium">MEDIUM MODE</button>
+                <button type="button" class="lb-tab lobby-mode" data-mode="hard">HARD MODE</button>
+              </div>
+            </div>
+            <div class="settings-section">
+              <label class="settings-label">Game code</label>
+              <div class="invite-form invite-form-join">
+                <input type="text" id="lobby-code-input" class="text-input code-input" maxlength="12" autocomplete="off" />
+                <button type="button" id="lobby-shuffle" class="btn btn-muted btn-sm">NEW CODE</button>
+              </div>
+              <p class="lobby-help">Your friend types this code on their Friends page, or you invite them from there.</p>
+            </div>
+            <p id="lobby-setup-msg" class="auth-error hidden"></p>
+            <div class="settings-footer">
+              <button id="lobby-open" class="btn btn-cyan btn-sm">OPEN LOBBY</button>
+            </div>
+          </div>
+
+          <div id="lobby-wait" class="lobby-phase hidden">
+            <div class="lobby-code-card">
+              <span class="lobby-code-label">GAME CODE</span>
+              <span id="lobby-code" class="lobby-code"></span>
+              <span id="lobby-mode" class="lobby-mode-chip"></span>
+            </div>
+            <div id="lobby-players" class="lb-list lb-list-compact"></div>
+            <p id="lobby-status" class="lobby-help"></p>
+            <p id="lobby-msg" class="auth-error hidden"></p>
+            <div class="button-row">
+              <button id="lobby-leave" class="btn btn-muted btn-flex-1">LEAVE</button>
+              <button id="lobby-invite" class="btn btn-ghost-cyan btn-flex-1">INVITE A FRIEND</button>
+              <button id="lobby-start" class="btn btn-cyan btn-flex-2" disabled>START</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Password Reset Modal (opened via emailed ?reset=TOKEN link) -->
       <div id="reset-modal" class="overlay overlay-settings hidden">
         <div class="panel panel-settings">
@@ -700,6 +811,7 @@ function asset(string $path): string
 
     <script src="<?= asset('game.js') ?>"></script>
     <script src="<?= asset('auth.js') ?>"></script>
+    <script src="<?= asset('net.js') ?>"></script>
     <script src="<?= asset('ui.js') ?>"></script>
   </body>
 </html>

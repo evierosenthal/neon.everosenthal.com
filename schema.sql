@@ -33,5 +33,44 @@ CREATE TABLE password_resets (
   CONSTRAINT fk_pr_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Online two-player lobbies (host opens a code, a friend joins by code or
+-- invite; WebRTC signaling is relayed through game_signals).
+CREATE TABLE games (
+  code          VARCHAR(12)  NOT NULL PRIMARY KEY,     -- A-Z 0-9, chosen by the host
+  host_user_id  INT UNSIGNED NOT NULL,
+  guest_user_id INT UNSIGNED NULL,
+  mode          ENUM('easy','medium','hard') NOT NULL,
+  status        ENUM('open','started','finished') NOT NULL DEFAULT 'open',
+  host_seen_at  DATETIME     NOT NULL,                 -- lobby polling heartbeat
+  guest_seen_at DATETIME     NULL,
+  created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_games_host (host_user_id),
+  KEY idx_games_guest (guest_user_id),
+  CONSTRAINT fk_games_host FOREIGN KEY (host_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_games_guest FOREIGN KEY (guest_user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE game_invites (
+  id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  code         VARCHAR(12)  NOT NULL,
+  from_user_id INT UNSIGNED NOT NULL,
+  to_user_id   INT UNSIGNED NOT NULL,
+  status       ENUM('pending','accepted','declined') NOT NULL DEFAULT 'pending',
+  created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_invites_to (to_user_id, status),
+  KEY idx_invites_code (code),
+  CONSTRAINT fk_invites_from FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_invites_to FOREIGN KEY (to_user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE game_signals (
+  id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  code       VARCHAR(12) NOT NULL,
+  from_role  ENUM('host','guest') NOT NULL,
+  payload    MEDIUMTEXT  NOT NULL,                     -- JSON: WebRTC offer / answer
+  created_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_signals_code (code, id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Upgrading an existing database instead of creating a fresh one? Run the
 -- numbered migrations in www/db_migrations/ (see its README; lead developers can also apply them with the RUN DB MIGRATIONS button in Settings).
