@@ -493,48 +493,171 @@
     }
   };
 
-  // Background music: original synthwave loop composed for the game
-  // (8 bars, 112 BPM, Am-F-C-G — kick/snare/hats, pumped saw pads, square
-  // arp). Loops during play, pauses with the game, and stops on death so
-  // the crash/fanfare take the stage. Missing file = silent game.
-  var bgMusic = new Audio('sounds/background-music.m4a');
-  bgMusic.preload = 'auto';
-  bgMusic.loop = true;
+  // --- Music ---------------------------------------------------------------
+  // Both loops play through the Web Audio API: a decoded buffer looped by
+  // the audio engine is sample-accurate and never stops, whereas a looping
+  // <audio> element can fall silent at the end of the file in some browsers
+  // (Safari and phones especially). If Web Audio is unavailable or the file
+  // fails to decode, the same track falls back to an <audio> element with an
+  // "ended" safety net that restarts it.
+  var audioCtx = null;
+
+  function getAudioContext() {
+    if (audioCtx) return audioCtx;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    try { audioCtx = new AC(); } catch (err) { audioCtx = null; }
+    return audioCtx;
+  }
+
+  function MusicTrack(url, level) {
+    var self = this;
+    this.level = level; // mixed level; the Settings slider scales it
+    this.scale = 1;
+    this.muted = false;
+    this.wanted = false; // should be sounding right now
+    this.buffer = null;
+    this.source = null;
+    this.gain = null;
+    this.offset = 0; // where in the loop to resume after a pause
+    this.startedAt = 0;
+    this.loading = false;
+    this.failed = false; // Web Audio path unusable -> element fallback
+
+    this.el = new Audio(url);
+    this.el.preload = 'auto';
+    this.el.loop = true;
+    this.el.volume = level;
+    this.el.addEventListener('ended', function () {
+      // Some browsers ignore loop and just end: start over.
+      if (self.wanted && self.failed) {
+        try { self.el.currentTime = 0; } catch (err) { /* not seekable yet */ }
+        self.el.play().catch(function () { /* blocked */ });
+      }
+    });
+
+    // Fetch + decode as soon as possible so the first play is instant.
+    var ctx = getAudioContext();
+    if (!ctx || typeof fetch !== 'function') {
+      this.failed = true;
+    } else {
+      this.loading = true;
+      fetch(url).then(function (res) {
+        if (!res.ok) throw new Error('missing');
+        return res.arrayBuffer();
+      }).then(function (data) {
+        return new Promise(function (resolve, reject) {
+          var p = ctx.decodeAudioData(data, resolve, reject);
+          if (p && p.then) p.then(resolve, reject);
+        });
+      }).then(function (decoded) {
+        self.buffer = decoded;
+        self.loading = false;
+        if (self.wanted) self.play();
+      }).catch(function () {
+        self.loading = false;
+        self.failed = true;
+        if (self.wanted) self.play();
+      });
+    }
+  }
+
+  MusicTrack.prototype.effectiveVolume = function () {
+    return this.muted ? 0 : this.level * this.scale;
+  };
+
+  MusicTrack.prototype.play = function () {
+    this.wanted = true;
+    if (this.failed) {
+      this.el.volume = this.level * this.scale;
+      this.el.muted = this.muted;
+      this.el.play().catch(function () { /* autoplay blocked until first tap */ });
+      return;
+    }
+    var ctx = getAudioContext();
+    if (!this.buffer || !ctx) return; // still decoding; play() runs again when it lands
+    if (ctx.state === 'suspended') ctx.resume().catch(function () { /* needs a tap */ });
+    if (this.source) return; // already looping
+    var src = ctx.createBufferSource();
+    src.buffer = this.buffer;
+    src.loop = true;
+    if (!this.gain) {
+      this.gain = ctx.createGain();
+      this.gain.connect(ctx.destination);
+    }
+    this.gain.gain.value = this.effectiveVolume();
+    src.connect(this.gain);
+    var offset = this.offset % this.buffer.duration;
+    src.start(0, offset);
+    this.source = src;
+    this.startedAt = ctx.currentTime - offset;
+  };
+
+  MusicTrack.prototype.pause = function () {
+    this.wanted = false;
+    if (this.failed) { this.el.pause(); return; }
+    if (this.source) {
+      var ctx = getAudioContext();
+      this.offset = (ctx.currentTime - this.startedAt) % this.buffer.duration;
+      try { this.source.stop(); } catch (err) { /* already stopped */ }
+      this.source.disconnect();
+      this.source = null;
+    }
+  };
+
+  // Next play starts from the top of the loop (each mission starts fresh).
+  MusicTrack.prototype.rewind = function () {
+    if (this.failed) {
+      try { this.el.currentTime = 0; } catch (err) { /* metadata not loaded yet */ }
+      return;
+    }
+    var playing = !!this.source;
+    if (playing) this.pause();
+    this.offset = 0;
+    if (playing) this.play();
+  };
+
+  MusicTrack.prototype.setVolume = function (scale, muted) {
+    this.scale = scale;
+    this.muted = muted;
+    if (this.gain) this.gain.gain.value = this.effectiveVolume();
+    this.el.volume = this.level * scale;
+    this.el.muted = muted;
+  };
+
+  // Retry after the first user gesture (browsers block sound until then).
+  MusicTrack.prototype.kick = function () {
+    if (this.wanted) this.play();
+  };
+
+  // Gameplay loop: original synthwave (8 bars, 112 BPM, Am-F-C-G). Plays
+  // during a mission, pauses with the game, and stops on death so the
+  // crash/fanfare take the stage. Missing file = silent game.
   var BG_MUSIC_LEVEL = 0.35;
-  bgMusic.volume = BG_MUSIC_LEVEL;
+  var bgMusic = new MusicTrack('sounds/background-music.m4a', BG_MUSIC_LEVEL);
 
   // Home screen loop: original chiptune-pop, plays whenever the menu is up.
-  var homeMusic = new Audio('sounds/home-music.m4a');
-  homeMusic.preload = 'auto';
-  homeMusic.loop = true;
   var HOME_MUSIC_LEVEL = 0.22; // the loop is denser than the gameplay track, so it sits a little lower
-  homeMusic.volume = HOME_MUSIC_LEVEL;
-  var homeMusicWanted = false;
+  var homeMusic = new MusicTrack('sounds/home-music.m4a', HOME_MUSIC_LEVEL);
 
   function setHomeMusicPlaying(playing) {
-    homeMusicWanted = playing;
-    if (playing) {
-      if (homeMusic.paused) homeMusic.play().catch(function () { /* autoplay blocked until first tap */ });
-    } else if (!homeMusic.paused) {
-      homeMusic.pause();
-    }
+    if (playing) homeMusic.play();
+    else homeMusic.pause();
   }
 
   // Browsers refuse audio before the first interaction, so retry on it.
   ['pointerdown', 'keydown'].forEach(function (evt) {
     document.addEventListener(evt, function () {
-      if (homeMusicWanted && homeMusic.paused) {
-        homeMusic.play().catch(function () { /* still blocked */ });
-      }
+      var ctx = getAudioContext();
+      if (ctx && ctx.state === 'suspended') ctx.resume().catch(function () { /* still blocked */ });
+      bgMusic.kick();
+      homeMusic.kick();
     });
   });
 
   function setMusicPlaying(playing) {
-    if (playing) {
-      bgMusic.play().catch(function () { /* file missing or autoplay blocked */ });
-    } else {
-      bgMusic.pause();
-    }
+    if (playing) bgMusic.play();
+    else bgMusic.pause();
   }
 
   // "You Win" fanfare by floraphonic (pixabay.com, sound #183950) — played
@@ -568,9 +691,8 @@
     var sfx = (parseInt(el.sfxSlider.value, 10) || 0) / 100;
     el.musicValue.textContent = music === 0 ? 'OFF' : Math.round(music * 100) + '%';
     el.sfxValue.textContent = sfx === 0 ? 'OFF' : Math.round(sfx * 100) + '%';
-    bgMusic.volume = BG_MUSIC_LEVEL * music;
-    homeMusic.volume = HOME_MUSIC_LEVEL * music;
-    bgMusic.muted = homeMusic.muted = music === 0;
+    bgMusic.setVolume(music, music === 0);
+    homeMusic.setVolume(music, music === 0);
     newHighSound.volume = NEW_HIGH_LEVEL * sfx;
     deathSound.volume = DEATH_LEVEL * sfx;
     hitSound.volume = HIT_LEVEL * sfx;
@@ -1787,9 +1909,7 @@
     currentMode = (localMultiplayer ? '2p_' : '') + modeFromDifficulty(diff);
     refreshHighScoreDisplays();
     buildModeStrip();
-    try {
-      bgMusic.currentTime = 0; // each mission starts the track from the top
-    } catch (err) { /* metadata not loaded yet */ }
+    bgMusic.rewind(); // each mission starts the track from the top
     isLocalMultiplayer = !!localMultiplayer;
     isCPUMultiplayer = !!cpuMultiplayer;
     lastMission = { diff: diff, mode: localMultiplayer ? 'local' : (cpuMultiplayer ? 'cpu' : 'single') };
@@ -2213,7 +2333,7 @@
     currentMode = '2p_' + online.mode;
     refreshHighScoreDisplays();
     buildModeStrip();
-    try { bgMusic.currentTime = 0; } catch (err) { /* metadata not loaded yet */ }
+    bgMusic.rewind();
     isLocalMultiplayer = false;
     isCPUMultiplayer = false;
     gameState = 'PLAYING';

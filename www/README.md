@@ -43,6 +43,10 @@ Sound effects (from [Pixabay](https://pixabay.com/)):
 - `sounds/home-music.m4a` — original chiptune-pop loop composed for the home screen
   (16 bars, 104 BPM, E-B-C#m-A); loops while the menu is up and stops when a mission starts
 
+Both music loops are decoded once and looped by the Web Audio API (sample-accurate, never
+runs out); if that is unavailable they fall back to a looping `<audio>` element with an
+"ended" restart. Sound effects stay on plain `<audio>` elements.
+
 ## Modes
 
 - **Easy / Medium / Hard / Super Hard** — solo, initial difficulty `0.3 / 0.62 / 1.3 / 6.0`
