@@ -804,9 +804,6 @@ function asset(string $path): string
           </div>
         </div>
       </div>
-
-      <!-- Subtle Grid Overlay -->
-      <div class="grid-overlay"></div>
     </div>
 
     <script src="<?= asset('game.js') ?>"></script>

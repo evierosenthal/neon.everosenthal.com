@@ -118,15 +118,6 @@ html.rotated .panel-settings {
   background: var(--emerald-800);
 }
 
-.grid-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.03;
-  background-image: radial-gradient(circle, #ffffff 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
 .game-canvas {
   display: block;
   width: 100%;
