@@ -1,0 +1,11 @@
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.ipa
+*.xcarchive
+*.dSYM.zip
+.swiftpm/
+NeonEngine/.build/
+# Keep Package.resolved committed for reproducible dependency versions.

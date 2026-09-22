@@ -1,5 +1,5 @@
 /**
- * Neon Nebula — auth + leaderboard client (plain JavaScript).
+ * Nitro Nebula — auth + leaderboard client (plain JavaScript).
  *
  * Talks to the PHP endpoints in api/. Exposes window.NeonAuth. Never blocks
  * the game: if the API is unreachable, state.offline is set and the game

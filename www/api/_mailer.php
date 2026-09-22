@@ -19,7 +19,7 @@ function send_smtp_mail(string $toEmail, string $toName, string $subject, string
     $port = (int)SMTP_PORT;
     $secure = defined('SMTP_SECURE') ? strtolower(SMTP_SECURE) : 'tls';
     $fromEmail = defined('SMTP_FROM_EMAIL') && SMTP_FROM_EMAIL ? SMTP_FROM_EMAIL : SMTP_USER;
-    $fromName = defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : 'Neon Nebula';
+    $fromName = defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : 'Nitro Nebula';
 
     $timeout = 20;
     $transport = ($secure === 'ssl') ? "ssl://$host" : $host;

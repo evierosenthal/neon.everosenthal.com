@@ -1,4 +1,4 @@
--- Neon Nebula leaderboard schema. Run once against the neon_nebula database:
+-- Nitro Nebula leaderboard schema. Run once against the neon_nebula database:
 --   mysql -u USER -p neon_nebula < schema.sql
 -- (or paste into phpMyAdmin's SQL tab).
 
@@ -7,7 +7,9 @@ CREATE TABLE users (
   username      VARCHAR(20)  NOT NULL UNIQUE,  -- 3-20 chars [A-Za-z0-9_-]; collation makes it case-insensitive unique
   email         VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NULL,             -- NULL for Google-only accounts
-  google_sub    VARCHAR(64)  NULL UNIQUE,      -- Apple later: add apple_sub the same way
+  google_sub    VARCHAR(64)  NULL UNIQUE,
+  apple_sub     VARCHAR(255) NULL UNIQUE,      -- Sign in with Apple user id (iOS app)
+  apple_refresh_token VARCHAR(1024) NULL,      -- from the auth-code exchange; used only to revoke on account deletion
   role          ENUM('normal','developer','lead_developer') NOT NULL DEFAULT 'normal',
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -40,6 +42,8 @@ CREATE TABLE games (
   host_user_id  INT UNSIGNED NOT NULL,
   guest_user_id INT UNSIGNED NULL,
   mode          ENUM('easy','medium','hard') NOT NULL,
+  host_platform ENUM('web','ios') NOT NULL DEFAULT 'web', -- web = WebRTC, ios = Game Center; a join must match the host
+  guest_platform ENUM('web','ios') NULL,
   status        ENUM('open','started','finished') NOT NULL DEFAULT 'open',
   host_seen_at  DATETIME     NOT NULL,                 -- lobby polling heartbeat
   guest_seen_at DATETIME     NULL,
@@ -67,7 +71,7 @@ CREATE TABLE game_signals (
   id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   code       VARCHAR(12) NOT NULL,
   from_role  ENUM('host','guest') NOT NULL,
-  payload    MEDIUMTEXT  NOT NULL,                     -- JSON: WebRTC offer / answer
+  payload    MEDIUMTEXT  NOT NULL,                     -- JSON: WebRTC offer / answer, or {type:'gc', gamePlayerID} from the iOS app
   created_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_signals_code (code, id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

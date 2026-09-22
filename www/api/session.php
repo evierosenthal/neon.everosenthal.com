@@ -1,6 +1,8 @@
 <?php
-// GET: bootstrap call the game makes on page load. Returns login state, the
-// CSRF token for subsequent POSTs, and the Google client ID.
+// GET: bootstrap call the game (and the iOS app) makes on launch. Returns
+// login state, the CSRF token for subsequent POSTs, the Google client ID and
+// apiVersion — bump that when a response shape changes incompatibly so an
+// old app build can say "update me" instead of misreading the JSON.
 define('NEON_API', 1);
 require __DIR__ . '/_bootstrap.php';
 
@@ -16,6 +18,7 @@ try {
         'user' => null,
         'csrf' => $_SESSION['csrf'],
         'googleClientId' => GOOGLE_CLIENT_ID,
+        'apiVersion' => 1,
         'offline' => true,
     ]);
 }
@@ -25,4 +28,5 @@ json_out([
     'user' => $user ? user_payload($user) : null,
     'csrf' => $_SESSION['csrf'],
     'googleClientId' => GOOGLE_CLIENT_ID,
+    'apiVersion' => 1,
 ]);

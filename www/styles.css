@@ -1,5 +1,5 @@
 /**
- * Neon Nebula — plain CSS port of the Tailwind design.
+ * Nitro Nebula — plain CSS port of the Tailwind design.
  * Palette names track the original Tailwind tokens (slate-950, indigo-600, ...).
  */
 
@@ -3061,6 +3061,111 @@ html.rotated .panel-settings {
 .settings-footer {
   display: flex;
   justify-content: flex-end;
+}
+
+/* Privacy / support links under the auth and settings modals */
+.legal-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 1rem;
+  font-size: 0.7rem;
+}
+
+.legal-links a {
+  color: var(--slate-500);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.legal-links a:hover {
+  color: var(--slate-300);
+}
+
+.legal-links-left {
+  margin: 0 auto 0 0;
+  align-self: center;
+}
+
+/* --- Standalone document pages (privacy.php, support.php) --- */
+
+body.doc-page {
+  overflow: auto;
+  height: auto;
+  min-height: 100%;
+}
+
+.doc-page .nebula {
+  position: fixed;
+}
+
+.doc {
+  position: relative;
+  z-index: 1;
+  max-width: 44rem;
+  margin: 2rem auto;
+  padding: 2rem 1.5rem;
+  border-radius: 1.5rem;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  color: var(--slate-300);
+}
+
+.doc h1 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.6rem;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.doc h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--cyan-400);
+  margin: 2rem 0 0.5rem;
+}
+
+.doc p,
+.doc ul {
+  margin-bottom: 0.75rem;
+}
+
+.doc ul {
+  padding-left: 1.25rem;
+}
+
+.doc a {
+  color: var(--cyan-400);
+}
+
+.doc .doc-meta {
+  font-size: 0.75rem;
+  color: var(--slate-500);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 1.5rem;
+}
+
+.doc .doc-nav {
+  display: flex;
+  gap: 1.25rem;
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 480px) {
+  .doc {
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
 }
 
 /* --- Lead developer console --- */

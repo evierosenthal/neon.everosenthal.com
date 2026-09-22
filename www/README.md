@@ -1,4 +1,4 @@
-# Neon Nebula
+# Nitro Nebula
 
 A 2D space arcade shooter. Plain HTML, CSS and JavaScript — no TypeScript, no framework,
 no build step, no dependencies to install.
@@ -23,7 +23,11 @@ php -S localhost:8000
 | `auth.js` | Login/leaderboard API client (`window.NeonAuth`) — Google Sign-In, accounts, score submission |
 | `net.js` | Online two-player client (`window.NeonNet`) — lobby calls and the WebRTC data channel between host and guest |
 | `ui.js` | Screen flow, menus, HUD updates, settings persistence, new-high-score/login flow |
-| `api/` | PHP endpoints: sessions, register/login/Google, score submit, top-10 leaderboard, password reset, online lobbies (`games.php`) (see `docs/leaderboard-setup.md`) |
+| `api/` | PHP endpoints: sessions, register/login/Google/Apple, account deletion, score submit, top-10 leaderboard, password reset, online lobbies (`games.php`) — see the API table below and `docs/leaderboard-setup.md` |
+| `privacy.php`, `support.php` | Standalone privacy policy and support pages (linked from the login and settings modals; also the App Store listing's URLs) |
+
+The native iOS app lives in `../ios/` (its own README) and talks to the same `api/`
+endpoints over HTTPS; see "iOS app" below for what differs.
 
 The only external asset is the Orbitron + Inter webfont from Google Fonts; without a network
 connection the game still runs and falls back to system fonts.
@@ -77,6 +81,50 @@ Server side: `api/games.php` with the `games`, `game_invites` and `game_signals`
 (migration `05_online_games.sql`, applied automatically on the next login like the others).
 Lobbies expire when the host stops polling for 45 seconds. Two players behind very strict
 networks (symmetric NAT) may fail to connect, since there is no TURN relay.
+
+**Platform gating.** Every `create` and `join` carries `platform: 'web' | 'ios'` (`net.js`
+always sends `web`). The iOS app links its two devices over Game Center instead of WebRTC, so
+a browser and an app can never actually connect; the server stores `host_platform` /
+`guest_platform` (migration `07_games_platform.sql`) and a `join` from the other platform is
+refused with `platform_mismatch` (409) — the Friends page shows the server's message.
+
+## iOS app
+
+`../ios/` is a native Swift client of the same API (persistent cookie jar, `X-CSRF-Token`
+header, no `Origin` header — `require_post_with_csrf()` accepts that). What it adds server-side:
+
+- **Sign in with Apple** — `api/apple.php` verifies the identity token against Apple's JWKS
+  (`api/_jwt.php`, cached in `cache/`), links or creates the account by verified email like
+  Google does, and stores `apple_sub` (migration `06_apple_sign_in.sql`). Google Sign-In from
+  the app uses a separate iOS OAuth client, so `google.php` accepts any audience in
+  `GOOGLE_ALLOWED_CLIENT_IDS`.
+- **Account deletion** — `api/delete-account.php` (App Store guideline 5.1.1(v)); password
+  accounts confirm with the password, Apple-linked accounts get their grant revoked when the
+  Apple key is configured (see `docs/leaderboard-setup.md`).
+- `session.php` reports `apiVersion` so an old app build can tell when the API moved on, and
+  `user` payloads carry `email`, `provider` (`password` | `google` | `apple`) and `hasPassword`.
+
+## API
+
+All endpoints are JSON. `GET session.php` first: it returns the CSRF token every POST must send
+in `X-CSRF-Token`. Errors are `{error, message}` with a 4xx/5xx status; `message` is safe to
+show to the player.
+
+| Endpoint | Method | Body / query | Notes |
+| --- | --- | --- | --- |
+| `session.php` | GET | | `{loggedIn, user, csrf, googleClientId, apiVersion, offline?}` |
+| `register.php` | POST | `{username, email, password}` | Reserved/offensive call signs → `bad_username` |
+| `login.php` | POST | `{usernameOrEmail, password}` | Social-only account → `use_google` / `use_apple` |
+| `google.php` | POST | `{credential}` | Google ID token (web or iOS client) |
+| `apple.php` | POST | `{identityToken, authorizationCode?, nonce?, fullName?}` | Sign in with Apple |
+| `logout.php` | POST | `{}` | |
+| `delete-account.php` | POST | `{password?, appleAuthorizationCode?}` | Deletes the logged-in account; returns a logged-out session |
+| `request-reset.php` | POST | `{email}` | Emails a reset link |
+| `reset-password.php` | POST | `{token, newPassword}` | |
+| `submit-score.php` | POST | `{score, mode}` | |
+| `leaderboard.php` | GET | | Top 10 per mode |
+| `games.php` | GET/POST | `action=...` (see file header) | Lobbies, invites, signaling; `platform` on create/join |
+| `set-role.php`, `run-migrations.php` | POST | | Lead developer only |
 
 ## Controls
 

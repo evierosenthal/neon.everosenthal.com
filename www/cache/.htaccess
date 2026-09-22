@@ -1,0 +1,2 @@
+# Cached JWKS / token verification data must never be served over the web.
+Require all denied

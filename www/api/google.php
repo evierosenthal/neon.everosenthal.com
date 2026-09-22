@@ -34,8 +34,9 @@ if ($httpCode !== 200 || !is_array($claims)) {
 $reject = '';
 if (!in_array($claims['iss'] ?? '', ['https://accounts.google.com', 'accounts.google.com'], true)) {
     $reject = 'bad iss: ' . ($claims['iss'] ?? '(missing)');
-} elseif (($claims['aud'] ?? '') !== GOOGLE_CLIENT_ID) {
-    $reject = 'aud mismatch: token is for ' . ($claims['aud'] ?? '(missing)') . ', expected ' . GOOGLE_CLIENT_ID;
+} elseif (!in_array($claims['aud'] ?? '', GOOGLE_ALLOWED_CLIENT_IDS, true)) {
+    // The web game and the iOS app each have their own OAuth client.
+    $reject = 'aud mismatch: token is for ' . ($claims['aud'] ?? '(missing)') . ' (azp ' . ($claims['azp'] ?? '(missing)') . '), expected one of ' . implode(', ', GOOGLE_ALLOWED_CLIENT_IDS);
 } elseif ((int)($claims['exp'] ?? 0) < time()) {
     $reject = 'token expired at ' . ($claims['exp'] ?? '(missing)');
 } elseif (($claims['email_verified'] ?? '') !== 'true') {
@@ -53,43 +54,14 @@ $sub = (string)$claims['sub'];
 $email = strtolower((string)$claims['email']);
 $profileName = (string)($claims['name'] ?? '');
 
-// Derive a unique username from the Google profile name (fallback: email
-// prefix), suffixing on collision: brian, brian2, brian3...
-function derive_username(PDO $db, string $profileName, string $email): string
-{
-    $base = preg_replace('/[^A-Za-z0-9_-]/', '', str_replace(' ', '_', $profileName));
-    if (strlen($base) < 3) {
-        $base = preg_replace('/[^A-Za-z0-9_-]/', '', explode('@', $email)[0]);
-    }
-    if (strlen($base) < 3) {
-        $base = 'pilot';
-    }
-    $base = substr($base, 0, 17); // leave room for a numeric suffix
-
-    $stmt = $db->prepare('SELECT id FROM users WHERE username = ?');
-    $candidate = $base;
-    for ($i = 2; $i < 1000; $i++) {
-        $stmt->execute([$candidate]);
-        if (!$stmt->fetch()) {
-            return $candidate;
-        }
-        $candidate = $base . $i;
-    }
-    return $base . bin2hex(random_bytes(2));
-}
-
 try {
     $db = db();
 
-    $stmt = $db->prepare('SELECT id, username, email, password_hash, google_sub, role FROM users WHERE google_sub = ?');
-    $stmt->execute([$sub]);
-    $user = $stmt->fetch();
+    $user = find_user('google_sub = ?', [$sub]);
 
     if (!$user) {
-        // Link to an existing password account with the same (verified) email.
-        $stmt = $db->prepare('SELECT id, username, email, password_hash, google_sub, role FROM users WHERE email = ?');
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
+        // Link to an existing password/Apple account with the same (verified) email.
+        $user = find_user('email = ?', [$email]);
         if ($user) {
             $db->prepare('UPDATE users SET google_sub = ? WHERE id = ?')->execute([$sub, (int)$user['id']]);
             $user['google_sub'] = $sub;
@@ -100,9 +72,7 @@ try {
         $username = derive_username($db, $profileName, $email);
         $db->prepare('INSERT INTO users (username, email, google_sub) VALUES (?, ?, ?)')
             ->execute([$username, $email, $sub]);
-        $stmt = $db->prepare('SELECT id, username, email, password_hash, google_sub, role FROM users WHERE id = ?');
-        $stmt->execute([(int)$db->lastInsertId()]);
-        $user = $stmt->fetch();
+        $user = find_user('id = ?', [(int)$db->lastInsertId()]);
     }
 } catch (PDOException $e) {
     neon_log('db', 'google.php db error: ' . $e->getMessage());
@@ -110,7 +80,7 @@ try {
 }
 
 establish_login($user);
-neon_log('google', 'sign-in ok for ' . $email . ' as ' . $user['username']);
+neon_log('google', 'sign-in ok for ' . $email . ' as ' . $user['username'] . ' (azp ' . ($claims['azp'] ?? '?') . ')');
 json_out([
     'loggedIn' => true,
     'user' => user_payload($user),

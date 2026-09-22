@@ -35,7 +35,7 @@ if ($user) {
         $safeLink = htmlspecialchars($link, ENT_QUOTES, 'UTF-8');
         $safeName = htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8');
         $html = '<p>Hello ' . $safeName . ',</p>'
-            . '<p>You requested a password reset for your Neon Nebula account.</p>'
+            . '<p>You requested a password reset for your Nitro Nebula account.</p>'
             . '<p><a href="' . $safeLink . '">' . $safeLink . '</a></p>'
             . '<p>This link expires in 1 hour. If you did not request this reset, you can safely ignore this email.</p>';
 

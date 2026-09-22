@@ -1,5 +1,5 @@
 /**
- * Neon Nebula — online two-player networking (plain JavaScript).
+ * Nitro Nebula — online two-player networking (plain JavaScript).
  *
  * Exposes window.NeonNet:
  *   NeonNet.lobby.*            thin wrappers over api/games.php (create, invite,
@@ -33,15 +33,19 @@
     if (typeof NeonNet.debug === 'function') NeonNet.debug(msg);
   }
 
+  // The browser game links over WebRTC; the iOS app links over Game Center.
+  // The server pairs like with like, so every lobby call says which we are.
+  var PLATFORM = 'web';
+
   var lobby = {
     create: function (code, mode) {
-      return api().post('games.php', { action: 'create', code: code, mode: mode }).then(function (d) { return d.game; });
+      return api().post('games.php', { action: 'create', code: code, mode: mode, platform: PLATFORM }).then(function (d) { return d.game; });
     },
     invite: function (username, code) {
       return api().post('games.php', { action: 'invite', username: username, code: code });
     },
     join: function (code) {
-      return api().post('games.php', { action: 'join', code: code }).then(function (d) { return d.game; });
+      return api().post('games.php', { action: 'join', code: code, platform: PLATFORM }).then(function (d) { return d.game; });
     },
     decline: function (id) {
       return api().post('games.php', { action: 'decline', id: id });

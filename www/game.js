@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  *
- * Neon Nebula — canvas game engine (plain ES5+/ES6 JavaScript, no build step).
+ * Nitro Nebula — canvas game engine (plain ES5+/ES6 JavaScript, no build step).
  * Port of the original GameCanvas React component.
  */
 
@@ -1220,13 +1220,17 @@
 
       updatePowerUps();
 
-      // Magnet burns twice as fast as the other effects (also ticked in the effects loop above)
+      updateCollectibles();
+      updateAsteroids();
+
+      // Magnet burns twice as fast as the other effects (also ticked in the
+      // effects loop above). This second tick must come AFTER
+      // updateCollectibles(): the Magnet Muzzle fire power tops the effect up
+      // to 2 each frame, and ticking twice before the pull ran left it at 0
+      // exactly when updateCollectibles() checked it, so the power did nothing.
       if (state.activeEffects.magnet > 0) {
         state.activeEffects.magnet -= 1;
       }
-
-      updateCollectibles();
-      updateAsteroids();
 
       // Update Particles
       for (var pt = state.particles.length - 1; pt >= 0; pt--) {

@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  *
- * Neon Nebula — menus, HUD and screen flow (plain JavaScript).
+ * Nitro Nebula — menus, HUD and screen flow (plain JavaScript).
  * Port of the original App React component.
  */
 
@@ -1396,6 +1396,15 @@
     render();
   }
 
+  // A social-only account tried the password form: the server says which
+  // button to press (use_google / use_apple). Both simply show that message;
+  // Apple accounts are created in the iOS app, so on the web the text tells
+  // the pilot to use the Apple button there (or set a password via reset).
+  function loginErrorText(err) {
+    if (err && (err.code === 'use_google' || err.code === 'use_apple')) return err.message;
+    return err && err.message ? err.message : 'Login failed.';
+  }
+
   function setFormError(node, message) {
     node.textContent = message || '';
     show(node, !!message);
@@ -2107,6 +2116,9 @@
       menuMode = 'two-player';
       openLobbyWait();
     }).catch(function (err) {
+      // Server messages are shown as-is; that includes platform_mismatch
+      // ("Online play pairs app with app and web with web — your friend is
+      // on the other version.") when the host opened the lobby in the iOS app.
       setNotice(msgNode, err.message);
     });
   }
@@ -2637,7 +2649,7 @@
       e.preventDefault();
       setFormError(el.amLoginError, '');
       auth.login(el.amUser.value.trim(), el.amPass.value).catch(function (err) {
-        setFormError(el.amLoginError, err.message);
+        setFormError(el.amLoginError, loginErrorText(err));
       });
     });
 
@@ -2671,7 +2683,7 @@
       e.preventDefault();
       setFormError(el.loginError, '');
       auth.login(el.authUser.value.trim(), el.authPass.value).catch(function (err) {
-        setFormError(el.loginError, err.message);
+        setFormError(el.loginError, loginErrorText(err));
       });
     });
 

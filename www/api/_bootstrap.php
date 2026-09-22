@@ -67,6 +67,7 @@ function json_out(array $data, int $code = 200): void
 {
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store'); // session state and CSRF tokens must never be cached
     echo json_encode($data);
     exit;
 }
@@ -105,14 +106,40 @@ function require_post_with_csrf(): void
 // Solo tiers plus their two-player counterparts (tracked separately).
 const GAME_MODES = ['easy', 'medium', 'hard', 'super', '2p_easy', '2p_medium', '2p_hard', '2p_super'];
 
+// The columns every login path selects; user_payload() and the provider
+// checks in login.php / delete-account.php rely on all of them being present.
+const USER_COLUMNS = 'id, username, email, password_hash, google_sub, apple_sub, role';
+
+// SELECT one user row (USER_COLUMNS) by an arbitrary WHERE clause. If the
+// database predates a column the code now selects (SQLSTATE 42S22, e.g.
+// apple_sub before migration 06 ran), the pending migrations are applied and
+// the query retried once — otherwise a deploy that adds a column would lock
+// everyone out before the self-healing runner in user_payload() could fire.
+function find_user(string $where, array $params): ?array
+{
+    $sql = 'SELECT ' . USER_COLUMNS . ' FROM users WHERE ' . $where;
+    try {
+        $stmt = db()->prepare($sql);
+        $stmt->execute($params);
+    } catch (PDOException $e) {
+        if ((string)$e->getCode() !== '42S22' || !empty($_SESSION['migrations_checked'])) {
+            throw $e;
+        }
+        $_SESSION['migrations_checked'] = 1;
+        apply_all_migrations();
+        $stmt = db()->prepare($sql);
+        $stmt->execute($params);
+    }
+    $user = $stmt->fetch();
+    return $user ?: null;
+}
+
 function current_user(): ?array
 {
     if (empty($_SESSION['user_id'])) {
         return null;
     }
-    $stmt = db()->prepare('SELECT id, username, email, password_hash, google_sub, role FROM users WHERE id = ?');
-    $stmt->execute([(int)$_SESSION['user_id']]);
-    $user = $stmt->fetch();
+    $user = find_user('id = ?', [(int)$_SESSION['user_id']]);
     if (!$user) {
         unset($_SESSION['user_id']);
         return null;
@@ -204,12 +231,45 @@ function user_payload(array $user): array
     foreach ($stmt->fetchAll() as $row) {
         $bests[$row['mode']] = (int)$row['best_score'];
     }
+    // Which button signs this account in. A password account that later
+    // linked Google/Apple still counts as 'password' (it can use either).
+    $hasPassword = !empty($user['password_hash']);
+    $provider = $hasPassword ? 'password' : (!empty($user['apple_sub']) ? 'apple' : 'google');
     return [
         'id' => (int)$user['id'],
         'username' => $user['username'],
+        'email' => $user['email'],
         'role' => $role,
+        'provider' => $provider,
+        'hasPassword' => $hasPassword,
         'bestScores' => $bests,
     ];
+}
+
+// Derive a unique username from a social profile name (fallback: email
+// prefix, then 'pilot'), suffixing on collision: brian, brian2, brian3...
+// Shared by google.php and apple.php.
+function derive_username(PDO $db, string $profileName, string $email): string
+{
+    $base = preg_replace('/[^A-Za-z0-9_-]/', '', str_replace(' ', '_', $profileName));
+    if (strlen($base) < 3) {
+        $base = preg_replace('/[^A-Za-z0-9_-]/', '', explode('@', $email)[0]);
+    }
+    if (strlen($base) < 3) {
+        $base = 'pilot';
+    }
+    $base = substr($base, 0, 17); // leave room for a numeric suffix
+
+    $stmt = $db->prepare('SELECT id FROM users WHERE username = ?');
+    $candidate = $base;
+    for ($i = 2; $i < 1000; $i++) {
+        $stmt->execute([$candidate]);
+        if (!$stmt->fetch()) {
+            return $candidate;
+        }
+        $candidate = $base . $i;
+    }
+    return $base . bin2hex(random_bytes(2));
 }
 
 // Log the user in on this session (register, login, google, reset all funnel

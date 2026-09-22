@@ -15,7 +15,7 @@ www/logs/*
 *.log
 
 # ===== Image / file cache =====
-cache/
+/cache/
 
 # ===== Vim temporary files =====
 *.swp
@@ -50,7 +50,8 @@ www/unit-tests/tests/tmp/
 www/config.local.php
 www/logs/*
 !www/logs/.htaccess
-www/cache/
+www/cache/*
+!www/cache/.htaccess
 var/
 
 xcschememanagement.plist

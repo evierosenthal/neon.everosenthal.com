@@ -11,7 +11,7 @@ function asset(string $path): string
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Neon Nebula</title>
+    <title>Nitro Nebula</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
@@ -129,6 +129,10 @@ function asset(string $path): string
             <button type="button" id="am-show-forgot" class="link-btn">Forgot password?</button>
             <button type="button" id="am-show-login" class="link-btn hidden">Back to log in</button>
           </div>
+          <p class="legal-links">
+            <a href="privacy.php" target="_blank" rel="noopener">Privacy policy</a>
+            <a href="support.php" target="_blank" rel="noopener">Support</a>
+          </p>
         </div>
       </div>
 
@@ -212,7 +216,7 @@ function asset(string $path): string
           <!-- Main Menu -->
           <div id="menu-main" class="menu">
             <div class="title-block">
-              <h1 class="title">NEON<br />NEBULA</h1>
+              <h1 class="title">NITRO<br />NEBULA</h1>
               <div class="title-rule title-rule-cyan"></div>
             </div>
             <p class="subtitle">Galactic Tactical System // 4.0</p>
@@ -800,6 +804,10 @@ function asset(string $path): string
           </div>
 
           <div class="settings-footer">
+            <p class="legal-links legal-links-left">
+              <a href="privacy.php" target="_blank" rel="noopener">Privacy policy</a>
+              <a href="support.php" target="_blank" rel="noopener">Support</a>
+            </p>
             <button id="settings-done" class="btn btn-cyan btn-sm">DONE</button>
           </div>
         </div>

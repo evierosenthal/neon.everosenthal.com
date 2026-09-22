@@ -4,9 +4,9 @@
 //   GET  ?action=inbox                 invites waiting for me + the game I'm in
 //   GET  ?action=status&code=X         lobby state (also my "still here" heartbeat)
 //   GET  ?action=signals&code=X&after=N  WebRTC messages from the other side
-//   POST {action: 'create', code, mode}   open a lobby I host
+//   POST {action: 'create', code, mode, platform?}  open a lobby I host
 //   POST {action: 'invite', username, code}  ask a friend into my lobby
-//   POST {action: 'join', code}           take the guest seat
+//   POST {action: 'join', code, platform?}   take the guest seat
 //   POST {action: 'decline', id}          dismiss an invite
 //   POST {action: 'start', code}          host: begin (guest must be seated)
 //   POST {action: 'leave', code}          host closes the lobby / guest steps out
@@ -15,10 +15,16 @@
 //
 // The server only matchmakes and relays signaling; the game itself runs
 // peer-to-peer over a WebRTC data channel (host simulates, guest renders).
+//
+// platform is 'web' (default; browsers, WebRTC) or 'ios' (the app, Game
+// Center). The two transports cannot talk to each other, so a join whose
+// platform differs from the host's is refused with platform_mismatch. The
+// iOS app relays {type:'gc', gamePlayerID} through 'signal' instead of SDP.
 define('NEON_API', 1);
 require __DIR__ . '/_bootstrap.php';
 
 const LOBBY_MODES = ['easy', 'medium', 'hard'];
+const LOBBY_PLATFORMS = ['web', 'ios'];
 const LOBBY_STALE_SEC = 45;      // no heartbeat for this long = that side left
 const LOBBY_MAX_AGE_SEC = 3600;  // lobbies older than an hour are swept
 
@@ -37,6 +43,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 function stamp(int $offsetSec = 0): string
 {
     return date('Y-m-d H:i:s', time() + $offsetSec);
+}
+
+function clean_platform(array $in): string
+{
+    $platform = (string)($in['platform'] ?? 'web');
+    if (!in_array($platform, LOBBY_PLATFORMS, true)) {
+        json_error('bad_platform', 'platform must be "web" or "ios".');
+    }
+    return $platform;
 }
 
 function clean_code(string $raw): string
@@ -85,6 +100,8 @@ function game_payload(array $g, int $me): array
             : ((int)($g['guest_user_id'] ?? 0) === $me ? 'guest' : null),
         'hostOnline' => $g['host_seen_at'] >= $stale,
         'guestOnline' => !empty($g['guest_user_id']) && ($g['guest_seen_at'] ?? '') >= $stale,
+        'hostPlatform' => $g['host_platform'] ?? 'web',
+        'guestPlatform' => !empty($g['guest_user_id']) ? ($g['guest_platform'] ?? null) : null,
     ];
 }
 
@@ -157,7 +174,7 @@ try {
             touch_seen($g, $userId);
             // A guest who stopped polling gives their seat back while the lobby is open.
             if ($g['status'] === 'open' && !empty($g['guest_user_id']) && ($g['guest_seen_at'] ?? '') < stamp(-LOBBY_STALE_SEC)) {
-                $db->prepare('UPDATE games SET guest_user_id = NULL, guest_seen_at = NULL WHERE code = ?')->execute([$code]);
+                $db->prepare('UPDATE games SET guest_user_id = NULL, guest_seen_at = NULL, guest_platform = NULL WHERE code = ?')->execute([$code]);
             }
             json_out(['game' => game_payload(load_game($code), $userId)]);
         }
@@ -182,6 +199,7 @@ try {
             if (!in_array($mode, LOBBY_MODES, true)) {
                 json_error('bad_mode', 'Pick Easy, Medium or Hard.');
             }
+            $platform = clean_platform($in);
             sweep();
             $existing = load_game($code);
             if ($existing && (int)$existing['host_user_id'] !== $userId && $existing['host_seen_at'] >= stamp(-LOBBY_STALE_SEC)) {
@@ -190,9 +208,9 @@ try {
             // One lobby per host: anything else I was hosting closes.
             $db->prepare('DELETE FROM games WHERE host_user_id = ? OR code = ?')->execute([$userId, $code]);
             $db->prepare('DELETE FROM game_signals WHERE code = ?')->execute([$code]);
-            $db->prepare('INSERT INTO games (code, host_user_id, guest_user_id, mode, status, host_seen_at, guest_seen_at, created_at)
-                          VALUES (?, ?, NULL, ?, \'open\', ?, NULL, ?)')
-                ->execute([$code, $userId, $mode, stamp(), stamp()]);
+            $db->prepare('INSERT INTO games (code, host_user_id, guest_user_id, mode, host_platform, guest_platform, status, host_seen_at, guest_seen_at, created_at)
+                          VALUES (?, ?, NULL, ?, ?, NULL, \'open\', ?, NULL, ?)')
+                ->execute([$code, $userId, $mode, $platform, stamp(), stamp()]);
             json_out(['game' => game_payload(load_game($code), $userId)]);
         }
 
@@ -224,6 +242,7 @@ try {
 
         case 'join': {
             $code = clean_code((string)($in['code'] ?? ''));
+            $platform = clean_platform($in);
             $g = load_game($code);
             if (!$g || $g['host_seen_at'] < stamp(-LOBBY_STALE_SEC)) {
                 json_error('not_found', 'No open game with that code.', 404);
@@ -239,9 +258,12 @@ try {
             if ($guestId && $guestId !== $userId && $guestFresh) {
                 json_error('full', 'Someone already joined that game.', 409);
             }
+            if (($g['host_platform'] ?? 'web') !== $platform) {
+                json_error('platform_mismatch', 'Online play pairs app with app and web with web — your friend is on the other version.', 409);
+            }
             // Leave any other lobby I was sitting in.
-            $db->prepare("UPDATE games SET guest_user_id = NULL, guest_seen_at = NULL WHERE guest_user_id = ? AND status = 'open'")->execute([$userId]);
-            $db->prepare('UPDATE games SET guest_user_id = ?, guest_seen_at = ? WHERE code = ?')->execute([$userId, stamp(), $code]);
+            $db->prepare("UPDATE games SET guest_user_id = NULL, guest_seen_at = NULL, guest_platform = NULL WHERE guest_user_id = ? AND status = 'open'")->execute([$userId]);
+            $db->prepare('UPDATE games SET guest_user_id = ?, guest_seen_at = ?, guest_platform = ? WHERE code = ?')->execute([$userId, stamp(), $platform, $code]);
             $db->prepare("UPDATE game_invites SET status = 'accepted' WHERE code = ? AND to_user_id = ? AND status = 'pending'")->execute([$code, $userId]);
             json_out(['game' => game_payload(load_game($code), $userId)]);
         }
@@ -276,7 +298,7 @@ try {
                     $db->prepare('DELETE FROM game_invites WHERE code = ?')->execute([$code]);
                 } elseif ((int)($g['guest_user_id'] ?? 0) === $userId) {
                     if ($g['status'] === 'open') {
-                        $db->prepare('UPDATE games SET guest_user_id = NULL, guest_seen_at = NULL WHERE code = ?')->execute([$code]);
+                        $db->prepare('UPDATE games SET guest_user_id = NULL, guest_seen_at = NULL, guest_platform = NULL WHERE code = ?')->execute([$code]);
                     } else {
                         $db->prepare("UPDATE games SET status = 'finished' WHERE code = ?")->execute([$code]);
                     }
@@ -295,6 +317,8 @@ try {
         case 'signal': {
             $code = clean_code((string)($in['code'] ?? ''));
             $g = require_member($code, $userId);
+            // Any JSON object up to 200 KB: a WebRTC {type:'offer'|'answer', sdp}
+            // from the web game, or {type:'gc', gamePlayerID} from the iOS app.
             $payload = $in['payload'] ?? null;
             $encoded = json_encode($payload);
             if (!is_array($payload) || $encoded === false || strlen($encoded) > 200000) {

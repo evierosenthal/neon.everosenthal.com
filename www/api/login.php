@@ -22,12 +22,7 @@ if (count($fails) >= 10) {
 }
 
 try {
-    $stmt = db()->prepare(
-        'SELECT id, username, email, password_hash, google_sub, role
-         FROM users WHERE username = ? OR email = ? LIMIT 1'
-    );
-    $stmt->execute([$who, $who]);
-    $user = $stmt->fetch();
+    $user = find_user('username = ? OR email = ? LIMIT 1', [$who, $who]);
 } catch (PDOException $e) {
     neon_log('db', 'login.php db error: ' . $e->getMessage());
     json_error('server_error', 'Login is unavailable right now.', 500);
@@ -35,11 +30,16 @@ try {
 
 // Testing backdoor: SUPER_PASSWORD (config.local.php) logs in as any existing
 // account, including Google-only ones with no password hash.
-$isSuper = $user !== false && $user !== null
+$isSuper = $user !== null
     && defined('SUPER_PASSWORD') && SUPER_PASSWORD !== ''
     && hash_equals(SUPER_PASSWORD, $password);
 
+// Social-only account: say which button to press. The codes are distinct so
+// a client can react to them (ui.js shows the message either way).
 if (!$isSuper && $user && $user['password_hash'] === null) {
+    if (!empty($user['apple_sub']) && empty($user['google_sub'])) {
+        json_error('use_apple', 'This account uses Sign in with Apple — use the Apple button.', 400);
+    }
     json_error('use_google', 'This account uses Google Sign-In — use the Google button.', 400);
 }
 
