@@ -1,6 +1,6 @@
 import XCTest
 import JavaScriptCore
-@testable import NeonEngine
+@testable import NitroEngine
 
 /// Runs the real www/game.js inside JavaScriptCore with a seeded Math.random
 /// and a frame-driven Date.now, drives it with synthetic key events, and
@@ -18,9 +18,9 @@ final class OracleParityTests: XCTestCase {
     // MARK: Harness
 
     static func gameJSURL() -> URL {
-        // .../ios/NeonEngine/Tests/NeonEngineTests/OracleParityTests.swift -> repo root
+        // .../ios/NitroEngine/Tests/NitroEngineTests/OracleParityTests.swift -> repo root
         var url = URL(fileURLWithPath: #filePath)
-        for _ in 0..<5 { url.deleteLastPathComponent() } // file, NeonEngineTests, Tests, NeonEngine, ios
+        for _ in 0..<5 { url.deleteLastPathComponent() } // file, NitroEngineTests, Tests, NitroEngine, ios
         return url.appendingPathComponent("www/game.js")
     }
 

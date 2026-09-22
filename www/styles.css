@@ -2417,6 +2417,19 @@ html.rotated .panel-settings {
   margin-bottom: 0.25rem;
 }
 
+/* Shown inside the slot when Google's button could not be rendered. */
+.google-slot-note {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  max-width: 280px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--slate-400);
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+}
+
 /* --- Auth forms --- */
 
 .auth-form {

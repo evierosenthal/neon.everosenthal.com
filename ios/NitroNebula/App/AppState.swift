@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 import SwiftUI
-import NeonEngine
+import NitroEngine
 
 /// The whole UI state, a flat port of the ui.js module variables (L272-328).
 /// Every screen reads from here; every button calls a method here. The

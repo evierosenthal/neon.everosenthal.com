@@ -1,11 +1,11 @@
 import XCTest
-import NeonEngine
-@testable import NeonNebula
+import NitroEngine
+@testable import NitroNebula
 
 nonisolated final class LocalStoreTests: XCTestCase {
     nonisolated(unsafe) private var defaults: UserDefaults!
     nonisolated(unsafe) private var store: LocalStore!
-    private let suite = "NeonNebulaTests.LocalStore"
+    private let suite = "NitroNebulaTests.LocalStore"
 
     @MainActor override func setUp() async throws {
         try await super.setUp()

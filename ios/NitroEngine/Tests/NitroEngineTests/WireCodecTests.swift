@@ -1,5 +1,5 @@
 import XCTest
-@testable import NeonEngine
+@testable import NitroEngine
 
 final class WireCodecTests: XCTestCase {
     func roundTrip(_ m: NetMessage, file: StaticString = #filePath, line: UInt = #line) throws -> Data {

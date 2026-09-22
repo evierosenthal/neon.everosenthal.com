@@ -1,5 +1,5 @@
 import Foundation
-import NeonEngine
+import NitroEngine
 
 /// The app-facing face of an online round: the port of net.js's `Session`
 /// (`.send(obj)`, `.close()`, `.onMessage`, `.onClose(reason)`), over any

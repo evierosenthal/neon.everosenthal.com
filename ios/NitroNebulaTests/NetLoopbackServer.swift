@@ -1,6 +1,6 @@
 import Foundation
 import Network
-@testable import NeonNebula
+@testable import NitroNebula
 
 /// A one-connection-at-a-time HTTP/1.1 server on 127.0.0.1 for the tests that
 /// need URLSession's real HTTP stack (cookie storage and sending happen in

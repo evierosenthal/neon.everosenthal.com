@@ -1,7 +1,7 @@
 import Foundation
-import NeonEngine
+import NitroEngine
 import XCTest
-@testable import NeonNebula
+@testable import NitroNebula
 
 nonisolated final class AuthFlowTests: XCTestCase {
     private let server = FakeServer()

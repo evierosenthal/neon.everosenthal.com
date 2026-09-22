@@ -1,5 +1,5 @@
 import SwiftUI
-import NeonEngine
+import NitroEngine
 
 /// The Tailor card art (ui.js skinSvg/trailSvg/flameSvg, L1650-1732),
 /// drawn into a GraphicsContext in the SVGs' 40x64 space so the same code

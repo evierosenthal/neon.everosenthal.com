@@ -1,5 +1,5 @@
 import XCTest
-@testable import NeonEngine
+@testable import NitroEngine
 
 final class SpawnerTests: XCTestCase {
     func testCreateParticleDrawOrder() {

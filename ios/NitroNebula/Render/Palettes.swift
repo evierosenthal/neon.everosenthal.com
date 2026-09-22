@@ -1,5 +1,5 @@
 import Foundation
-import NeonEngine
+import NitroEngine
 
 /// One asteroid color scheme (game.js:18-104). Every string is verbatim.
 struct AsteroidPalette {

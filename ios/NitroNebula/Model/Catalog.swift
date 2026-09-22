@@ -1,5 +1,5 @@
 import Foundation
-import NeonEngine
+import NitroEngine
 
 /// The Tailor's three racks (ui.js:305, 1578-1611, 977-993) as the UI sees
 /// them: thin wrappers over `GearCatalog` plus the wallet rules.

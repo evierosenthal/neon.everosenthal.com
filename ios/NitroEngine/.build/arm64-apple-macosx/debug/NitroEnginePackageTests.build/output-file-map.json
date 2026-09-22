@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/primary.swiftdeps"
+  },
+  "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.derived/runner.swift": {
+    "dependencies": "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/runner.d",
+    "object": "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/runner.dia"
+  }
+}

@@ -1,7 +1,7 @@
 import XCTest
 import UIKit
-import NeonEngine
-@testable import NeonNebula
+import NitroEngine
+@testable import NitroNebula
 
 nonisolated final class RenderTests: XCTestCase {
 

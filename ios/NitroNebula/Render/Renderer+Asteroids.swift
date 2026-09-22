@@ -1,5 +1,5 @@
 import UIKit
-import NeonEngine
+import NitroEngine
 
 // game.js:1504-1653 — traceAsteroidPath and the three body styles.
 extension Renderer {

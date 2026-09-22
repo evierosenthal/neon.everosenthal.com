@@ -1,5 +1,5 @@
 import SwiftUI
-import NeonEngine
+import NitroEngine
 
 /// The single screen stack, in index.php order: nebula → canvas + HUD →
 /// start / game over / new high → pause → modals → settings → the corner

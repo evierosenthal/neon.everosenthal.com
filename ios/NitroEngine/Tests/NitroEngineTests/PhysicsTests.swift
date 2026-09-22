@@ -1,5 +1,5 @@
 import XCTest
-@testable import NeonEngine
+@testable import NitroEngine
 
 final class PhysicsTests: XCTestCase {
     /// Solo keyboard: kbAccel = 1.0, then friction -> vx 0.92.

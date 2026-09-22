@@ -1,5 +1,5 @@
 import XCTest
-@testable import NeonEngine
+@testable import NitroEngine
 
 /// Regression guard: a seeded solo run with scripted steering must keep
 /// producing exactly the values captured when the port matched the

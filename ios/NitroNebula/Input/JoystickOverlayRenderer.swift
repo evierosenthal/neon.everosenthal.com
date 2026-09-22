@@ -1,5 +1,5 @@
 import UIKit
-import NeonEngine
+import NitroEngine
 
 /// Draws the floating sticks: a faint base ring at the anchor and a knob in
 /// the pilot's accent. Called by Renderer after the tutorial, outside the

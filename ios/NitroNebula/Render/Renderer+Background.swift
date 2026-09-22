@@ -1,5 +1,5 @@
 import UIKit
-import NeonEngine
+import NitroEngine
 
 // game.js:1270-1289 — drawStars, drawAtmosphere.
 extension Renderer {

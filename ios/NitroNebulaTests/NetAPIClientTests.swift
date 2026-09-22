@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import NeonNebula
+@testable import NitroNebula
 
 // MARK: - Stub transport
 
@@ -163,7 +163,7 @@ nonisolated final class NetAPIClientTests: XCTestCase {
         XCTAssertEqual(req.url.absoluteString, "http://localhost:8000/api/session.php")
         XCTAssertNil(req.header("X-CSRF-Token"))
         XCTAssertNil(req.header("Origin"))
-        XCTAssertEqual(req.header("User-Agent")?.hasPrefix("NeonNebula-iOS/"), true)
+        XCTAssertEqual(req.header("User-Agent")?.hasPrefix("NitroNebula-iOS/"), true)
         let stored = await client.csrf
         XCTAssertEqual(stored, "tok1")
     }
@@ -243,7 +243,7 @@ nonisolated final class NetAPIClientTests: XCTestCase {
         XCTAssertEqual(requests.last?.header("Cookie"), "neon_sid=abc")
         XCTAssertNil(requests.last?.header("Origin"))
         XCTAssertNil(requests.last?.header("X-CSRF-Token"))
-        XCTAssertEqual(requests.last?.header("User-Agent")?.hasPrefix("NeonNebula-iOS/"), true)
+        XCTAssertEqual(requests.last?.header("User-Agent")?.hasPrefix("NitroNebula-iOS/"), true)
 
         // A POST over the real stack carries cookie, CSRF and JSON body together.
         server.enqueue(.init(body: "{\"ok\":true}"))

@@ -1,5 +1,5 @@
 import XCTest
-@testable import NeonEngine
+@testable import NitroEngine
 
 final class CollisionTests: XCTestCase {
     func solo() -> (GameEngine, RecordingDelegate) {

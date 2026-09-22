@@ -1,41 +1,41 @@
 # Nitro Nebula for iOS
 
 Native Swift port of the web game in `../www/`. SwiftUI shell, Core Graphics
-game view, and a Foundation-only simulation package (`NeonEngine`) that is a
+game view, and a Foundation-only simulation package (`NitroEngine`) that is a
 line-for-line port of `www/game.js`. Landscape only, iPhone and iPad, iOS 17+.
 
 ## Layout
 
 | Path | Contents |
 | --- | --- |
-| `NeonNebula.xcodeproj` | Xcode project (Xcode 16+ synchronized folders: every file under `NeonNebula/` and `NeonNebulaTests/` is in the target automatically) |
+| `NitroNebula.xcodeproj` | Xcode project (Xcode 16+ synchronized folders: every file under `NitroNebula/` and `NitroNebulaTests/` is in the target automatically) |
 | `Config/` | `Info.plist`, entitlements, `ExportOptions.plist` |
-| `NeonEngine/` | Swift package: physics, spawning, collisions, CPU wingman, online snapshot codec, tests (`swift test` runs on macOS) |
-| `NeonNebula/App` | App entry, `AppState` (port of `ui.js` state), root screen stack |
-| `NeonNebula/Model` | Game modes, ranks, catalog wrappers, `LocalStore` (UserDefaults with the same keys and formats as the web's localStorage), economy |
-| `NeonNebula/Game`, `Input`, `Render` | `GameView` + display link loop, floating joystick touch controller, Core Graphics renderer (port of `draw()` in `game.js`) |
-| `NeonNebula/Audio` | Music loops and sound effects (AVAudioPlayer, `.ambient` session) |
-| `NeonNebula/Net` | API client for `www/api/*.php`, Google Sign-In, Sign in with Apple, Game Center matchmaking and the GameKit transport |
-| `NeonNebula/UI` | Theme, home screen, HUD, modals |
-| `NeonNebula/Resources` | Fonts (Orbitron, Inter), sounds, asset catalog, privacy manifest |
+| `NitroEngine/` | Swift package: physics, spawning, collisions, CPU wingman, online snapshot codec, tests (`swift test` runs on macOS) |
+| `NitroNebula/App` | App entry, `AppState` (port of `ui.js` state), root screen stack |
+| `NitroNebula/Model` | Game modes, ranks, catalog wrappers, `LocalStore` (UserDefaults with the same keys and formats as the web's localStorage), economy |
+| `NitroNebula/Game`, `Input`, `Render` | `GameView` + display link loop, floating joystick touch controller, Core Graphics renderer (port of `draw()` in `game.js`) |
+| `NitroNebula/Audio` | Music loops and sound effects (AVAudioPlayer, `.ambient` session) |
+| `NitroNebula/Net` | API client for `www/api/*.php`, Google Sign-In, Sign in with Apple, Game Center matchmaking and the GameKit transport |
+| `NitroNebula/UI` | Theme, home screen, HUD, modals |
+| `NitroNebula/Resources` | Fonts (Orbitron, Inter), sounds, asset catalog, privacy manifest |
 | `scripts/set-build-number.sh` | Sets the build number to the git commit count before archiving |
 
 ## Build and run
 
 ```sh
 # Simulator build (no signing)
-xcodebuild -project ios/NeonNebula.xcodeproj -scheme NeonNebula \
+xcodebuild -project ios/NitroNebula.xcodeproj -scheme NitroNebula \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO build
 
 # Engine tests (fast, no simulator)
-cd ios/NeonEngine && swift test
+cd ios/NitroEngine && swift test
 
 # App tests
-xcodebuild -project ios/NeonNebula.xcodeproj -scheme NeonNebula \
+xcodebuild -project ios/NitroNebula.xcodeproj -scheme NitroNebula \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test
 ```
 
-Or open `ios/NeonNebula.xcodeproj` in Xcode, pick a simulator or device, and run.
+Or open `ios/NitroNebula.xcodeproj` in Xcode, pick a simulator or device, and run.
 For a device build set your team under Signing & Capabilities (the project
 leaves `DEVELOPMENT_TEAM` empty).
 
@@ -46,7 +46,7 @@ leaves `DEVELOPMENT_TEAM` empty).
 - Coordinates are top-left, y-down, in points, like the canvas. Nothing is
   flipped or scaled; the world is the view's size.
 - Every `Math.random()` call maps to one `RandomSource.next()` in the same
-  order. `NeonEngineTests/OracleParityTests` runs the real `www/game.js` in
+  order. `NitroEngineTests/OracleParityTests` runs the real `www/game.js` in
   JavaScriptCore with a seeded generator and asserts the Swift engine produces
   the same positions and score frame by frame.
 - Persistence uses the same `neon_nebula_*` keys and string formats as the web.
@@ -120,10 +120,10 @@ codes and invites and a `GKMatch` (Game Center) for the connection.
 
 ```sh
 ios/scripts/set-build-number.sh            # CFBundleVersion = git commit count
-xcodebuild -project ios/NeonNebula.xcodeproj -scheme NeonNebula -configuration Release \
-  -destination 'generic/platform=iOS' -archivePath build/NeonNebula.xcarchive \
+xcodebuild -project ios/NitroNebula.xcodeproj -scheme NitroNebula -configuration Release \
+  -destination 'generic/platform=iOS' -archivePath build/NitroNebula.xcarchive \
   DEVELOPMENT_TEAM=<TEAMID> -allowProvisioningUpdates archive
-xcodebuild -exportArchive -archivePath build/NeonNebula.xcarchive \
+xcodebuild -exportArchive -archivePath build/NitroNebula.xcarchive \
   -exportOptionsPlist ios/Config/ExportOptions.plist -exportPath build/export \
   -allowProvisioningUpdates
 ```
@@ -136,7 +136,7 @@ iPhone 6.9" 2868×1320 (iPhone 17 Pro Max simulator, landscape) and iPad 13"
 ## Third-party notices
 
 - **Orbitron** by Matt McInerney and **Inter** by Rasmus Andersson — SIL Open
-  Font License 1.1 (`NeonNebula/Resources/Fonts/OFL-*.txt`).
+  Font License 1.1 (`NitroNebula/Resources/Fonts/OFL-*.txt`).
 - Sound effects from Pixabay (Pixabay Content License): "You Win Sequence 3"
   by floraphonic (#183950), "Spacecraft crashing" by freesound_community
   (#88048), "Cinematic designed sci-fi whoosh spectral glide" by Rescopic

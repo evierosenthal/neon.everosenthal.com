@@ -1,5 +1,5 @@
 import UIKit
-import NeonEngine
+import NitroEngine
 
 // game.js:1998-2010 — drawFloatingTexts.
 extension Renderer {

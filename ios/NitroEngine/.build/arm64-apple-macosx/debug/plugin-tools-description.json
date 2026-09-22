@@ -1,0 +1,1360 @@
+{
+  "builtTestProducts" : [
+    {
+      "binaryPath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.xctest/Contents/MacOS/NitroEnginePackageTests",
+      "packagePath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine",
+      "productName" : "NitroEnginePackageTests"
+    }
+  ],
+  "copyCommands" : {
+    "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine_NitroEngineTests.bundle/Fixtures" : {
+      "inputs" : [
+        {
+          "kind" : "directory",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/Fixtures"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "directory",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine_NitroEngineTests.bundle/Fixtures"
+        }
+      ]
+    }
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.NitroEngine-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/sources",
+      "importPath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/CPUPilot.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Collisions.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Color.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Constants.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Death.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Difficulty.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Entities.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameConfig.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine+Internals.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine+Reset.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine+Update.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngineDelegate.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameState.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Gear.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GearCatalog.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/InputState.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/JSMath.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/GameEngine+Net.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/NetMessage.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/NetTransport.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/WireCodec.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Physics.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Spawner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Thrusters.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Weapons.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "NitroEngine",
+      "moduleOutputPath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules/NitroEngine.swiftmodule",
+      "objects" : [
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/CPUPilot.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Collisions.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Color.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Constants.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Death.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Difficulty.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Entities.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameConfig.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine+Internals.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine+Reset.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine+Update.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngineDelegate.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameState.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Gear.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GearCatalog.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/InputState.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/JSMath.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine+Net.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/NetMessage.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/NetTransport.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/WireCodec.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Physics.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Spawner.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Thrusters.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Weapons.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/include/NitroEngine-Swift.h",
+        "-swift-version",
+        "5",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "nitroengine"
+      ],
+      "outputFileMapPath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/CPUPilot.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Collisions.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Color.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Constants.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Death.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Difficulty.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Entities.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameConfig.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine+Internals.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine+Reset.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine+Update.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngineDelegate.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameState.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Gear.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GearCatalog.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/InputState.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/JSMath.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine+Net.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/NetMessage.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/NetTransport.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/WireCodec.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Physics.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Spawner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Thrusters.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Weapons.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules/NitroEngine.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/CPUPilot.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Collisions.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Color.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Constants.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Death.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Difficulty.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Entities.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameConfig.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine+Internals.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine+Reset.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine+Update.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngineDelegate.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameState.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Gear.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GearCatalog.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/InputState.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/JSMath.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/GameEngine+Net.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/NetMessage.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/NetTransport.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/WireCodec.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Physics.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Spawner.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Thrusters.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Weapons.swift"
+      ],
+      "tempsPath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.NitroEnginePackageTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/sources",
+      "importPath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.derived/runner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules/NitroEngineTests.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "NitroEnginePackageTests",
+      "moduleOutputPath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules/NitroEnginePackageTests.swiftmodule",
+      "objects" : [
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/runner.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/include/NitroEnginePackageTests-Swift.h",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "nitroengine"
+      ],
+      "outputFileMapPath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules/NitroEnginePackageTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.derived/runner.swift"
+      ],
+      "tempsPath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.NitroEngineTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/sources",
+      "importPath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/CPUPilotTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/CollisionTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/DeathSequenceTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/DifficultyTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/EffectTimerTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/GearCatalogTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/GoldenRunTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/LoopbackTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/OracleParityTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/PhysicsTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/SnapshotTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/SpawnerTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/TestSupport.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/WireCodecTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/DerivedSources/resource_bundle_accessor.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<NitroEngineTests-arm64-apple-macosx-debug.module-resources>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules/NitroEngine.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "NitroEngineTests",
+      "moduleOutputPath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules/NitroEngineTests.swiftmodule",
+      "objects" : [
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/CPUPilotTests.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/CollisionTests.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/DeathSequenceTests.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/DifficultyTests.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/EffectTimerTests.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/GearCatalogTests.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/GoldenRunTests.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/LoopbackTests.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/OracleParityTests.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/PhysicsTests.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/SnapshotTests.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/SpawnerTests.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/TestSupport.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/WireCodecTests.swift.o",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/resource_bundle_accessor.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+        "-module-cache-path",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-swift-version",
+        "5",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "nitroengine"
+      ],
+      "outputFileMapPath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/CPUPilotTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/CollisionTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/DeathSequenceTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/DifficultyTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/EffectTimerTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/GearCatalogTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/GoldenRunTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/LoopbackTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/OracleParityTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/PhysicsTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/SnapshotTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/SpawnerTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/TestSupport.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/WireCodecTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/resource_bundle_accessor.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules/NitroEngineTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/CPUPilotTests.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/CollisionTests.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/DeathSequenceTests.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/DifficultyTests.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/EffectTimerTests.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/GearCatalogTests.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/GoldenRunTests.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/LoopbackTests.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/OracleParityTests.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/PhysicsTests.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/SnapshotTests.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/SpawnerTests.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/TestSupport.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/WireCodecTests.swift",
+        "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/DerivedSources/resource_bundle_accessor.swift"
+      ],
+      "tempsPath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "NitroEngine" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "NitroEngine",
+      "-package-name",
+      "nitroengine",
+      "-c",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/CPUPilot.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Collisions.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Color.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Constants.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Death.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Difficulty.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Entities.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameConfig.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine+Internals.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine+Reset.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine+Update.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngineDelegate.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameState.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Gear.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GearCatalog.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/InputState.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/JSMath.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/GameEngine+Net.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/NetMessage.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/NetTransport.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/WireCodec.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Physics.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Spawner.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Thrusters.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Weapons.swift",
+      "-I",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/include/NitroEngine-Swift.h",
+      "-swift-version",
+      "5",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "nitroengine",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "NitroEnginePackageTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "NitroEnginePackageTests",
+      "-package-name",
+      "nitroengine",
+      "-c",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.derived/runner.swift",
+      "-I",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/include/NitroEnginePackageTests-Swift.h",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "nitroengine",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "NitroEngineTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "NitroEngineTests",
+      "-package-name",
+      "nitroengine",
+      "-c",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/CPUPilotTests.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/CollisionTests.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/DeathSequenceTests.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/DifficultyTests.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/EffectTimerTests.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/GearCatalogTests.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/GoldenRunTests.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/LoopbackTests.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/OracleParityTests.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/PhysicsTests.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/SnapshotTests.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/SpawnerTests.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/TestSupport.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/WireCodecTests.swift",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/DerivedSources/resource_bundle_accessor.swift",
+      "-I",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+      "-module-cache-path",
+      "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-swift-version",
+      "5",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "nitroengine",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "NitroEngine" : [
+
+    ],
+    "NitroEnginePackageTests" : [
+      "NitroEngineTests",
+      "NitroEngine"
+    ],
+    "NitroEngineTests" : [
+      "NitroEngine"
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+    "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.derived/runner.swift" : {
+      "inputs" : [
+
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.derived/runner.swift"
+        }
+      ]
+    }
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/CPUPilot.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Collisions.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Color.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Constants.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Death.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Difficulty.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Entities.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameConfig.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine+Internals.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine+Reset.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine+Update.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameEngineDelegate.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GameState.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Gear.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/GearCatalog.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/InputState.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/JSMath.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/GameEngine+Net.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/NetMessage.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/NetTransport.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Online/WireCodec.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Physics.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Spawner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Thrusters.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Sources/NitroEngine/Weapons.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/sources"
+    },
+    "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.derived/runner.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/sources"
+    },
+    "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/CPUPilot.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Collisions.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Color.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Constants.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Death.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Difficulty.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Entities.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameConfig.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine+Internals.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine+Net.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine+Reset.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine+Update.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameEngineDelegate.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GameState.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Gear.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/GearCatalog.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/InputState.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/JSMath.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/NetMessage.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/NetTransport.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Physics.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Spawner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Thrusters.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/Weapons.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngine.build/WireCodec.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/CPUPilotTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/CollisionTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/DeathSequenceTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/DifficultyTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/EffectTimerTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/GearCatalogTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/GoldenRunTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/LoopbackTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/OracleParityTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/PhysicsTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/SnapshotTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/SpawnerTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/TestSupport.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/WireCodecTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/resource_bundle_accessor.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEnginePackageTests.product/Objects.LinkFileList"
+    },
+    "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/CPUPilotTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/CollisionTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/DeathSequenceTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/DifficultyTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/EffectTimerTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/GearCatalogTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/GoldenRunTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/LoopbackTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/OracleParityTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/PhysicsTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/SnapshotTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/SpawnerTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/TestSupport.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/Tests/NitroEngineTests/WireCodecTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/DerivedSources/resource_bundle_accessor.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/NitroEngineTests.build/sources"
+    },
+    "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/everosenthal/coding/NitroNebula/ios/NitroEngine/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

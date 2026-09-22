@@ -1,5 +1,5 @@
 import XCTest
-@testable import NeonNebula
+@testable import NitroNebula
 
 nonisolated final class ModelTests: XCTestCase {
     @MainActor func testModeRawValuesMatchServer() {

@@ -1,5 +1,5 @@
 import SwiftUI
-import NeonEngine
+import NitroEngine
 
 /// SwiftUI host for `GameView`. The engine is owned by the caller; this view
 /// ticks it at 60 Hz, feeds it joystick input and draws it. Give it the

@@ -1,6 +1,6 @@
 import XCTest
-import NeonEngine
-@testable import NeonNebula
+import NitroEngine
+@testable import NitroNebula
 
 nonisolated final class SmokeTests: XCTestCase {
     @MainActor

@@ -1,5 +1,5 @@
 import Foundation
-import NeonEngine
+import NitroEngine
 
 // Launching, pausing and ending missions (ui.js:1336-1387, 1914-1959,
 // 2523-2535), the celebration screen's score submission and the canvas size

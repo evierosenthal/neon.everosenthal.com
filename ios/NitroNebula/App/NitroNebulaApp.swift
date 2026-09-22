@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct NeonNebulaApp: App {
+struct NitroNebulaApp: App {
     @State private var app: AppState = {
         let state = AppState()
         #if DEBUG

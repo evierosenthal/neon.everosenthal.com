@@ -1,8 +1,8 @@
 import Foundation
 import GameKit
-import NeonEngine
+import NitroEngine
 import XCTest
-@testable import NeonNebula
+@testable import NitroNebula
 
 nonisolated final class NetGameCenterTests: XCTestCase {
     @MainActor func testFNV1a32KnownVectors() {

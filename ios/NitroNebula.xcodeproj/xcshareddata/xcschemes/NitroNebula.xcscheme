@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4E454F4E0000000000000002"
-               BuildableName = "NeonNebula.app"
-               BlueprintName = "NeonNebula"
-               ReferencedContainer = "container:NeonNebula.xcodeproj">
+               BuildableName = "NitroNebula.app"
+               BlueprintName = "NitroNebula"
+               ReferencedContainer = "container:NitroNebula.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4E454F4E0000000000000003"
-               BuildableName = "NeonNebulaTests.xctest"
-               BlueprintName = "NeonNebulaTests"
-               ReferencedContainer = "container:NeonNebula.xcodeproj">
+               BuildableName = "NitroNebulaTests.xctest"
+               BlueprintName = "NitroNebulaTests"
+               ReferencedContainer = "container:NitroNebula.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4E454F4E0000000000000002"
-            BuildableName = "NeonNebula.app"
-            BlueprintName = "NeonNebula"
-            ReferencedContainer = "container:NeonNebula.xcodeproj">
+            BuildableName = "NitroNebula.app"
+            BlueprintName = "NitroNebula"
+            ReferencedContainer = "container:NitroNebula.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4E454F4E0000000000000002"
-            BuildableName = "NeonNebula.app"
-            BlueprintName = "NeonNebula"
-            ReferencedContainer = "container:NeonNebula.xcodeproj">
+            BuildableName = "NitroNebula.app"
+            BlueprintName = "NitroNebula"
+            ReferencedContainer = "container:NitroNebula.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -1,5 +1,5 @@
 import Foundation
-import NeonEngine
+import NitroEngine
 
 // Coins, the daily chest and the Tailor (ui.js:1160-1185, 1578-1873).
 

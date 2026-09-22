@@ -1,5 +1,5 @@
 import Foundation
-import NeonEngine
+import NitroEngine
 
 // The engine's callbacks (createGame's `callbacks`, ui.js:722-729). The
 // engine ticks on the main actor (the canvas view drives it from its display

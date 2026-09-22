@@ -1,7 +1,7 @@
 import Foundation
-import NeonEngine
+import NitroEngine
 import XCTest
-@testable import NeonNebula
+@testable import NitroNebula
 
 // Shared scaffolding for the AppState-level auth / online tests: a fake
 // Game Center, a droppable loopback transport, a tiny routed server and an

@@ -12,7 +12,21 @@ public final class GameEngine {
 
     public internal(set) var config = GameConfig()
     public private(set) var worldSize = WorldSize(width: 800, height: 600)
-    public internal(set) var state: GameState?
+    /// The running round, or nil between rounds. Backed by `s` so the
+    /// simulation code never force-unwraps: an optional accessor yielded
+    /// through a `_read` coroutine was found to miscompile member reads
+    /// across the module boundary (see GameEngine+Internals.swift).
+    public internal(set) var state: GameState? {
+        get { hasState ? s : nil }
+        set {
+            if let value = newValue { s = value; hasState = true } else { hasState = false }
+        }
+    }
+    /// Storage for `state`. Simulation files read and mutate `s` directly
+    /// (only ever while `hasState` is true, since `update()` returns early
+    /// when there is no round).
+    var s: GameState = .idle
+    var hasState = false
     public internal(set) var stars: [Star] = []
     /// Screen shake magnitude (game.js `shake`), decays x0.9 per tick.
     public internal(set) var shake: Double = 0

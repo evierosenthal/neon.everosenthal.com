@@ -1,5 +1,5 @@
 import XCTest
-@testable import NeonNebula
+@testable import NitroNebula
 
 /// The in-flight bar's sizing rules: the web's `.hud` numbers on iPads and
 /// the slim phone layout that keeps the bar under 15% of a 402pt screen.

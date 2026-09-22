@@ -38,4 +38,8 @@ public struct GameState: Hashable, Codable, Sendable {
         self.player2 = player2
         self.difficulty = difficulty
     }
+
+    /// Placeholder used between rounds (never simulated or drawn).
+    public static let idle = GameState(player: Player(id: .player1, x: 0, y: 0, color: "#00ffff"),
+                                       player2: nil, difficulty: 1)
 }

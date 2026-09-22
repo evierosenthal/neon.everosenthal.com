@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import NeonNebula
+@testable import NitroNebula
 
 nonisolated final class NetLobbyTests: XCTestCase {
     override func setUp() {

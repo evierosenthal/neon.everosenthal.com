@@ -1,6 +1,6 @@
 import UIKit
 import CoreText
-import NeonEngine
+import NitroEngine
 
 // A thin Canvas-2D-flavoured layer over CGContext so the ported draw code
 // reads like www/game.js. Every context handed to these helpers is in UIKit

@@ -19,6 +19,15 @@
 
   var authChangeHandlers = [];
   var googleLoaded = false;
+  var googleLoadFailed = false;
+
+  function googleUnavailableError(reason) {
+    var err = new Error(reason === 'blocked'
+      ? 'Google sign-in could not load — a browser extension or content blocker is probably blocking accounts.google.com. Use a password account, or allow that site and reload.'
+      : 'Google sign-in is unavailable right now. Use a password account, or reload and try again.');
+    err.code = 'google_unavailable';
+    return err;
+  }
 
   function emitAuthChange() {
     authChangeHandlers.forEach(function (fn) {
@@ -83,6 +92,15 @@
       });
       if (window.NeonAuth.onGoogleReady) window.NeonAuth.onGoogleReady();
     };
+    // The script is fetched from accounts.google.com; content blockers and
+    // strict privacy extensions stop it. Say so instead of leaving the
+    // button's slot blank.
+    script.onerror = function () {
+      googleLoadFailed = true;
+      if (window.NeonAuth.onGoogleError) {
+        window.NeonAuth.onGoogleError(googleUnavailableError('blocked'));
+      }
+    };
     document.head.appendChild(script);
   }
 
@@ -125,7 +143,16 @@
     },
 
     renderGoogleButton: function (containerEl) {
-      if (!window.google || !window.google.accounts || !containerEl) return false;
+      if (!containerEl) return false;
+      if (googleLoadFailed) {
+        containerEl.innerHTML = '';
+        var blocked = document.createElement('p');
+        blocked.className = 'google-slot-note';
+        blocked.textContent = googleUnavailableError('blocked').message;
+        containerEl.appendChild(blocked);
+        return false;
+      }
+      if (!window.google || !window.google.accounts) return false;
       containerEl.innerHTML = '';
       window.google.accounts.id.renderButton(containerEl, {
         theme: 'filled_black',
@@ -134,6 +161,18 @@
         text: 'continue_with',
         width: 280
       });
+      // renderButton fails silently (nothing is inserted) when Google
+      // rejects the page origin for this client id, or when its iframe is
+      // blocked. Explain the empty slot after a moment.
+      setTimeout(function () {
+        if (containerEl.childNodes.length === 0 && document.body.contains(containerEl)) {
+          var note = document.createElement('p');
+          note.className = 'google-slot-note';
+          note.textContent = googleUnavailableError('rejected').message +
+            ' (Google reported the problem in the browser console.)';
+          containerEl.appendChild(note);
+        }
+      }, 2500);
       return true;
     },
 

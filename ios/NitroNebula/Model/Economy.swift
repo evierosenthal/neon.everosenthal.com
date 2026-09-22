@@ -1,5 +1,5 @@
 import Foundation
-import NeonEngine
+import NitroEngine
 
 /// The coin economy and daily chest (ui.js:54-65, 1136-1185, 1336-1360).
 enum Economy {

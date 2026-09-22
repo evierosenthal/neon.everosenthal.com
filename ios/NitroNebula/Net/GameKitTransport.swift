@@ -1,6 +1,6 @@
 import Foundation
 import GameKit
-import NeonEngine
+import NitroEngine
 
 /// A transport that can also say when the other side went away (the engine's
 /// `NetTransport` only carries messages). `NetSession` uses it for `onClosed`.

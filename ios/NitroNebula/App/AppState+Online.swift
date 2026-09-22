@@ -1,5 +1,5 @@
 import Foundation
-import NeonEngine
+import NitroEngine
 
 // The online round (ui.js:2283-2393) over Game Center instead of WebRTC.
 // The server lobby pairs the two accounts; `matchmaking.connect` links the

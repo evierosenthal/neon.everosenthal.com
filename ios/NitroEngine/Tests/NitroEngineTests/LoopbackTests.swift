@@ -1,5 +1,5 @@
 import XCTest
-@testable import NeonEngine
+@testable import NitroEngine
 
 /// Two engines wired host <-> guest through LoopbackTransport.
 final class LoopbackTests: XCTestCase {

@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import NeonEngine
+@testable import NitroEngine
 
 /// Returns a scripted sequence of "Math.random()" values, then keeps
 /// returning `fallback`. Counts calls so tests can pin the number of draws.

@@ -1,5 +1,5 @@
 import UIKit
-import NeonEngine
+import NitroEngine
 
 /// The canvas. Owns the display-link loop, the touch controller and the
 /// renderer; the engine is owned by the app and shared with the HUD.

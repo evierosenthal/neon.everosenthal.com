@@ -1,5 +1,5 @@
 import UIKit
-import NeonEngine
+import NitroEngine
 
 // game.js:1291-1433 — drawDonut, drawSundae, drawCollectibles.
 extension Renderer {

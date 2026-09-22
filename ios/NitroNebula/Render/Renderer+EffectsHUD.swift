@@ -1,5 +1,5 @@
 import UIKit
-import NeonEngine
+import NitroEngine
 
 // game.js:2012-2080 — drawEffectsHud: one chip per active effect along the
 // bottom edge. The chips start `safeInsets.left` further in and sit above
