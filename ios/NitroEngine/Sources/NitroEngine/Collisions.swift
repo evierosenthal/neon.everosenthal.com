@@ -3,6 +3,17 @@ import Foundation
 // game.js:834-1061 — updatePowerUps, updateCollectibles, updateAsteroids.
 // The JS splices inside reverse loops; the port iterates indices downward
 // and removes in place, so the surviving order and every random draw match.
+
+/// What applyMagnetPull reads and steers: treats and quest cookies.
+protocol MagnetPullable {
+    var x: Double { get }
+    var y: Double { get }
+    var vx: Double { get set }
+    var vy: Double { get set }
+}
+extension Collectible: MagnetPullable {}
+extension QuestCookie: MagnetPullable {}
+
 extension GameEngine {
 
     /// game.js:834-890
@@ -65,39 +76,49 @@ extension GameEngine {
         }
     }
 
-    /// game.js:892-958
+    /// game.js:1065-1093 applyMagnetPull: when the magnet effect is active
+    /// the pickup `c` (a treat, or a quest cookie: both use exactly this
+    /// math) is sucked toward the nearest ship within 500 px, capped at
+    /// 10 px/frame. No randoms.
+    func applyMagnetPull<C: MagnetPullable>(_ c: inout C) {
+        if s.activeEffects.magnet <= 0 { return }
+        var closestPlayer: Player? = nil
+        var minDist = Double.infinity
+        let candidates: [Player?] = [s.player, s.player2]
+        for maybe in candidates {
+            guard let cp = maybe else { continue }
+            let mdx = cp.x - c.x
+            let mdy = cp.y - c.y
+            let mdist = (mdx * mdx + mdy * mdy).squareRoot()
+            if mdist < minDist {
+                minDist = mdist
+                closestPlayer = cp
+            }
+        }
+        if let cp = closestPlayer, minDist < 500 {
+            // Magnetic suction force towards player
+            c.vx += ((cp.x - c.x) / minDist) * 0.95
+            c.vy += ((cp.y - c.y) / minDist) * 0.95
+            let coinSpeed = (c.vx * c.vx + c.vy * c.vy).squareRoot()
+            if coinSpeed > 10 {
+                c.vx = (c.vx / coinSpeed) * 10
+                c.vy = (c.vy / coinSpeed) * 10
+            }
+        }
+    }
+
+    /// game.js:1095-1135
     func updateCollectibles() {
         let w = worldSize.width, h = worldSize.height
         var i = s.collectibles.count - 1
         while i >= 0 {
             defer { i -= 1 }
 
-            // Magnetic pull when the magnet effect is active
-            if s.activeEffects.magnet > 0 {
-                let c = s.collectibles[i]
-                var closestPlayer: Player? = nil
-                var minDist = Double.infinity
-                let candidates: [Player?] = [s.player, s.player2]
-                for maybe in candidates {
-                    guard let cp = maybe else { continue }
-                    let mdx = cp.x - c.x
-                    let mdy = cp.y - c.y
-                    let mdist = (mdx * mdx + mdy * mdy).squareRoot()
-                    if mdist < minDist {
-                        minDist = mdist
-                        closestPlayer = cp
-                    }
-                }
-                if let cp = closestPlayer, minDist < 500 {
-                    s.collectibles[i].vx += ((cp.x - c.x) / minDist) * 0.95
-                    s.collectibles[i].vy += ((cp.y - c.y) / minDist) * 0.95
-                    let coinSpeed = (s.collectibles[i].vx * s.collectibles[i].vx + s.collectibles[i].vy * s.collectibles[i].vy).squareRoot()
-                    if coinSpeed > 10 {
-                        s.collectibles[i].vx = (s.collectibles[i].vx / coinSpeed) * 10
-                        s.collectibles[i].vy = (s.collectibles[i].vy / coinSpeed) * 10
-                    }
-                }
-            }
+            // (copied out and back: an inout element of `s` while the pull
+            // reads `s.player` is an exclusivity conflict)
+            var pulled = s.collectibles[i]
+            applyMagnetPull(&pulled)
+            s.collectibles[i] = pulled
 
             s.collectibles[i].x += s.collectibles[i].vx
             s.collectibles[i].y += s.collectibles[i].vy
@@ -220,7 +241,7 @@ extension GameEngine {
                         asteroidDestroyed = true
 
                         if s.health <= 0 {
-                            startDeathSequence(deadPlayer: p, killerAsteroid: asteroid)
+                            startDeathSequence(deadPlayer: p, killerX: asteroid.x, killerY: asteroid.y, killerColor: asteroid.color)
                         } else {
                             s.hitCount += 1
                             delegate?.engineDidTakeHit(self)
@@ -235,12 +256,15 @@ extension GameEngine {
                 continue
             }
 
-            // Remove off-screen asteroids (+10 score)
+            // Remove off-screen asteroids (+10 score; burnt cookies from the
+            // cookie quest pay nothing for leaving, game.js:1231-1240)
             let a = s.asteroids[i]
             if a.x < -100 || a.x > w + 100 || a.y < -100 || a.y > h + 100 {
                 s.asteroids.remove(at: i)
-                s.score += 10
-                delegate?.engine(self, scoreDidChange: s.score)
+                if a.style != .burnt {
+                    s.score += 10
+                    delegate?.engine(self, scoreDidChange: s.score)
+                }
             }
         }
     }

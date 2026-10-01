@@ -10,7 +10,10 @@ import Foundation
 /// lobby-wait. `NEON_USER=<name>` stages a logged-in session (no server
 /// call is made) so the account-gated screens can be captured;
 /// `NEON_DIFF=<difficulty>` (0.3 / 0.62 / 1.3 / 6) picks the mission the
-/// `playing` / `pause` screens launch. Debug only.
+/// `playing` / `pause` screens launch. `NEON_COOKIE_FRAME=<frame>` (or
+/// `-cookieSpawnFrame <frame>`) makes the secret cookie appear on that frame
+/// of every Hard run, and `NEON_COOKIE_AIM=1` (or `-cookieAimAtShip`) aims
+/// it at the ship, so the cookie quest can be reached in seconds. Debug only.
 enum DebugLaunch {
     static func apply(to app: AppState) {
         let env = ProcessInfo.processInfo.environment
@@ -20,6 +23,13 @@ enum DebugLaunch {
             screen = ProcessInfo.processInfo.arguments[i + 1]
         }
         if let coins = env["NEON_COINS"].flatMap(Int.init) { app.coins = coins }
+        let args = ProcessInfo.processInfo.arguments
+        var cookieFrame = env["NEON_COOKIE_FRAME"].flatMap(Int.init)
+        if cookieFrame == nil, let i = args.firstIndex(of: "-cookieSpawnFrame"), i + 1 < args.count {
+            cookieFrame = Int(args[i + 1])
+        }
+        if let cookieFrame { app.debugCookieSpawnFrame = cookieFrame }
+        if env["NEON_COOKIE_AIM"] == "1" || args.contains("-cookieAimAtShip") { app.debugCookieAimAtShip = true }
         if let best = env["NEON_BEST"].flatMap(Int.init) { app.highScores[.medium] = best }
         if env["NEON_LAST"] == "1" { app.lastMission = LastMission(diff: 0.62, mode: .single) }
         if let name = env["NEON_USER"], !name.isEmpty {

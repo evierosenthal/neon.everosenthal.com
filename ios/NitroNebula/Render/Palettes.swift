@@ -107,6 +107,24 @@ let ASTEROID_PALETTES: [AsteroidTint: AsteroidPalette] = [
         lit: "rgba(96, 165, 250, 0.25)",
         blobCrater: "#0f172a",
         blobRim: "rgba(147, 197, 253, 0.4)"
+    ),
+    // the cookie quest's charred cookies: dark chocolate browns
+    .burnt: AsteroidPalette(
+        gradient: ["#6b4423", "#3b2314", "#1f1008"],
+        craterFill: "rgba(18, 8, 3, 0.7)",
+        craterRim: "rgba(212, 163, 115, 0.3)",
+        speckle: "rgba(212, 163, 115, 0.2)",
+        glow: "rgba(120, 72, 32, 0.45)",
+        base: "#3b2314",
+        outline: "#1f1008",
+        facet: "rgba(160, 82, 45, 0.35)",
+        facetSoft: "rgba(160, 82, 45, 0.18)",
+        hole: "#120803",
+        blobBase: "#4a2c17",
+        blobOutline: "#1f1008",
+        lit: "rgba(212, 163, 115, 0.18)",
+        blobCrater: "#120803",
+        blobRim: "rgba(212, 163, 115, 0.3)"
     )
 ]
 

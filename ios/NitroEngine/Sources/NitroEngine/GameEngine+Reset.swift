@@ -40,6 +40,19 @@ extension GameEngine {
             stars.append(Star(x: x, y: y, s: sz))
         }
 
+        // Secret cookie quest: Hard runs only (not Super Hard, never online).
+        // One random here, AFTER the stars and only when eligible, so Easy /
+        // Medium / Super Hard / online runs draw exactly what they did before
+        // the quest existed (game.js:670-680).
+        let questEligible = config.initialDifficulty >= 1.0 && config.initialDifficulty < 5.0 && config.online == nil
+        if !questEligible {
+            s.cookieSpawnFrame = -1
+        } else if let hooked = config.cookieSpawnFrame {
+            s.cookieSpawnFrame = hooked // test hook: no random consumed
+        } else {
+            s.cookieSpawnFrame = 1200 + Int((random() * 2401).rounded(.down)) // 20-60 s in
+        }
+
         // keysPressed = {} on the web; `input` belongs to the app here and is
         // left alone (setPaused clears it, like the web).
         controlMode = .mouse

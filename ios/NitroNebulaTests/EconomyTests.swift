@@ -15,6 +15,24 @@ nonisolated final class EconomyTests: XCTestCase {
         XCTAssertEqual(Economy.coinsEarned(score: 1000, beatRecord: true, flamePower: .fast), 100)
     }
 
+    @MainActor func testCookieQuestReward() {
+        XCTAssertEqual(Economy.cookieQuestCoins, 1000)
+        XCTAssertEqual(Economy.applyCoinPowers(1000, flamePower: nil), 1000)
+        XCTAssertEqual(Economy.applyCoinPowers(1000, flamePower: .lucky), 2000)
+        XCTAssertEqual(Economy.applyCoinPowers(1000, flamePower: .jackpot), 3000)
+        XCTAssertEqual(Economy.applyCoinPowers(1000, flamePower: .magnet), 1000)
+    }
+
+    @MainActor func testSecretSkinsNeverCountForTheBadge() {
+        // The three secret skins cost 0 but can't be bought, so an otherwise
+        // complete wardrobe shows no badge.
+        let allSkins = GearCatalog.skins.map(\.id).filter { !GearCatalog.skin(id: $0).secret }
+        let allTrails = GearCatalog.trails.map(\.id)
+        let allFlames = GearCatalog.flames.map(\.id)
+        XCTAssertFalse(Catalog.anyAffordableUnowned(coins: 99999, ownedSkins: allSkins, ownedTrails: allTrails, ownedFlames: allFlames, isDeveloper: false))
+        XCTAssertTrue(Catalog.items(for: .skins).contains { $0.secret && $0.id == "goldencookie" })
+    }
+
     @MainActor func testBeatsRecord() {
         XCTAssertTrue(Economy.beatsRecord(score: 10, best: 0))
         XCTAssertFalse(Economy.beatsRecord(score: 0, best: 0))

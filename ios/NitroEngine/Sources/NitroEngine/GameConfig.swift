@@ -32,6 +32,12 @@ public struct GameConfig: Hashable, Codable, Sendable {
     /// web uses 1x accel/moveSpeed (arrow keys) instead of the solo 2x.
     /// Web-identical default; kept as a knob for playtesting.
     public var touchThrustScale: Double = 1
+    /// Cookie quest test hooks (game.js:183-190). `cookieSpawnFrame` replaces
+    /// the random spawn-frame draw in reset() (that random is NOT consumed);
+    /// `cookieAimAtShip` spawns the drifting cookie at the player's y (its y
+    /// random is still drawn and ignored). Production callers set neither.
+    public var cookieSpawnFrame: Int? = nil
+    public var cookieAimAtShip = false
 
     public init() {}
 

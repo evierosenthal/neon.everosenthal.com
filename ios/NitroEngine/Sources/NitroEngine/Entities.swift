@@ -146,14 +146,18 @@ public struct FloatingText: Hashable, Codable, Sendable {
     }
 }
 
+/// `burnt` is the cookie quest's charred cookie / crumb (game.js
+/// createBurntCookie / createCrumb): a regular asteroid for every rule except
+/// the off-screen +10, drawn by drawBurntCookie.
 public enum AsteroidStyle: String, Codable, Sendable, CaseIterable {
-    case rocky, faceted, blobby
+    case rocky, faceted, blobby, burnt
 }
 
-/// Palette key (game.js:18-104). rocky = gray, faceted = blue, blobby = darkblue;
-/// purple and pink exist in the palette table but are never spawned.
+/// Palette key (game.js:18-121). rocky = gray, faceted = blue, blobby = darkblue;
+/// purple and pink exist in the palette table but are never spawned; burnt is
+/// the cookie quest's dark-chocolate palette.
 public enum AsteroidTint: String, Codable, Sendable, CaseIterable {
-    case purple, pink, gray, blue, darkblue
+    case purple, pink, gray, blue, darkblue, burnt
 }
 
 public struct Crater: Hashable, Codable, Sendable {
@@ -207,4 +211,117 @@ public struct Star: Hashable, Codable, Sendable {
     /// Size; also the scroll speed factor (y += s * 0.5 per tick).
     public var s: Double
     public init(x: Double, y: Double, s: Double) { self.x = x; self.y = y; self.s = s }
+}
+
+// MARK: Secret cookie quest (game.js:124-146, 464-565, 1312-1395)
+
+/// The lone cookie that drifts across a Hard run (createDriftingCookie,
+/// game.js:467-484). Caught -> the quest starts.
+public struct DriftingCookie: Hashable, Codable, Sendable {
+    public var id: EntityID = "secret_cookie"
+    public var x: Double
+    public var y: Double
+    /// +2.4 from the left edge, -2.4 from the right; vy is the wobble.
+    public var vx: Double
+    public var radius: Double = 16
+    /// Phase of the vertical wobble (y += sin(frame / 25 + wobble) * 0.7).
+    public var wobble: Double
+    public var rotation: Double = 0
+    public var spin: Double = 0.01
+
+    public init(id: EntityID = "secret_cookie", x: Double, y: Double, vx: Double, radius: Double = 16,
+                wobble: Double, rotation: Double = 0, spin: Double = 0.01) {
+        self.id = id; self.x = x; self.y = y; self.vx = vx; self.radius = radius
+        self.wobble = wobble; self.rotation = rotation; self.spin = spin
+    }
+}
+
+/// A cookie raining down in quest levels 1 and 2 (createQuestCookie,
+/// game.js:488-506). Drawn like the drifting cookie, at radius 13.
+public struct QuestCookie: Hashable, Codable, Sendable {
+    public var id: EntityID
+    public var x: Double
+    public var y: Double
+    public var vx: Double
+    public var vy: Double
+    public var radius: Double = 13
+    public var rotation: Double
+    public var spin: Double
+
+    public init(id: EntityID, x: Double, y: Double, vx: Double, vy: Double, radius: Double = 13,
+                rotation: Double, spin: Double) {
+        self.id = id; self.x = x; self.y = y; self.vx = vx; self.vy = vy; self.radius = radius
+        self.rotation = rotation; self.spin = spin
+    }
+}
+
+/// The Giant Cookie of level 3 (beginQuestPlay, game.js:1360-1372): a
+/// bitten cookie that bounces around the world, fires crumb rings and
+/// shows an hp bar (hp / maxHp).
+public struct QuestBoss: Hashable, Codable, Sendable {
+    public var x: Double
+    public var y: Double
+    public var vx: Double
+    public var vy: Double
+    public var radius: Double = 58
+    public var hp: Int
+    public var maxHp: Int
+    public var rotation: Double = 0
+    /// Frames of white flash left after a projectile hit (8 on a hit).
+    public var hitFlash: Int = 0
+    /// Ship-bump immunity frames left (45 after a bump).
+    public var contactCooldown: Int = 0
+
+    public init(x: Double, y: Double, vx: Double, vy: Double, radius: Double = 58, hp: Int, maxHp: Int,
+                rotation: Double = 0, hitFlash: Int = 0, contactCooldown: Int = 0) {
+        self.x = x; self.y = y; self.vx = vx; self.vy = vy; self.radius = radius
+        self.hp = hp; self.maxHp = maxHp; self.rotation = rotation
+        self.hitFlash = hitFlash; self.contactCooldown = contactCooldown
+    }
+}
+
+/// `quest.phase` (game.js:1340). `intro`, `won`, `failed` and `complete` are
+/// banner phases (phaseTimer counts down); `play` is the timed level.
+public enum QuestPhase: String, Codable, Sendable, CaseIterable {
+    case intro, play, won, complete, failed
+}
+
+/// `state.quest` (startQuest, game.js:1338-1347): the running cookie quest.
+public struct QuestState: Hashable, Codable, Sendable {
+    /// 1...3
+    public var level: Int
+    public var phase: QuestPhase
+    /// Frames left in a banner phase (120; 180 for `complete`).
+    public var phaseTimer: Int
+    /// Play frames elapsed in this level (the clock shows duration - timer).
+    public var timer: Int
+    /// Cookies to collect this level (QuestLevelDef.goal).
+    public var goal: Int
+    public var collected: Int
+    /// The raining quest cookies.
+    public var cookies: [QuestCookie]
+    /// The Giant Cookie (level 3 play phase only).
+    public var boss: QuestBoss?
+
+    public init(level: Int, phase: QuestPhase, phaseTimer: Int, timer: Int, goal: Int, collected: Int,
+                cookies: [QuestCookie], boss: QuestBoss?) {
+        self.level = level; self.phase = phase; self.phaseTimer = phaseTimer; self.timer = timer
+        self.goal = goal; self.collected = collected; self.cookies = cookies; self.boss = boss
+    }
+}
+
+/// One row of QUEST_LEVELS (game.js:131-138). Durations are frames at 60
+/// fps; `rain` / `burnt` are per-frame spawn chances during the play phase.
+public struct QuestLevelDef: Hashable, Codable, Sendable {
+    public let name: String
+    public let duration: Int
+    public let goal: Int
+    public let rain: Double
+    public let burnt: Double
+    public let hint: String
+
+    public init(name: String, duration: Int, goal: Int, rain: Double, burnt: Double, hint: String) {
+        self.name = name; self.duration = duration; self.goal = goal
+        self.rain = rain; self.burnt = burnt; self.hint = hint
+    }
 }

@@ -5,7 +5,7 @@ import Foundation
 /// and color string verbatim. The ids and prices are shared with the server.
 public enum GearCatalog {
 
-    // MARK: Rocket skins (ui.js:67-126)
+    // MARK: Rocket skins (ui.js:72-140)
 
     public static let skins: [Skin] = [
         Skin(id: "cyan", name: "Neon Classic", price: 0, accent: "#22d3ee"),
@@ -65,8 +65,23 @@ public enum GearCatalog {
              accentGradient: ["#fde047", "#f97316", "#dc2626"]),
         Skin(id: "aurora", name: "Aurora Prism", price: 5000, accent: "#a855f7",
              accentGradient: ["#f472b6", "#a855f7", "#22d3ee"]),
-        Skin(id: "galaxy", name: "Galaxy Prism", price: 6000, accent: "#22d3ee", animated: true)
+        Skin(id: "galaxy", name: "Galaxy Prism", price: 6000, accent: "#22d3ee", animated: true),
+        // Secret skins (ui.js:132-140): earned only by finishing the cookie
+        // quest — never purchasable and never free for developers.
+        Skin(id: "cookie", name: "Cookie Crumb", price: 0, accent: "#d4a373",
+             hull: ["#8b5a2b", "#f5deb3", "#deb887", "#5c3a1e"],
+             window: ["#fff8e7", "#f4c27a", "#6b3e0f"], secret: true),
+        Skin(id: "chocochip", name: "Choco Chip", price: 0, accent: "#a0522d",
+             hull: ["#3b2314", "#a0522d", "#7b4a24", "#1f1008"],
+             window: ["#fde68a", "#f59e0b", "#78350f"], secret: true),
+        Skin(id: "goldencookie", name: "Golden Cookie", price: 0, accent: "#fbbf24",
+             hull: ["#b45309", "#fef3c7", "#fcd34d", "#92400e"],
+             window: ["#fffbeb", "#fde68a", "#78350f"],
+             accentGradient: ["#fde68a", "#fbbf24", "#b45309"], secret: true)
     ]
+
+    /// The ids the cookie quest unlocks (ui.js SECRET_SKIN_IDS), in rack order.
+    public static let secretSkinIDs: [String] = ["cookie", "chocochip", "goldencookie"]
 
     // MARK: Thruster trails (ui.js:132-160)
 

@@ -33,6 +33,9 @@ final class RecordingDelegate: GameEngineDelegate {
     var gameOverScore: Int? = nil
     var sent: [NetMessage] = []
     var onSend: ((NetMessage) -> Void)? = nil
+    /// Cookie quest: engineDidCompleteQuest count and "kind:level" notices.
+    var questCompletes = 0
+    var questEvents: [String] = []
 
     func engine(_ engine: GameEngine, gameOverWithScore score: Int) { gameOverScore = score }
     func engine(_ engine: GameEngine, scoreDidChange score: Int) { scores.append(score) }
@@ -41,6 +44,8 @@ final class RecordingDelegate: GameEngineDelegate {
     func engineDidStartDeath(_ engine: GameEngine) { deaths += 1 }
     func engineDidTakeHit(_ engine: GameEngine) { hits += 1 }
     func engine(_ engine: GameEngine, send message: NetMessage) { sent.append(message); onSend?(message) }
+    func engineDidCompleteQuest(_ engine: GameEngine) { questCompletes += 1 }
+    func engine(_ engine: GameEngine, questEvent: QuestEvent, level: Int) { questEvents.append("\(questEvent.rawValue):\(level)") }
 }
 
 let testWorld = WorldSize(width: 800, height: 600)

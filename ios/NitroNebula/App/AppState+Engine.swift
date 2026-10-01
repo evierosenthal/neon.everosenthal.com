@@ -48,6 +48,10 @@ extension AppState: @MainActor GameEngineDelegate {
             pendingHUDHealth = nil
             if h != health { health = h }
         }
+        if pendingQuestComplete {
+            pendingQuestComplete = false
+            handleQuestComplete()
+        }
         if let final = pendingGameOver {
             pendingGameOver = nil
             handleGameOver(score: final)

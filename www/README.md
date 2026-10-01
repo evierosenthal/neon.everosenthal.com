@@ -177,3 +177,30 @@ crash and the high-score fanfare.
 
 Sundaes and donuts pay 100 points and repair the hull; destroyed asteroids pay 20; asteroids
 that drift off screen pay 10. Difficulty climbs with survival time and score up to a per-mode ceiling.
+
+## Secret cookie quest
+
+Once per **Hard** run (solo, CPU co-pilot or local two-player — never Super Hard, never online),
+somewhere between 20 and 60 seconds in, a lone cookie drifts across the screen. Touch it with
+either ship and the field clears into a three-level side quest with the blasters switched on and
+difficulty frozen:
+
+1. **Cookie Crumbs** — collect 10 falling cookies in 30 s (50 points each; the magnet pulls them)
+2. **Crumb Storm** — collect 15 in 35 s while dodging burnt cookies (they hit like asteroids and
+   can be shot for 20, but pay nothing for drifting off)
+3. **The Cookie Jar** — crack the Giant Cookie (36 blaster hits, 5 points each, 500 for the crack)
+   in 45 s while it bounces around firing crumb rings
+
+Running out of time drops you straight back into the normal run with no reward. Clearing all
+three pays **1000 coins** (Star Fire / Money Storm multipliers apply) and unlocks the three
+secret Tailor skins — Cookie Crumb, Choco Chip and Golden Cookie — which can't be bought and
+aren't free for developers. `localStorage` remembers the win under `neon_nebula_cookie_quest`.
+
+Test hooks on `game.start(options)`: `cookieSpawnFrame` (a number) fixes the frame the cookie
+appears on instead of the random draw, and `cookieAimAtShip: true` spawns it at the player's y.
+`www/tests/cookie-quest.jsc.js` drives the whole quest headlessly in JavaScriptCore (it reuses the
+iOS parity harness stubs). From the repo root:
+
+```
+/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc www/tests/cookie-quest.jsc.js
+```

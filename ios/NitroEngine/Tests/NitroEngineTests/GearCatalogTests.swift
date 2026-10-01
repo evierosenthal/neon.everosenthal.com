@@ -3,7 +3,7 @@ import XCTest
 
 final class GearCatalogTests: XCTestCase {
     func testCounts() {
-        XCTAssertEqual(GearCatalog.skins.count, 24)
+        XCTAssertEqual(GearCatalog.skins.count, 27)
         XCTAssertEqual(GearCatalog.trails.count, 25)
         XCTAssertEqual(GearCatalog.flames.count, 24)
     }
@@ -21,7 +21,8 @@ final class GearCatalogTests: XCTestCase {
         XCTAssertEqual(GearCatalog.skins.map(\.id), [
             "cyan", "rose", "emerald", "ice", "candy", "toxic", "gold", "magma", "amethyst", "void", "stealth",
             "lime", "bubblegum", "oceanwave", "grape", "sunset", "cherrybomb", "copper", "cottoncandy",
-            "midnightgold", "emeraldroyale", "dragonfire", "aurora", "galaxy"
+            "midnightgold", "emeraldroyale", "dragonfire", "aurora", "galaxy",
+            "cookie", "chocochip", "goldencookie"
         ])
         XCTAssertEqual(GearCatalog.trails.map(\.id), [
             "classic", "rosepetal", "bubble", "lemon", "mint", "ember", "lavender", "goldrush", "sky", "frost",
@@ -37,7 +38,7 @@ final class GearCatalogTests: XCTestCase {
     }
 
     func testIdsAreUnique() {
-        XCTAssertEqual(Set(GearCatalog.skins.map(\.id)).count, 24)
+        XCTAssertEqual(Set(GearCatalog.skins.map(\.id)).count, 27)
         XCTAssertEqual(Set(GearCatalog.trails.map(\.id)).count, 25)
         XCTAssertEqual(Set(GearCatalog.flames.map(\.id)).count, 24)
     }
@@ -77,6 +78,42 @@ final class GearCatalogTests: XCTestCase {
         XCTAssertEqual(GearCatalog.flame(id: "voidfire").pal?[0], "rgba(15, 23, 42, 0.9)")
         XCTAssertEqual(GearCatalog.flame(id: "starfire").powerLabel, "POWER: 2× COINS")
         XCTAssertEqual(GearCatalog.skin(id: "cottoncandy").hull?[0], "#bfdbfe")
+    }
+
+    /// ui.js:132-140 — the cookie quest's three secret skins: free, secret,
+    /// last on the rack, with the web's exact colors.
+    func testSecretSkins() throws {
+        XCTAssertEqual(GearCatalog.secretSkinIDs, ["cookie", "chocochip", "goldencookie"])
+        XCTAssertEqual(GearCatalog.skins.filter(\.secret).map(\.id), GearCatalog.secretSkinIDs)
+        for id in GearCatalog.secretSkinIDs {
+            let s = GearCatalog.skin(id: id)
+            XCTAssertEqual(s.price, 0, id)
+            XCTAssertTrue(s.secret, id)
+        }
+        XCTAssertEqual(GearCatalog.skin(id: "cookie").name, "Cookie Crumb")
+        XCTAssertEqual(GearCatalog.skin(id: "cookie").accent, "#d4a373")
+        XCTAssertEqual(GearCatalog.skin(id: "cookie").hull, ["#8b5a2b", "#f5deb3", "#deb887", "#5c3a1e"])
+        XCTAssertEqual(GearCatalog.skin(id: "cookie").window, ["#fff8e7", "#f4c27a", "#6b3e0f"])
+        XCTAssertEqual(GearCatalog.skin(id: "chocochip").name, "Choco Chip")
+        XCTAssertEqual(GearCatalog.skin(id: "chocochip").accent, "#a0522d")
+        XCTAssertEqual(GearCatalog.skin(id: "chocochip").hull, ["#3b2314", "#a0522d", "#7b4a24", "#1f1008"])
+        XCTAssertEqual(GearCatalog.skin(id: "chocochip").window, ["#fde68a", "#f59e0b", "#78350f"])
+        XCTAssertEqual(GearCatalog.skin(id: "goldencookie").name, "Golden Cookie")
+        XCTAssertEqual(GearCatalog.skin(id: "goldencookie").accent, "#fbbf24")
+        XCTAssertEqual(GearCatalog.skin(id: "goldencookie").accentGradient, ["#fde68a", "#fbbf24", "#b45309"])
+        XCTAssertEqual(GearCatalog.skin(id: "goldencookie").hull, ["#b45309", "#fef3c7", "#fcd34d", "#92400e"])
+        XCTAssertEqual(GearCatalog.skin(id: "goldencookie").window, ["#fffbeb", "#fde68a", "#78350f"])
+
+        // JSON: `secret` only appears on secret skins, so the encoding of the
+        // other 24 is unchanged (the parity test hands it to game.js).
+        let galaxy = String(data: try JSONEncoder().encode(GearCatalog.skin(id: "galaxy")), encoding: .utf8)!
+        XCTAssertFalse(galaxy.contains("secret"))
+        XCTAssertTrue(galaxy.contains("\"animated\":true"))
+        let cookie = String(data: try JSONEncoder().encode(GearCatalog.skin(id: "cookie")), encoding: .utf8)!
+        XCTAssertTrue(cookie.contains("\"secret\":true"))
+        let decoded = try JSONDecoder().decode(Skin.self, from: Data(galaxy.utf8))
+        XCTAssertEqual(decoded, GearCatalog.skin(id: "galaxy"))
+        XCTAssertEqual(try JSONDecoder().decode(Skin.self, from: Data(cookie.utf8)), GearCatalog.skin(id: "cookie"))
     }
 
     func testLookupFallsBackToFirstEntry() {

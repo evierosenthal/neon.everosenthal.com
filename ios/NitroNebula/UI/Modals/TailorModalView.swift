@@ -52,19 +52,21 @@ struct GearGrid: View {
     private func grid(columns: Int) -> some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 12) {
             ForEach(Catalog.items(for: tab)) { item in
-                GearCard(item: item, equipped: app.isEquipped(item), owned: app.isOwned(item), devFree: !app.isOwned(item) && app.isDeveloper)
+                GearCard(item: item, equipped: app.isEquipped(item), owned: app.isOwned(item),
+                         devFree: app.isDevFree(item), secretLocked: app.isSecretLocked(item))
                     .onTapGesture { app.tapGear(item) }
             }
         }
     }
 }
 
-/// `.skin-card`.
+/// `.skin-card` (`.secret-locked` + `.skin-lock` for an unearned secret skin).
 struct GearCard: View {
     let item: GearItem
     let equipped: Bool
     let owned: Bool
     let devFree: Bool
+    var secretLocked = false
 
     var body: some View {
         VStack(spacing: 6) {
@@ -90,6 +92,15 @@ struct GearCard: View {
                 status("EQUIPPED", color: NeonColors.cyan400)
             } else if owned {
                 status("TAP TO EQUIP", color: NeonColors.slate500)
+            } else if secretLocked {
+                Text("SECRET · FINISH THE COOKIE QUEST")
+                    .font(NeonFont.sans(9, .bold))
+                    .tracking(0.6)
+                    .foregroundStyle(NeonColors.amber400)
+                    .neonGlow(NeonColors.amber400.opacity(0.4), radius: 6)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
             } else {
                 price
                 if devFree { status("FREE — DEV", color: NeonColors.slate500) }
@@ -101,7 +112,17 @@ struct GearCard: View {
         .frame(maxWidth: .infinity)
         .glassTile(cornerRadius: 16,
                    fill: equipped ? NeonColors.cyan500.opacity(0.15) : NeonColors.white(0.05),
-                   border: equipped ? NeonColors.cyan400 : NeonColors.white(0.08))
+                   border: equipped ? NeonColors.cyan400 : (secretLocked ? NeonColors.amber400.opacity(0.35) : NeonColors.white(0.08)))
+        .overlay(alignment: .topTrailing) {
+            if secretLocked {
+                Icon(NeonIcon.lock, size: 11)
+                    .foregroundStyle(NeonColors.amber400)
+                    .frame(width: 18, height: 18)
+                    .background(Circle().fill(NeonColors.amber400.opacity(0.18)))
+                    .padding(6)
+                    .accessibilityHidden(true)
+            }
+        }
         .shadow(color: equipped ? NeonColors.cyan400.opacity(0.3) : .clear, radius: 6)
         .opacity(!owned && !devFree && !equipped ? 0.85 : 1)
         .contentShape(RoundedRectangle(cornerRadius: 16))
@@ -133,6 +154,7 @@ struct GearCard: View {
         if let power = item.powerLabel { parts.append(power) }
         if equipped { parts.append("equipped") }
         else if owned { parts.append("tap to equip") }
+        else if secretLocked { parts.append("secret, finish the cookie quest in Hard mode to unlock") }
         else { parts.append("\(item.price) coins" + (devFree ? ", free for developers" : "")) }
         return parts.joined(separator: ", ")
     }

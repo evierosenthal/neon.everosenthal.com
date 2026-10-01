@@ -41,20 +41,22 @@ struct GearItem: Identifiable, Hashable, Sendable {
     /// Fires only.
     let powerLabel: String?
     let hasPower: Bool
+    /// Secret skins (cookie quest): never purchasable, never free for developers.
+    let secret: Bool
 
     init(skin: Skin) {
         tab = .skins; id = skin.id; name = skin.name; price = skin.price
-        powerLabel = nil; hasPower = false
+        powerLabel = nil; hasPower = false; secret = skin.secret
     }
 
     init(trail: Trail) {
         tab = .trails; id = trail.id; name = trail.name; price = trail.price
-        powerLabel = nil; hasPower = false
+        powerLabel = nil; hasPower = false; secret = false
     }
 
     init(flame: Flame) {
         tab = .flames; id = flame.id; name = flame.name; price = flame.price
-        powerLabel = flame.powerLabel; hasPower = flame.power != nil
+        powerLabel = flame.powerLabel; hasPower = flame.power != nil; secret = false
     }
 }
 
@@ -85,13 +87,14 @@ enum Catalog {
 
     /// refreshTailorBadge() (ui.js:977-993): true when any rack has an
     /// unowned item the wallet can pay for. Developers get everything free,
-    /// so the badge never nags them.
+    /// so the badge never nags them. Secret skins can't be bought, so they
+    /// never count.
     static func anyAffordableUnowned(coins: Int, ownedSkins: [String], ownedTrails: [String],
                                     ownedFlames: [String], isDeveloper: Bool) -> Bool {
         if isDeveloper { return false }
         let racks: [(TailorTab, [String])] = [(.skins, ownedSkins), (.trails, ownedTrails), (.flames, ownedFlames)]
         for (tab, owned) in racks {
-            for item in items(for: tab) where !owned.contains(item.id) && item.price <= coins {
+            for item in items(for: tab) where !item.secret && !owned.contains(item.id) && item.price <= coins {
                 return true
             }
         }

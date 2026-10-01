@@ -12,6 +12,7 @@ extension GameEngine {
 
     private func simulate() {
         if isPaused || state == nil || s.isGameOver { return }
+        s.frame += 1 // counts every simulated frame (cookie quest timing, game.js:1648)
 
         // A pointer update is the web's mousemove: it hands control to the
         // mouse path (game.js:2380-2383).
@@ -51,7 +52,7 @@ extension GameEngine {
         updatePlayer1(accel: accel, friction: friction, moveSpeed: moveSpeed)
         updatePlayer2(accel: accel, friction: friction, moveSpeed: moveSpeed)
         updateShooting()
-        updateDifficulty()
+        if s.quest == nil { updateDifficulty() } // difficulty is frozen during the cookie quest
 
         // Magnet Muzzle: the treat magnet never switches off (L1178-1182)
         if config.flame?.power == .magnet && s.activeEffects.magnet < 2 {
@@ -69,7 +70,14 @@ extension GameEngine {
         clampToWorld(&s.player, bounce: p1Bouncy)
         if s.player2 != nil { clampToWorld(&s.player2!, bounce: false) }
 
-        updateSpawns()
+        if s.quest != nil {
+            // Cookie quest: no asteroid/treat/orb spawns; cookie rain, burnt
+            // cookies and the boss's motion instead (game.js:1704-1711).
+            updateQuest()
+        } else {
+            updateSpawns()
+            updateDriftingCookie() // the secret cookie: spawn on its frame, drift, catch
+        }
 
         // Projectiles (L1211-1219)
         var pi = s.projectiles.count - 1
@@ -86,7 +94,9 @@ extension GameEngine {
         updatePowerUps()
 
         updateCollectibles()
+        if s.quest != nil { updateQuestCookies() } // raining cookies: fall, magnet, pickup
         updateAsteroids()
+        if s.quest?.boss != nil { updateQuestBoss() } // Giant Cookie: shots, ship bumps, death
 
         // Magnet burns twice as fast as the other effects (L1226-1233). This
         // second tick comes AFTER updateCollectibles(): the Magnet Muzzle

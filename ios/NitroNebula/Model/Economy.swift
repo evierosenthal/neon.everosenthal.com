@@ -12,9 +12,19 @@ enum Economy {
     static func coinsEarned(score: Int, beatRecord: Bool, flamePower: FlamePower?) -> Int {
         var earned = Int(max(0, jsRound(Double(score) / coinScoreDivisor)))
         if beatRecord { earned *= recordCoinMultiplier }
-        if flamePower == .lucky { earned *= 2 }
-        if flamePower == .jackpot { earned *= 3 }
-        return earned
+        return applyCoinPowers(earned, flamePower: flamePower)
+    }
+
+    /// The secret cookie quest's reward (ui.js `COOKIE_QUEST_COINS`).
+    static let cookieQuestCoins = 1000
+
+    /// applyCoinPowers (ui.js): Star Fire doubles and Money Storm triples any
+    /// coin payout — mission pay and the cookie quest reward alike.
+    static func applyCoinPowers(_ amount: Int, flamePower: FlamePower?) -> Int {
+        var amount = amount
+        if flamePower == .lucky { amount *= 2 }
+        if flamePower == .jackpot { amount *= 3 }
+        return amount
     }
 
     /// `finalScore > highScores[currentMode] && finalScore > 0` (ui.js:1344).

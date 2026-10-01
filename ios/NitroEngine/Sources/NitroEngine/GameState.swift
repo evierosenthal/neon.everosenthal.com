@@ -32,6 +32,15 @@ public struct GameState: Hashable, Codable, Sendable {
     public var hitCount = 0
     public var difficulty: Double
     public var activeEffects = ActiveEffects()
+    // Secret cookie quest (game.js:631-635)
+    /// `update()` calls so far this run (cookie quest timing).
+    public var frame = 0
+    /// Frame the drifting cookie appears on (-1: never; set in reset()).
+    public var cookieSpawnFrame = -1
+    /// The drifting cookie while it is on screen.
+    public var cookie: DriftingCookie? = nil
+    /// The active quest, see startQuest() in Quest.swift.
+    public var quest: QuestState? = nil
 
     public init(player: Player, player2: Player?, difficulty: Double) {
         self.player = player

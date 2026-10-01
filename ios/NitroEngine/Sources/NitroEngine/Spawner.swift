@@ -169,6 +169,65 @@ extension GameEngine {
                         rotation: rotation, spinSpeed: spinSpeed)
     }
 
+    // MARK: Secret cookie quest factories (game.js:464-565)
+    // The Math.random() order is part of the parity contract; each factory
+    // lists its draws in the order they happen.
+
+    /// game.js:467-484. Randoms, in order: 1 side (left/right), 2 y (drawn
+    /// and ignored with cookieAimAtShip), 3 wobble phase.
+    func createDriftingCookie(width: Double, height: Double) -> DriftingCookie {
+        let fromLeft = random() < 0.5                       // 1: side
+        var y = height * (0.2 + random() * 0.6)            // 2: y
+        if config.cookieAimAtShip { y = s.player.y }       // test hook (random above still consumed)
+        let wobble = random() * Double.pi * 2              // 3: wobble phase
+        return DriftingCookie(x: fromLeft ? -30 : width + 30, y: y,
+                              vx: fromLeft ? 2.4 : -2.4, wobble: wobble)
+    }
+
+    /// game.js:488-506. Randoms, in order: 1 x, 2 vx, 3 vy, 4 rotation,
+    /// 5 spin, 6 id (randomId).
+    func createQuestCookie(width: Double) -> QuestCookie {
+        let x = 30 + random() * (width - 60)               // 1
+        let vx = (random() - 0.5) * 1.2                    // 2
+        let vy = 2.2 + random() * 1.6                      // 3
+        let rotation = random() * Double.pi * 2            // 4
+        let spin = (random() - 0.5) * 0.08                 // 5
+        let id = randomId()                                // 6
+        return QuestCookie(id: id, x: x, y: -30, vx: vx, vy: vy, rotation: rotation, spin: spin)
+    }
+
+    /// game.js:512-540. A regular asteroid (style/tint burnt) so every
+    /// asteroid rule applies unchanged; only the off-screen +10 is skipped.
+    /// Randoms, in order: 1 radius, 2 x, 3 vx, 4 vy, 5 rotation,
+    /// 6 spinSpeed, 7-16 the ten vertices, 17 id (randomId).
+    func createBurntCookie(width: Double, height: Double) -> Asteroid {
+        let radius = 14 + random() * 10                    // 1
+        let x = random() * width                           // 2
+        let vx = (random() - 0.5) * 1.5                    // 3
+        let vy = 2.8 + random() * 2.2                      // 4
+        let rotation = random() * Double.pi * 2            // 5
+        let spinSpeed = (random() - 0.5) * 0.05            // 6
+        var vertices: [Double] = []
+        for _ in 0..<10 {
+            vertices.append(0.9 + random() * 0.12)         // 7..16
+        }
+        let id = randomId()                                // 17
+        return Asteroid(id: id, x: x, y: -40, vx: vx, vy: vy, radius: radius,
+                        color: GameConstants.burntCookieColor, style: .burnt, tint: .burnt,
+                        vertices: vertices, craters: [], speckles: [],
+                        rotation: rotation, spinSpeed: spinSpeed)
+    }
+
+    /// game.js:544-563. A crumb fired by the Giant Cookie: a small burnt
+    /// cookie flying along `angle` at 3.2 px/frame. Only random: id (randomId).
+    func createCrumb(x: Double, y: Double, angle: Double) -> Asteroid {
+        let id = randomId()
+        return Asteroid(id: id, x: x, y: y, vx: cos(angle) * 3.2, vy: sin(angle) * 3.2, radius: 9,
+                        color: GameConstants.burntCookieColor, style: .burnt, tint: .burnt,
+                        vertices: GameConstants.crumbVertices, craters: [], speckles: [],
+                        rotation: angle, spinSpeed: 0.04)
+    }
+
     /// game.js:400-411 (no randoms).
     func createPlayer(id: PilotID, x: Double, y: Double, color: CSSColor) -> Player {
         Player(id: id, x: x, y: y, color: color)

@@ -61,6 +61,26 @@ wall-clock timers (fire rate, wobble, tutorial fade) use simulation time so
 pausing does not advance them. The Magnet Muzzle fire power, which was inert
 on the web because of an effect-timer ordering bug, is fixed on both sides.
 
+### The secret cookie quest
+
+Hard runs (never Super Hard, never online) hide a side quest: once per run a
+cookie drifts across the screen 20–60 s in, and catching it starts three
+timed levels (collect 10 cookies, collect 15 while dodging burnt ones, crack
+the Giant Cookie). Clearing all three pays 1000 coins and unlocks the three
+secret Tailor skins (`cookie`, `chocochip`, `goldencookie`); the win is stored
+under `neon_nebula_cookie_quest` like the web. `Quest.swift` ports the web's
+quest frame for frame; `OracleParityTests` drives a scripted ship through the
+whole quest on both engines, and `www/tests/cookie-quest.jsc.js` is the
+web-only equivalent. To reach the quest in seconds on the simulator:
+
+```
+xcrun simctl launch --terminate-running-process booted com.everosenthal.nitronebula \
+  -cookieSpawnFrame 120 -cookieAimAtShip -NeonScreen playing
+```
+
+with `NEON_DIFF=1.3` in the environment (`SIMCTL_CHILD_NEON_DIFF=1.3`), or
+set `NEON_COOKIE_FRAME` / `NEON_COOKIE_AIM=1` the same way. Debug builds only.
+
 ## Accounts and networking
 
 The app talks to the same PHP endpoints as the browser (`https://neon.everosenthal.com/api/`).

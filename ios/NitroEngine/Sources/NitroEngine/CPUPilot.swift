@@ -18,10 +18,12 @@ extension GameEngine {
             }
         }
 
-        // Nearest pickup: collectibles then power-ups (concat order, L674)
+        // Nearest pickup: collectibles, power-ups, then the cookie quest's
+        // raining cookies (concat order, game.js:846-847)
         var targetPickup: (x: Double, y: Double)? = nil
         var minDistCollectible = Double.infinity
         let pickups: [(x: Double, y: Double)] = s.collectibles.map { ($0.x, $0.y) } + s.powerUps.map { ($0.x, $0.y) }
+            + (s.quest?.cookies ?? []).map { ($0.x, $0.y) }
         for coll in pickups {
             let cdx = coll.x - p2.x
             let cdy = coll.y - p2.y

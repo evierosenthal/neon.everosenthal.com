@@ -217,6 +217,53 @@ nonisolated final class RenderTests: XCTestCase {
         XCTAssertEqual(renderer.sprites.count, 0)
     }
 
+    /// The cookie quest's layer: the drifting cookie, raining cookies, a burnt
+    /// cookie (asteroid style), the Giant Cookie with its hp bar, the status
+    /// line and each banner phase — all must put paint on the canvas, with
+    /// and without the sprite cache.
+    @MainActor func testCookieQuestLayerRenders() {
+        var noise = Noise()
+        let cached = Renderer.useSpriteCache
+        defer { Renderer.useSpriteCache = cached }
+        for useCache in [true, false] {
+            Renderer.useSpriteCache = useCache
+            let renderer = Renderer()
+            for phase in QuestPhase.allCases {
+                var frame = makeFixture(flame1: GearCatalog.flame(id: "classic"), flame2: GearCatalog.flame(id: "classic"))
+                frame.state.cookie = DriftingCookie(x: 200, y: 330, vx: 2.4, wobble: 1)
+                let boss = QuestBoss(x: 500, y: 150, vx: 2.2, vy: 1.3, hp: 20, maxHp: 36, rotation: 0.3, hitFlash: 4, contactCooldown: 0)
+                let cookies = (0..<3).map { i in
+                    QuestCookie(id: "qc\(i)", x: 300 + Double(i) * 80, y: 250, vx: 0, vy: 3, rotation: noise.next(), spin: 0.02)
+                }
+                frame.state.quest = QuestState(level: 3, phase: phase, phaseTimer: 60, timer: 600, goal: 1, collected: 0,
+                                               cookies: cookies, boss: boss)
+                frame.state.asteroids.append(
+                    makeAsteroid(id: "burnt", x: 650, y: 330, radius: 20, style: .burnt, tint: .burnt, noise: &noise))
+                let bmp = render(frame, renderer: renderer, name: "render-cookie-\(phase.rawValue)-\(useCache ? "cached" : "live").png")
+                let s = RenderTests.scale
+                var samples: [(String, CGFloat, CGFloat)] = [
+                    ("drifting cookie", 200, 330),
+                    ("quest cookie", 300, 250),
+                    ("burnt cookie", 650, 330),
+                    ("giant cookie", 500, 150),
+                    ("hp bar", 500 - 50, 150 - 58 - 22 + 3),
+                    ("status line", RenderTests.width / 2, 120)
+                ]
+                if phase != .play {
+                    samples.append(("banner title", RenderTests.width / 2 + 10, RenderTests.height / 2 - 30))
+                }
+                for (name, x, y) in samples {
+                    XCTAssertFalse(bmp.isBackground(x: x, y: y, scale: s),
+                                   "\(name) at (\(x), \(y)) is still background (phase \(phase), cache \(useCache))")
+                }
+            }
+        }
+        XCTAssertEqual(Renderer.formatClock(frames: 1800), "0:30")
+        XCTAssertEqual(Renderer.formatClock(frames: 61), "0:02")
+        XCTAssertEqual(Renderer.formatClock(frames: -5), "0:00")
+        XCTAssertEqual(Renderer.formatClock(frames: 3660), "1:01")
+    }
+
     @MainActor func testEveryExhaustStyleRenders() {
         let renderer = Renderer()
         let pairs: [(String, String)] = [

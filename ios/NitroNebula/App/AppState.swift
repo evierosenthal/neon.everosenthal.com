@@ -61,6 +61,9 @@ final class AppState {
     var tailorError: String? = nil
     /// Bumps once per chest claim so the coin burst can replay.
     var dailyClaimBurst = 0
+    /// In-game notice from the secret cookie quest (`#game-toast` on the
+    /// web); nil when hidden. See AppState+Quest.swift.
+    var questToast: String? = nil
 
     // MARK: Settings
 
@@ -128,6 +131,14 @@ final class AppState {
     @ObservationIgnored var pendingHUDScore: Int? = nil
     @ObservationIgnored var pendingHUDHealth: Int? = nil
     @ObservationIgnored var pendingGameOver: Int? = nil
+    /// Secret cookie quest completed this tick (applied in `flushTick()`).
+    @ObservationIgnored var pendingQuestComplete = false
+    /// Hides the quest toast after its delay.
+    @ObservationIgnored var questToastTask: Task<Void, Never>? = nil
+    /// Debug/QA hooks for the cookie quest (DebugLaunch): a fixed spawn frame
+    /// and a cookie aimed at the ship, passed into every `GameConfig`.
+    @ObservationIgnored var debugCookieSpawnFrame: Int? = nil
+    @ObservationIgnored var debugCookieAimAtShip = false
     /// The canvas's current size while it is on screen (nil when unmounted).
     @ObservationIgnored var canvasSize: WorldSize? = nil
 
@@ -244,6 +255,7 @@ final class AppState {
         audio.setMusicPlaying(playing && !isPaused)
         audio.setHomeMusicPlaying(phase == .start)
         if phase != .newHigh { audio.stopFanfare() }
+        if !playing { hideGameToast() }
         // A coasting ship sends no touches, so keep the screen awake while a
         // mission is running; the pause and menu screens may sleep as usual.
         UIApplication.shared.isIdleTimerDisabled = playing && !isPaused

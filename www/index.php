@@ -69,6 +69,8 @@ function asset(string $path): string
             </div>
           </div>
         </div>
+        <!-- In-game notice (secret cookie quest), shown by ui.js for a few seconds -->
+        <div id="game-toast" class="game-toast hidden" role="status" aria-live="polite"></div>
       </div>
 
       <!-- Logged-in Pilot Chip (top right) -->

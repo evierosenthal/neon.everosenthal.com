@@ -25,6 +25,8 @@ struct LocalStore {
         static let skinsOwned = "neon_nebula_skins_owned"
         static let trailsOwned = "neon_nebula_trails_owned"
         static let flamesOwned = "neon_nebula_flames_owned"
+        /// "1" once the secret cookie quest has been finished (ui.js `COOKIE_QUEST_KEY`).
+        static let cookieQuest = "neon_nebula_cookie_quest"
 
         static func highScore(_ mode: GameMode) -> String { highScorePrefix + mode.rawValue }
 
@@ -149,6 +151,13 @@ struct LocalStore {
     var coins: Int {
         get { string(Key.coins).flatMap(JS.parseInt) ?? 0 }
         nonmutating set { set(String(newValue), for: Key.coins) }
+    }
+
+    /// Whether the secret cookie quest has been finished on this device
+    /// (stored as "1", the same string the web writes).
+    var cookieQuestDone: Bool {
+        get { string(Key.cookieQuest) == "1" }
+        nonmutating set { if newValue { set("1", for: Key.cookieQuest) } else { remove(Key.cookieQuest) } }
     }
 
     /// The `Y-M-D` stamp of the last daily claim, if any.

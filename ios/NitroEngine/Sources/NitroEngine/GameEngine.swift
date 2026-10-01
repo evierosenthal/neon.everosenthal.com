@@ -154,10 +154,63 @@ public final class GameEngine {
         if !isPaused { tickCount += 1 }
     }
 
-    /// Read-only ship telemetry (debug/testing), game.js:2502-2516.
+    /// Read-only ship + cookie quest telemetry (debug/testing),
+    /// game.js:3248-3285 getDebugPositions. Positions are rounded to 0.1
+    /// (`r1`), ship velocities to 0.01, exactly like the JavaScript.
     public struct DebugPositions: Equatable, Sendable {
         public var p1: (x: Double, y: Double, vx: Double, vy: Double)?
         public var p2: (x: Double, y: Double, vx: Double, vy: Double)?
+
+        /// A rounded point (the drifting cookie, the quest cookies).
+        public struct Point: Equatable, Sendable {
+            public var x: Double
+            public var y: Double
+            public init(x: Double, y: Double) { self.x = x; self.y = y }
+        }
+        /// `out.quest`: level, phase, collected, timer and the boss hp (nil without a boss).
+        public struct Quest: Equatable, Sendable {
+            public var level: Int
+            public var phase: QuestPhase
+            public var collected: Int
+            public var timer: Int
+            public var bossHp: Int?
+            public init(level: Int, phase: QuestPhase, collected: Int, timer: Int, bossHp: Int?) {
+                self.level = level; self.phase = phase; self.collected = collected; self.timer = timer; self.bossHp = bossHp
+            }
+        }
+        /// `out.boss`: the Giant Cookie's rounded position/velocity and hp.
+        public struct Boss: Equatable, Sendable {
+            public var x: Double
+            public var y: Double
+            public var vx: Double
+            public var vy: Double
+            public var hp: Int
+            public init(x: Double, y: Double, vx: Double, vy: Double, hp: Int) {
+                self.x = x; self.y = y; self.vx = vx; self.vy = vy; self.hp = hp
+            }
+        }
+        /// `out.asteroids[i]`: rounded position, velocity, radius and style.
+        public struct AsteroidInfo: Equatable, Sendable {
+            public var x: Double
+            public var y: Double
+            public var vx: Double
+            public var vy: Double
+            public var r: Double
+            public var style: AsteroidStyle
+            public init(x: Double, y: Double, vx: Double, vy: Double, r: Double, style: AsteroidStyle) {
+                self.x = x; self.y = y; self.vx = vx; self.vy = vy; self.r = r; self.style = style
+            }
+        }
+
+        // Secret cookie quest telemetry (game.js:3263-3284)
+        public var frame: Int = 0
+        public var cookieSpawnFrame: Int = -1
+        public var cookie: Point? = nil
+        public var quest: Quest? = nil
+        public var questCookies: [Point] = []
+        public var boss: Boss? = nil
+        public var asteroids: [AsteroidInfo] = []
+
         public static func == (l: DebugPositions, r: DebugPositions) -> Bool {
             func eq(_ a: (x: Double, y: Double, vx: Double, vy: Double)?, _ b: (x: Double, y: Double, vx: Double, vy: Double)?) -> Bool {
                 switch (a, b) {
@@ -167,6 +220,9 @@ public final class GameEngine {
                 }
             }
             return eq(l.p1, r.p1) && eq(l.p2, r.p2)
+                && l.frame == r.frame && l.cookieSpawnFrame == r.cookieSpawnFrame
+                && l.cookie == r.cookie && l.quest == r.quest && l.questCookies == r.questCookies
+                && l.boss == r.boss && l.asteroids == r.asteroids
         }
     }
 
@@ -175,7 +231,23 @@ public final class GameEngine {
         func pack(_ p: Player) -> (x: Double, y: Double, vx: Double, vy: Double) {
             (jsRound(p.x * 10) / 10, jsRound(p.y * 10) / 10, jsRound(p.vx * 100) / 100, jsRound(p.vy * 100) / 100)
         }
-        return DebugPositions(p1: pack(s.player), p2: s.player2.map(pack))
+        func r1(_ v: Double) -> Double { jsRound(v * 10) / 10 }
+        var out = DebugPositions(p1: pack(s.player), p2: s.player2.map(pack))
+        out.frame = s.frame
+        out.cookieSpawnFrame = s.cookieSpawnFrame
+        out.cookie = s.cookie.map { DebugPositions.Point(x: r1($0.x), y: r1($0.y)) }
+        out.quest = s.quest.map {
+            DebugPositions.Quest(level: $0.level, phase: $0.phase, collected: $0.collected, timer: $0.timer,
+                                 bossHp: $0.boss?.hp)
+        }
+        out.questCookies = (s.quest?.cookies ?? []).map { DebugPositions.Point(x: r1($0.x), y: r1($0.y)) }
+        out.boss = s.quest?.boss.map {
+            DebugPositions.Boss(x: r1($0.x), y: r1($0.y), vx: r1($0.vx), vy: r1($0.vy), hp: $0.hp)
+        }
+        out.asteroids = s.asteroids.map {
+            DebugPositions.AsteroidInfo(x: r1($0.x), y: r1($0.y), vx: r1($0.vx), vy: r1($0.vy), r: r1($0.radius), style: $0.style)
+        }
+        return out
     }
 
     // MARK: Internals filled in by the simulation extension files.

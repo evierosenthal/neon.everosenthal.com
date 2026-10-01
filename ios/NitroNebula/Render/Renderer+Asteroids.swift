@@ -126,6 +126,35 @@ extension Renderer {
         ctx.restoreGState()
     }
 
+    // Charred cookie — the cookie quest's burnt cookies and crumbs
+    // (game.js drawBurntCookie). A round silhouette from the vertex list, a
+    // charred edge and 5 darker chips placed from the vertices.
+    func drawBurntCookie(_ a: Asteroid, path: CGPath, _ ctx: CGContext) {
+        let R = CGFloat(a.radius)
+        let P = AsteroidPalette.palette(for: .burnt)
+        ctx.fillRadialGradient(path: path, from: CGPoint(x: -R * 0.3, y: -R * 0.3), r0: R * 0.1,
+                               to: .zero, r1: R,
+                               stops: [(0, Colors.rgba(P.gradient[0])),
+                                       (0.6, Colors.rgba(P.gradient[1])),
+                                       (1, Colors.rgba(P.gradient[2]))],
+                               shadow: (10, Colors.rgba(P.glow)))
+        ctx.setStroke(P.outline) // charred edge
+        ctx.stroke(path, lineWidth: 2.5)
+
+        ctx.saveGState()
+        ctx.clip(to: path)
+        let steps = a.vertices.count
+        if steps > 0 {
+            for k in 0..<5 {
+                let idx = Int(floor(Double(k * steps) / 5))
+                let ang = (CGFloat(idx) / CGFloat(steps)) * .pi * 2 + 0.5
+                let dist = R * CGFloat(a.vertices[idx]) * (k % 2 == 1 ? 0.55 : 0.3)
+                ctx.fillCircle(cos(ang) * dist, sin(ang) * dist, R * 0.15, color: P.hole)
+            }
+        }
+        ctx.restoreGState()
+    }
+
     /// Body in local unrotated coordinates.
     func drawAsteroidBody(_ a: Asteroid, _ ctx: CGContext) {
         let path = Renderer.asteroidPath(a)
@@ -133,6 +162,7 @@ extension Renderer {
         case .faceted: drawFacetedAsteroid(a, path: path, ctx)
         case .blobby: drawBlobbyAsteroid(a, path: path, ctx)
         case .rocky: drawRockyAsteroid(a, path: path, ctx)
+        case .burnt: drawBurntCookie(a, path: path, ctx)
         }
     }
 

@@ -27,6 +27,8 @@ struct RootView: View {
                 .ignoresSafeArea()
                 HUDView()
                     .allowsHitTesting(!app.isPaused)
+                GameToastView(message: app.questToast)
+                    .allowsHitTesting(false)
             }
 
             switch app.phase {

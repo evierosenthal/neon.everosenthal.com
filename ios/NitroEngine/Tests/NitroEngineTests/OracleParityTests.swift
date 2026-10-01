@@ -12,6 +12,12 @@ final class OracleParityTests: XCTestCase {
         var name: String
         var frames = 1200
         var seed: UInt64 = 42
+        /// Pilot 1 steering computed from the Swift engine's telemetry
+        /// (the positions after the previous frame) and fed to both sims as
+        /// the same arrow keys; nil uses the fixed InputScript.
+        var input: ((GameEngine.DebugPositions) -> PilotInput)? = nil
+        /// Ends the run early once true (checked after each frame's comparison).
+        var stopWhen: ((GameEngine.DebugPositions, RecordingDelegate) -> Bool)? = nil
         var configure: (inout GameConfig) -> Void
     }
 
@@ -60,12 +66,18 @@ final class OracleParityTests: XCTestCase {
           isLocalMultiplayer: \(config.isLocalMultiplayer), isCPUMultiplayer: \(config.isCPUMultiplayer),
           controlModePreference: '\(config.controlModePreference.rawValue)',
           skin: \(js(config.skin)), trail: \(js(config.trail)), flame: \(js(config.flame)),
-          skin2: \(js(config.skin2)), trail2: \(js(config.trail2)), flame2: \(js(config.flame2)) }
+          skin2: \(js(config.skin2)), trail2: \(js(config.trail2)), flame2: \(js(config.flame2)),
+          cookieSpawnFrame: \(config.cookieSpawnFrame.map(String.init) ?? "undefined"),
+          cookieAimAtShip: \(config.cookieAimAtShip) }
         """
     }
 
     struct OracleFrame: Decodable {
         struct Pos: Decodable { var x, y, vx, vy: Double }
+        struct Pt: Decodable { var x, y: Double }
+        struct Quest: Decodable { var level: Int; var phase: String; var collected: Int; var timer: Int; var bossHp: Int? }
+        struct Boss: Decodable { var x, y, vx, vy: Double; var hp: Int }
+        struct Ast: Decodable { var x, y, vx, vy, r: Double; var style: String }
         var p1: Pos?
         var p2: Pos?
         var score: Int
@@ -73,6 +85,16 @@ final class OracleParityTests: XCTestCase {
         var hits: Int
         var deaths: Int
         var gameOver: Int?
+        // Secret cookie quest telemetry + callbacks
+        var frame: Int
+        var cookieSpawnFrame: Int
+        var cookie: Pt?
+        var quest: Quest?
+        var questCookies: [Pt]
+        var boss: Boss?
+        var asteroids: [Ast]
+        var questComplete: Int
+        var questEvents: [String]
     }
 
     /// Press/release the keys for a steering vector. Solo/CPU: arrows; local
@@ -110,8 +132,9 @@ final class OracleParityTests: XCTestCase {
 
         var lastScore = 0, lastHealth = 100
         var mismatches = 0
+        var framesRun = 0
         for frame in 0..<scenario.frames {
-            let in1 = InputScript.pilot(frame, pilot: 0)
+            let in1 = scenario.input.map { $0(engine.debugPositions!) } ?? InputScript.pilot(frame, pilot: 0)
             let in2 = InputScript.pilot(frame, pilot: 1)
             setKeys(context, in1, wasd: config.isLocalMultiplayer)
             if config.isLocalMultiplayer { setKeys(context, in2, wasd: false) }
@@ -150,16 +173,76 @@ final class OracleParityTests: XCTestCase {
                 XCTFail("\(scenario.name) frame \(frame): js hits/deaths \(oracle.hits)/\(oracle.deaths) swift \(delegate.hits)/\(delegate.deaths)", file: file, line: line)
                 ok = false
             }
+            ok = sameQuest(oracle, mine, delegate, "\(scenario.name) frame \(frame)", file: file, line: line) && ok
             if !ok {
                 mismatches += 1
                 if mismatches > 3 { break }
             }
+            framesRun = frame + 1
+            if let stop = scenario.stopWhen, stop(mine, delegate) { break }
         }
         let final = snapshot.call(withArguments: [game])!.toString()!
         let oracle = try JSONDecoder().decode(OracleFrame.self, from: Data(final.utf8))
         XCTAssertEqual(oracle.gameOver, delegate.gameOverScore, "\(scenario.name): game-over score", file: file, line: line)
         XCTAssertEqual(oracle.score, engine.state?.score, "\(scenario.name): final score", file: file, line: line)
-        print("[oracle] \(scenario.name): \(scenario.frames) frames, final score \(oracle.score), health \(oracle.health), hits \(oracle.hits), gameOver \(String(describing: oracle.gameOver))")
+        XCTAssertEqual(oracle.questComplete, delegate.questCompletes, "\(scenario.name): onQuestComplete count", file: file, line: line)
+        XCTAssertEqual(oracle.questEvents, delegate.questEvents, "\(scenario.name): quest events", file: file, line: line)
+        print("[oracle] \(scenario.name): \(framesRun) frames, final score \(oracle.score), health \(oracle.health), hits \(oracle.hits), gameOver \(String(describing: oracle.gameOver)), quest events \(oracle.questEvents)")
+    }
+
+    /// The cookie quest telemetry: quest level/phase/collected/timer/bossHp,
+    /// the drifting cookie, the boss, the quest cookies and the asteroids
+    /// (positions to 0.1 like p1/p2), plus the callback counts so far.
+    func sameQuest(_ o: OracleFrame, _ m: GameEngine.DebugPositions, _ d: RecordingDelegate, _ tag: String,
+                   file: StaticString, line: UInt) -> Bool {
+        var ok = true
+        func fail(_ msg: String) { XCTFail("\(tag): \(msg)", file: file, line: line); ok = false }
+        func near(_ a: Double, _ b: Double) -> Bool { abs(a - b) <= 0.1 }
+        if o.frame != m.frame || o.cookieSpawnFrame != m.cookieSpawnFrame {
+            fail("frame/cookieSpawnFrame js \(o.frame)/\(o.cookieSpawnFrame) swift \(m.frame)/\(m.cookieSpawnFrame)")
+        }
+        switch (o.cookie, m.cookie) {
+        case (nil, nil): break
+        case let (a?, b?): if !near(a.x, b.x) || !near(a.y, b.y) { fail("cookie js (\(a.x), \(a.y)) swift (\(b.x), \(b.y))") }
+        default: fail("cookie presence js \(o.cookie != nil) swift \(m.cookie != nil)")
+        }
+        switch (o.quest, m.quest) {
+        case (nil, nil): break
+        case let (a?, b?):
+            if a.level != b.level || a.phase != b.phase.rawValue || a.collected != b.collected || a.timer != b.timer || a.bossHp != b.bossHp {
+                fail("quest js \(a.level)/\(a.phase)/\(a.collected)/\(a.timer)/\(String(describing: a.bossHp)) swift \(b.level)/\(b.phase.rawValue)/\(b.collected)/\(b.timer)/\(String(describing: b.bossHp))")
+            }
+        default: fail("quest presence js \(o.quest != nil) swift \(m.quest != nil)")
+        }
+        switch (o.boss, m.boss) {
+        case (nil, nil): break
+        case let (a?, b?):
+            if !near(a.x, b.x) || !near(a.y, b.y) || !near(a.vx, b.vx) || !near(a.vy, b.vy) || a.hp != b.hp {
+                fail("boss js (\(a.x), \(a.y), \(a.vx), \(a.vy), hp \(a.hp)) swift (\(b.x), \(b.y), \(b.vx), \(b.vy), hp \(b.hp))")
+            }
+        default: fail("boss presence js \(o.boss != nil) swift \(m.boss != nil)")
+        }
+        if o.questCookies.count != m.questCookies.count {
+            fail("quest cookie count js \(o.questCookies.count) swift \(m.questCookies.count)")
+        } else {
+            for (i, (a, b)) in zip(o.questCookies, m.questCookies).enumerated() where !near(a.x, b.x) || !near(a.y, b.y) {
+                fail("quest cookie \(i) js (\(a.x), \(a.y)) swift (\(b.x), \(b.y))")
+                break
+            }
+        }
+        if o.asteroids.count != m.asteroids.count {
+            fail("asteroid count js \(o.asteroids.count) swift \(m.asteroids.count)")
+        } else {
+            for (i, (a, b)) in zip(o.asteroids, m.asteroids).enumerated()
+            where !near(a.x, b.x) || !near(a.y, b.y) || !near(a.vx, b.vx) || !near(a.vy, b.vy) || !near(a.r, b.r) || a.style != b.style.rawValue {
+                fail("asteroid \(i) js (\(a.x), \(a.y), \(a.vx), \(a.vy), r \(a.r), \(a.style)) swift (\(b.x), \(b.y), \(b.vx), \(b.vy), r \(b.r), \(b.style.rawValue))")
+                break
+            }
+        }
+        if o.questComplete != d.questCompletes || o.questEvents != d.questEvents {
+            fail("quest callbacks js \(o.questComplete) \(o.questEvents) swift \(d.questCompletes) \(d.questEvents)")
+        }
+        return ok
     }
 
     // MARK: RNG agreement
@@ -234,4 +317,78 @@ final class OracleParityTests: XCTestCase {
             c.flame = GearCatalog.flame(id: "megaburner")
         })
     }
+
+    // MARK: Secret cookie quest
+
+    /// The cookie is aimed at the still ship: catch (~frame 300) -> level 1
+    /// intro -> 1800-frame play phase with nothing collected -> "TIME'S UP"
+    /// banner -> the normal Hard run resumes (www/tests/cookie-quest.jsc.js
+    /// "fail path").
+    func testCookieQuestFailParity() throws {
+        try run(Scenario(name: "cookie quest fail", frames: 2700, seed: 42,
+                         input: { _ in .zero }) { c in
+            c.initialDifficulty = 1.3
+            c.controlModePreference = .keyboard
+            c.cookieSpawnFrame = 120
+            c.cookieAimAtShip = true
+        })
+    }
+
+    /// The steering strategy of www/tests/cookie-quest.jsc.js ("complete
+    /// path"): levels 1-2 sit mid-screen with the Magnet Muzzle dragging
+    /// cookies in, nudge toward the nearest cookie and sidestep burnt ones;
+    /// level 3 shadows the jar from 150 px below, offset 34 px so the
+    /// straight-down crumb misses, and lets the blasters work.
+    static func cookieQuestSteering(_ d: GameEngine.DebugPositions) -> PilotInput {
+        let p = d.p1!
+        var dx = 0.0, dy = 0.0
+        if let q = d.quest, q.phase == .play, let boss = d.boss {
+            dx = (boss.x + 34) - p.x
+            dy = min(boss.y + 150, 560) - p.y
+        } else if let q = d.quest, q.phase == .play {
+            var tx = 400.0, ty = 330.0, best = Double.infinity
+            for c in d.questCookies {
+                let dist = abs(c.x - p.x) + abs(c.y - p.y)
+                if c.y < p.y + 40 && dist < best { best = dist; tx = c.x; ty = max(c.y + 60, 200) }
+            }
+            for a in d.asteroids {
+                let framesToUs = (p.y - a.y) / max(a.vy, 0.1)
+                if framesToUs > 0 && framesToUs < 60 {
+                    let ax = a.x + a.vx * framesToUs
+                    if abs(ax - p.x) < a.r + 40 { tx = ax < p.x ? p.x + 90 : p.x - 90 }
+                }
+            }
+            dx = tx - p.x
+            dy = ty - p.y
+        }
+        // steer(dx, dy): a key is held past a 6 px dead zone
+        let dead = 6.0
+        return PilotInput(dx: dx > dead ? 1 : (dx < -dead ? -1 : 0), dy: dy > dead ? 1 : (dy < -dead ? -1 : 0))
+    }
+
+    /// Seed 1234 + Magnet Muzzle + the steering above finish all three
+    /// levels (about 2100 frames); the run stops when the 'complete' banner
+    /// ends, 180 frames after engineDidCompleteQuest.
+    func testCookieQuestCompleteParity() throws {
+        let delegateRef = RecordingDelegateBox()
+        try run(Scenario(name: "cookie quest complete", frames: 9000, seed: 1234,
+                         input: OracleParityTests.cookieQuestSteering,
+                         stopWhen: { positions, delegate in
+                             delegateRef.delegate = delegate
+                             return delegate.questCompletes == 1 && positions.quest == nil
+                         }) { c in
+            c.initialDifficulty = 1.3
+            c.controlModePreference = .keyboard
+            c.flame = GearCatalog.flames.first { $0.power == .magnet }
+            c.cookieSpawnFrame = 120
+            c.cookieAimAtShip = true
+        })
+        let delegate = try XCTUnwrap(delegateRef.delegate)
+        XCTAssertEqual(delegate.questCompletes, 1, "engineDidCompleteQuest fired once")
+        XCTAssertEqual(delegate.questEvents, ["start:1", "levelWon:1", "levelWon:2", "levelWon:3"])
+        XCTAssertNil(delegate.gameOverScore, "ship survived the complete path")
+    }
+
+    /// Lets a scenario's stopWhen hand the recording delegate back to the test.
+    final class RecordingDelegateBox { var delegate: RecordingDelegate? }
 }

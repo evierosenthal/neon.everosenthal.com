@@ -38,6 +38,8 @@ extension AppState {
         config.isCPUMultiplayer = isCPUMultiplayer
         config.controlModePreference = .keyboard
         config.speedFactor = Double(speedPercent) / 100
+        config.cookieSpawnFrame = debugCookieSpawnFrame
+        config.cookieAimAtShip = debugCookieAimAtShip
         let gear1 = loadout1.resolved
         config.skin = gear1.skin
         config.trail = gear1.trail

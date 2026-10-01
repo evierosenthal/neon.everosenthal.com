@@ -92,10 +92,12 @@ final class Renderer {
         drawProjectiles(f, ctx)
         drawParticles(f, ctx)
         drawAsteroids(f, ctx)
+        drawCookies(f, ctx) // secret cookie, quest cookies, the Giant Cookie
         drawShips(f, ctx)
         drawFloatingTexts(f, ctx)
         drawEffectsHud(f, ctx, size: size, safeInsets: safeInsets)
         drawTutorial(f, ctx, size: size)
+        drawQuestOverlay(f, ctx, size: size, safeInsets: safeInsets) // quest status line and banners
 
         ctx.restoreGState()
 

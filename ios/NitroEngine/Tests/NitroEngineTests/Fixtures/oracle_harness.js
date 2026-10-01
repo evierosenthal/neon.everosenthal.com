@@ -73,14 +73,18 @@ Math.random = __rng.random;
 var __frame = 0;
 Date.now = function () { return (1000 / 60) * __frame; };
 
-var __events = { score: 0, health: 100, difficulty: 0, deaths: 0, hits: 0, gameOver: null };
+var __events = { score: 0, health: 100, difficulty: 0, deaths: 0, hits: 0, gameOver: null,
+  questComplete: 0, questEvents: [] };
 var __callbacks = {
   onGameOver: function (sc) { __events.gameOver = sc; },
   onScoreUpdate: function (v) { __events.score = v; },
   onHealthUpdate: function (v) { __events.health = v; },
   onDifficultyUpdate: function (v) { __events.difficulty = v; },
   onDeath: function () { __events.deaths++; },
-  onHit: function () { __events.hits++; }
+  onHit: function () { __events.hits++; },
+  // Secret cookie quest: fired once when level 3 is won; 'kind:level' notices
+  onQuestComplete: function () { __events.questComplete++; },
+  onQuestEvent: function (kind, level) { __events.questEvents.push(kind + ':' + level); }
 };
 
 var __keys = {};
@@ -102,5 +106,9 @@ function __step(frame) {
 function __snapshot(game) {
   var pos = game.getDebugPositions();
   return JSON.stringify({ p1: pos.p1 || null, p2: pos.p2 || null, score: __events.score,
-    health: __events.health, hits: __events.hits, deaths: __events.deaths, gameOver: __events.gameOver });
+    health: __events.health, hits: __events.hits, deaths: __events.deaths, gameOver: __events.gameOver,
+    // Secret cookie quest telemetry (game.js getDebugPositions) and callbacks
+    frame: pos.frame, cookieSpawnFrame: pos.cookieSpawnFrame, cookie: pos.cookie, quest: pos.quest,
+    questCookies: pos.questCookies, boss: pos.boss, asteroids: pos.asteroids,
+    questComplete: __events.questComplete, questEvents: __events.questEvents });
 }

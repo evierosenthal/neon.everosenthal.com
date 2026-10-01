@@ -3,8 +3,14 @@ import Foundation
 // game.js:1063-1128 — the fatal-hit explosion and its aftermath.
 extension GameEngine {
 
-    /// game.js:1065-1095
+    /// game.js:1246-1276; the killer is an asteroid or, in the cookie quest,
+    /// the Giant Cookie (`{x, y, color: COOKIE_COLOR}`, game.js:1670).
     func startDeathSequence(deadPlayer: Player, killerAsteroid: Asteroid) {
+        startDeathSequence(deadPlayer: deadPlayer, killerX: killerAsteroid.x, killerY: killerAsteroid.y,
+                           killerColor: killerAsteroid.color)
+    }
+
+    func startDeathSequence(deadPlayer: Player, killerX: Double, killerY: Double, killerColor: CSSColor) {
         if s.dying { return }
         s.dying = true
         s.deathTimer = 100 // ~1.7s at 60fps
@@ -26,7 +32,7 @@ extension GameEngine {
             }
         }
 
-        explode(x: killerAsteroid.x, y: killerAsteroid.y, colors: [killerAsteroid.color, "#fbbf24"], sparks: 45, ringSize: 16)
+        explode(x: killerX, y: killerY, colors: [killerColor, "#fbbf24"], sparks: 45, ringSize: 16)
         let ships: [Player?] = [s.player, s.player2]
         for maybe in ships {
             guard let ship = maybe else { continue }

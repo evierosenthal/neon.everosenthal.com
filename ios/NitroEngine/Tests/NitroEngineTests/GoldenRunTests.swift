@@ -55,7 +55,11 @@ final class GoldenRunTests: XCTestCase {
     let GOLDEN_HITS = 1
     let GOLDEN_P1 = (x: 687.4, y: 26.1, vx: -8.34, vy: 0.44)
     let GOLDEN_ASTEROIDS = 4
-    let GOLDEN_CPU_SCORE = 860
-    let GOLDEN_CPU_HEALTH = 63
-    let GOLDEN_CPU_P2 = (x: 225.1, y: 118.1)
+    // The CPU run is a Hard (1.3) start: since the secret cookie quest,
+    // reset() draws one extra random there (the cookie's spawn frame), which
+    // shifted this run. Re-captured after an oracle run of the same
+    // seed/config/script ended at 520 / 100 with p2 matching frame by frame.
+    let GOLDEN_CPU_SCORE = 520
+    let GOLDEN_CPU_HEALTH = 100
+    let GOLDEN_CPU_P2 = (x: 727.9, y: 401.8)
 }

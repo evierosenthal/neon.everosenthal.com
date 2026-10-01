@@ -5,7 +5,10 @@ DerivedData/
 build/
 *.ipa
 *.xcarchive
+*.dSYM
 *.dSYM.zip
+
+# Swift Package Manager output (NitroEngine or any other local package)
+.build/
 .swiftpm/
-NeonEngine/.build/
 # Keep Package.resolved committed for reproducible dependency versions.

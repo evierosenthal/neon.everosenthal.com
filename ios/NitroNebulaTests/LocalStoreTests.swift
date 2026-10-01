@@ -19,6 +19,15 @@ nonisolated final class LocalStoreTests: XCTestCase {
         try await super.tearDown()
     }
 
+    @MainActor func testCookieQuestFlagIsTheWebString() {
+        XCTAssertFalse(store.cookieQuestDone)
+        store.cookieQuestDone = true
+        XCTAssertEqual(defaults.string(forKey: "neon_nebula_cookie_quest"), "1")
+        XCTAssertTrue(store.cookieQuestDone)
+        store.cookieQuestDone = false
+        XCTAssertNil(defaults.string(forKey: "neon_nebula_cookie_quest"))
+    }
+
     @MainActor func testHighScoresRoundTripAsDecimalStrings() {
         for mode in GameMode.allCases { XCTAssertEqual(store.highScore(mode), 0) }
         store.setHighScore(.duoSuperHard, 12345)

@@ -54,11 +54,27 @@ extension AppState {
         loadout(pilot: tailorPilot)[item.tab] == item.id
     }
 
+    /// isSecretLocked (ui.js): a secret skin stays locked, developer or not,
+    /// until the cookie quest awards it.
+    func isSecretLocked(_ item: GearItem) -> Bool {
+        item.secret && !isOwned(item)
+    }
+
+    /// Whether a developer wears this unowned item for free (secret skins
+    /// are the exception: everyone has to earn them).
+    func isDevFree(_ item: GearItem) -> Bool {
+        !isOwned(item) && !isSecretLocked(item) && isDeveloper
+    }
+
     /// handleSkinClick and its trail/flame twins (ui.js:1755-1769): buy if
     /// needed (developers wear anything for free), then equip for the pilot
     /// being dressed.
     func tapGear(_ item: GearItem) {
         tailorError = nil
+        if isSecretLocked(item) {
+            tailorError = "Find the cookie in Hard mode to unlock this."
+            return
+        }
         if !isOwned(item) && !isDeveloper {
             if coins < item.price {
                 tailorError = Economy.shortfallMessage(price: item.price, coins: coins)

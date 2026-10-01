@@ -1,8 +1,7 @@
 # ===== Local configuration (contains secrets) =====
 config.local.php
 config.local.demo.php
-
-.DS_Store
+www/config.local.php
 
 # ===== RSA keys for JWT signing =====
 keys/
@@ -32,7 +31,9 @@ Thumbs.db
 # ===== PHP =====
 *.phar
 !unit-tests/tools/phpunit.phar
-unit-tests/.phpunit.cache/*
+unit-tests/.phpunit.cache/
+www/unit-tests/.phpunit.cache/
+www/unit-tests/tests/tmp/
 
 # ===== Python =====
 __pycache__/
@@ -40,16 +41,7 @@ __pycache__/
 *.pyo
 *.pyd
 
-unit-tests/.phpunit.cache/
-
-# PHPUnit
-www/unit-tests/.phpunit.cache/
-www/unit-tests/tests/tmp/
-
-# Local app config / runtime (never commit secrets or logs)
-www/config.local.php
-www/logs/*
-!www/logs/.htaccess
+# ===== Runtime (never commit logs or caches) =====
 www/cache/*
 !www/cache/.htaccess
 var/
@@ -57,3 +49,8 @@ var/
 xcschememanagement.plist
 secret/
 db_backups/
+
+# ===== Swift Package Manager / Xcode (also covered by ios/.gitignore) =====
+.build/
+.swiftpm/
+DerivedData/

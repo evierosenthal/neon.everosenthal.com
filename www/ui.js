@@ -63,6 +63,11 @@
   var SKINS_OWNED_KEY = 'neon_nebula_skins_owned';
   var COIN_SCORE_DIVISOR = 50;
   var RECORD_COIN_MULTIPLIER = 5;
+  // Secret cookie quest (game.js): '1' once it has been finished; the
+  // reward and the skin ids it unlocks (ids shared with iOS).
+  var COOKIE_QUEST_KEY = 'neon_nebula_cookie_quest';
+  var COOKIE_QUEST_COINS = 1000;
+  var SECRET_SKIN_IDS = ['cookie', 'chocochip', 'goldencookie'];
 
   var SKINS = [
     { id: 'cyan', name: 'Neon Classic', price: 0, accent: '#22d3ee' },
@@ -122,7 +127,16 @@
       window: ['#fff7ed', '#fdba74', '#7c2d12'] },
     { id: 'aurora', name: 'Aurora Prism', price: 5000, accent: '#a855f7',
       accentGradient: ['#f472b6', '#a855f7', '#22d3ee'] },
-    { id: 'galaxy', name: 'Galaxy Prism', price: 6000, accent: '#22d3ee', animated: true }
+    { id: 'galaxy', name: 'Galaxy Prism', price: 6000, accent: '#22d3ee', animated: true },
+    // Secret skins: earned only by finishing the cookie quest — never
+    // purchasable and never free for developers. Ids are shared with iOS.
+    { id: 'cookie', name: 'Cookie Crumb', price: 0, secret: true, accent: '#d4a373',
+      hull: ['#8b5a2b', '#f5deb3', '#deb887', '#5c3a1e'], window: ['#fff8e7', '#f4c27a', '#6b3e0f'] },
+    { id: 'chocochip', name: 'Choco Chip', price: 0, secret: true, accent: '#a0522d',
+      hull: ['#3b2314', '#a0522d', '#7b4a24', '#1f1008'], window: ['#fde68a', '#f59e0b', '#78350f'] },
+    { id: 'goldencookie', name: 'Golden Cookie', price: 0, secret: true, accent: '#fbbf24',
+      accentGradient: ['#fde68a', '#fbbf24', '#b45309'],
+      hull: ['#b45309', '#fef3c7', '#fcd34d', '#92400e'], window: ['#fffbeb', '#fde68a', '#78350f'] }
   ];
 
   // Thruster trails (Tailor's second rack). 'count: 2' trails burn denser.
@@ -479,6 +493,7 @@
     skinsGrid: document.getElementById('skins-grid'),
     skinsCoins: document.getElementById('skins-coins'),
     skinsError: document.getElementById('skins-error'),
+    gameToast: document.getElementById('game-toast'),
     gameoverCoins: document.getElementById('gameover-coins'),
     newhighCoins: document.getElementById('newhigh-coins'),
     resetModal: document.getElementById('reset-modal'),
@@ -725,8 +740,52 @@
     onHealthUpdate: setHealth,
     onDifficultyUpdate: handleDifficultyUpdate,
     onDeath: playDeathSound, // crash boom at the moment of impact, with the explosion
-    onHit: playHitSound // whoosh on hull damage that isn't fatal
+    onHit: playHitSound, // whoosh on hull damage that isn't fatal
+    onQuestComplete: handleQuestComplete, // secret cookie quest finished: coins + skins
+    onQuestEvent: handleQuestEvent // quest start / level won / failed notices
   });
+
+  // --- Secret cookie quest -----------------------------------------------
+
+  // Small in-game notice at the bottom of the HUD, hidden again after `duration` ms.
+  var toastTimer = null;
+  function showGameToast(message, duration) {
+    el.gameToast.textContent = message;
+    show(el.gameToast, true);
+    el.gameToast.classList.remove('visible');
+    void el.gameToast.offsetWidth; // restart the slide-in transition
+    el.gameToast.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      el.gameToast.classList.remove('visible');
+      show(el.gameToast, false);
+    }, duration || 5000);
+  }
+
+  function handleQuestEvent(kind, level) {
+    if (kind === 'start') showGameToast('SECRET LEVEL FOUND · THE COOKIE QUEST BEGINS', 4000);
+    else if (kind === 'failed') showGameToast('COOKIE QUEST OVER · BACK TO THE NEBULA', 4000);
+    // 'levelWon' is celebrated by the canvas banner (level is unused here)
+  }
+
+  // Level 3 cleared: pay out (fire coin powers apply like mission pay),
+  // unlock the three secret skins, remember it, and celebrate.
+  function handleQuestComplete() {
+    var earned = applyCoinPowers(COOKIE_QUEST_COINS);
+    coins += earned;
+    SECRET_SKIN_IDS.forEach(function (id) {
+      if (ownedSkins.indexOf(id) === -1) ownedSkins.push(id);
+    });
+    try {
+      localStorage.setItem(COOKIE_QUEST_KEY, '1');
+    } catch (err) { /* storage unavailable — the skins still live in this session's wallet */ }
+    saveWallet();
+    showGameToast('SECRET QUEST COMPLETE · +' + formatNumber(earned) + ' COINS · 3 SKINS UNLOCKED', 5000);
+    try {
+      newHighSound.currentTime = 0;
+      newHighSound.play().catch(function () { /* autoplay blocked */ });
+    } catch (err) { /* audio unavailable */ }
+  }
 
   // --- Helpers -----------------------------------------------------------
 
@@ -974,7 +1033,8 @@
     });
   }
 
-  // Nudge toward the Tailor when the wallet can buy something new.
+  // Nudge toward the Tailor when the wallet can buy something new (secret
+  // skins can't be bought, so they never count).
   function refreshTailorBadge() {
     var affordable = false;
     if (!isDeveloper()) {
@@ -985,7 +1045,7 @@
       ];
       racks.forEach(function (rack) {
         rack.items.forEach(function (item) {
-          if (rack.owned.indexOf(item.id) === -1 && item.price <= coins) affordable = true;
+          if (!item.secret && rack.owned.indexOf(item.id) === -1 && item.price <= coins) affordable = true;
         });
       });
     }
@@ -1347,8 +1407,7 @@
     // Star Fire's power doubles the take.
     var earned = Math.max(0, Math.round(finalScore / COIN_SCORE_DIVISOR));
     if (beatRecord) earned *= RECORD_COIN_MULTIPLIER;
-    if (getFlame(selectedFlame).power === 'lucky') earned *= 2;
-    if (getFlame(selectedFlame).power === 'jackpot') earned *= 3;
+    earned = applyCoinPowers(earned);
     if (earned > 0) {
       coins += earned;
       saveWallet();
@@ -1577,10 +1636,24 @@
 
   // --- Skins shop --------------------------------------------------------
 
-  // Developers (and the lead developer) get every unlockable for free.
+  // Developers (and the lead developer) get every unlockable for free —
+  // except the secret skins, which everyone has to earn.
   function isDeveloper() {
     var user = window.NeonAuth ? window.NeonAuth.state.user : null;
     return !!user && (user.role === 'developer' || user.role === 'lead_developer');
+  }
+
+  // Secret skins stay locked (dev or not) until the cookie quest awards them.
+  function isSecretLocked(skin) {
+    return !!skin.secret && ownedSkins.indexOf(skin.id) === -1;
+  }
+
+  // Fire powers that fatten any coin payout: mission pay and the cookie
+  // quest reward go through here alike.
+  function applyCoinPowers(amount) {
+    if (getFlame(selectedFlame).power === 'lucky') amount *= 2;
+    if (getFlame(selectedFlame).power === 'jackpot') amount *= 3;
+    return amount;
   }
 
   function skinExists(id) {
@@ -1598,6 +1671,7 @@
   // The saved loadout is restored as-is on load so a developer's free gear
   // (Galaxy Prism, say) survives a reload. Once we know who is logged in,
   // anyone who isn't a developer is dropped back to gear they actually own.
+  // (An earned secret skin is in ownedSkins, so it is never stripped here.)
   function enforceOwnedGear() {
     if (isDeveloper()) return;
     var changed = false;
@@ -1737,15 +1811,22 @@
     var skinNow = tailorPilot === 2 ? selectedSkin2 : selectedSkin;
     SKINS.forEach(function (skin) {
       var owned = ownedSkins.indexOf(skin.id) !== -1;
-      var devFree = !owned && isDeveloper();
+      var secretLocked = isSecretLocked(skin);
+      var devFree = !owned && !secretLocked && isDeveloper();
       var card = document.createElement('button');
-      card.className = 'skin-card' + (skinNow === skin.id ? ' selected' : (owned || devFree ? '' : ' locked'));
+      card.className = 'skin-card' + (skinNow === skin.id ? ' selected' : (owned || devFree ? '' : ' locked')) +
+        (secretLocked ? ' secret-locked' : '');
       var status;
       if (skinNow === skin.id) status = '<span class="skin-status">EQUIPPED</span>';
       else if (owned) status = '<span class="skin-status">TAP TO EQUIP</span>';
+      else if (secretLocked) status = '<span class="skin-status skin-secret">SECRET · FINISH THE COOKIE QUEST</span>';
       else if (devFree) status = '<span class="skin-status price">' + formatNumber(skin.price) + '</span><span class="skin-status">FREE — DEV</span>';
       else status = '<span class="skin-status price">' + formatNumber(skin.price) + '</span>';
-      card.innerHTML = skinSvg(skin) +
+      var lock = secretLocked
+        ? '<span class="skin-lock" aria-hidden="true"><svg viewBox="0 0 24 24" class="icon icon-stroke">' +
+          '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>'
+        : '';
+      card.innerHTML = lock + skinSvg(skin) +
         '<span class="skin-name">' + skin.name + '</span>' + status;
       card.addEventListener('click', function () { handleSkinClick(skin); });
       el.skinsGrid.appendChild(card);
@@ -1754,6 +1835,10 @@
 
   function handleSkinClick(skin) {
     setFormError(el.skinsError, '');
+    if (isSecretLocked(skin)) {
+      setFormError(el.skinsError, 'Find the cookie in Hard mode to unlock this.');
+      return;
+    }
     if (ownedSkins.indexOf(skin.id) === -1 && !isDeveloper()) {
       if (coins < skin.price) {
         setFormError(el.skinsError,

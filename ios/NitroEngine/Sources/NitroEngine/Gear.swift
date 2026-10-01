@@ -17,13 +17,49 @@ public struct Skin: Hashable, Codable, Sendable, Identifiable {
     public var accentGradient: [CSSColor]? = nil
     /// Galaxy Prism: hull hue cycles over time.
     public var animated: Bool = false
+    /// Secret skins (ui.js:132-140): earned only by finishing the cookie
+    /// quest — never purchasable and never free for developers.
+    public var secret: Bool = false
 
     public init(id: String, name: String, price: Int, accent: CSSColor,
                 hull: [CSSColor]? = nil, window: [CSSColor]? = nil,
-                accentGradient: [CSSColor]? = nil, animated: Bool = false) {
+                accentGradient: [CSSColor]? = nil, animated: Bool = false, secret: Bool = false) {
         self.id = id; self.name = name; self.price = price; self.accent = accent
         self.hull = hull; self.window = window; self.accentGradient = accentGradient
-        self.animated = animated
+        self.animated = animated; self.secret = secret
+    }
+
+    // Codable by hand so `secret` is only written when true: the JSON of
+    // every pre-existing skin (and what the parity test hands game.js) is
+    // byte-for-byte what the synthesized conformance produced before.
+    enum CodingKeys: String, CodingKey {
+        case id, name, price, accent, hull, window, accentGradient, animated, secret
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        price = try c.decode(Int.self, forKey: .price)
+        accent = try c.decode(CSSColor.self, forKey: .accent)
+        hull = try c.decodeIfPresent([CSSColor].self, forKey: .hull)
+        window = try c.decodeIfPresent([CSSColor].self, forKey: .window)
+        accentGradient = try c.decodeIfPresent([CSSColor].self, forKey: .accentGradient)
+        animated = try c.decodeIfPresent(Bool.self, forKey: .animated) ?? false
+        secret = try c.decodeIfPresent(Bool.self, forKey: .secret) ?? false
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(name, forKey: .name)
+        try c.encode(price, forKey: .price)
+        try c.encode(accent, forKey: .accent)
+        try c.encodeIfPresent(hull, forKey: .hull)
+        try c.encodeIfPresent(window, forKey: .window)
+        try c.encodeIfPresent(accentGradient, forKey: .accentGradient)
+        try c.encode(animated, forKey: .animated)
+        if secret { try c.encode(secret, forKey: .secret) }
     }
 }
 

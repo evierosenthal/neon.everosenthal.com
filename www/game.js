@@ -100,9 +100,47 @@
       lit: 'rgba(96, 165, 250, 0.25)',
       blobCrater: '#0f172a',
       blobRim: 'rgba(147, 197, 253, 0.4)'
+    },
+    burnt: { // the cookie quest's charred cookies: dark chocolate browns
+      gradient: ['#6b4423', '#3b2314', '#1f1008'],
+      craterFill: 'rgba(18, 8, 3, 0.7)',
+      craterRim: 'rgba(212, 163, 115, 0.3)',
+      speckle: 'rgba(212, 163, 115, 0.2)',
+      glow: 'rgba(120, 72, 32, 0.45)',
+      base: '#3b2314',
+      outline: '#1f1008',
+      facet: 'rgba(160, 82, 45, 0.35)',
+      facetSoft: 'rgba(160, 82, 45, 0.18)',
+      hole: '#120803',
+      blobBase: '#4a2c17',
+      blobOutline: '#1f1008',
+      lit: 'rgba(212, 163, 115, 0.18)',
+      blobCrater: '#120803',
+      blobRim: 'rgba(212, 163, 115, 0.3)'
     }
   };
   var STAR_COUNT = 50;
+
+  // --- Secret cookie quest ---------------------------------------------------
+  // In a Hard run a lone cookie drifts across the screen once; catching it
+  // starts a three-level side quest (startQuest / updateQuest below).
+  // Durations are frames at 60 fps; `rain` / `burnt` are per-frame spawn
+  // chances during that level's play phase.
+  var QUEST_LEVELS = [
+    { name: 'COOKIE CRUMBS', duration: 1800, goal: 10, rain: 0.035, burnt: 0,
+      hint: 'COLLECT 10 COOKIES' },
+    { name: 'CRUMB STORM', duration: 2100, goal: 15, rain: 0.04, burnt: 0.02,
+      hint: 'COLLECT 15 COOKIES · DODGE THE BURNT ONES' },
+    { name: 'THE COOKIE JAR', duration: 2700, goal: 1, rain: 0, burnt: 0.012,
+      hint: 'CRACK THE COOKIE JAR · YOUR BLASTERS ARE HOT' }
+  ];
+  var QUEST_BOSS_HP = 36;
+  var QUEST_BOSS_FIRE_INTERVAL = 150; // play frames between crumb rings
+  var QUEST_BOSS_CONTACT_COOLDOWN = 45; // frames a ship is immune after bumping the boss
+  var COOKIE_COLOR = '#d4a373';
+  var COOKIE_GOLD = '#fbbf24';
+  // Crumb outline (no randoms): ten near-round vertices
+  var CRUMB_VERTICES = [1, 0.96, 1.02, 0.95, 1, 0.97, 1.03, 0.96, 1, 0.98];
 
   var MOVE_KEYS = [
     'w', 'a', 's', 'd', 'W', 'A', 'S', 'D', 'KeyW', 'KeyA', 'KeyS', 'KeyD',
@@ -126,7 +164,12 @@
       onHealthUpdate: (callbacks && callbacks.onHealthUpdate) || function () {},
       onDifficultyUpdate: (callbacks && callbacks.onDifficultyUpdate) || function () {},
       onDeath: (callbacks && callbacks.onDeath) || function () {},
-      onHit: (callbacks && callbacks.onHit) || function () {} // asteroid hit that hurts but doesn't kill
+      onHit: (callbacks && callbacks.onHit) || function () {}, // asteroid hit that hurts but doesn't kill
+      // Secret cookie quest: fired once when level 3 is won (start of the
+      // 'complete' banner) — ui.js pays the coins and unlocks the skins.
+      onQuestComplete: (callbacks && callbacks.onQuestComplete) || function () {},
+      // (kind, level) with kind 'start' | 'levelWon' | 'failed'
+      onQuestEvent: (callbacks && callbacks.onQuestEvent) || function () {}
     };
 
     var config = {
@@ -136,7 +179,15 @@
       controlModePreference: 'both',
       speedFactor: 1, // from the Settings rocket-speed slider
       flameSpeedMult: 1, // from the equipped fire's power (fast/slow)
-      online: null // {role: 'host'|'guest', send: fn(obj)} for an internet two-player game
+      online: null, // {role: 'host'|'guest', send: fn(obj)} for an internet two-player game
+      // Test hooks for the secret cookie quest (www/tests/cookie-quest.jsc.js):
+      //  cookieSpawnFrame — a number replaces the random spawn-frame draw in
+      //    reset() (that Math.random() is NOT consumed when this is given);
+      //  cookieAimAtShip — true spawns the cookie at the player's y (the y
+      //    Math.random() is still consumed and ignored, so the random count
+      //    is identical with or without the hook).
+      cookieSpawnFrame: undefined,
+      cookieAimAtShip: false
     };
 
     // --- Online play ----------------------------------------------------------
@@ -410,6 +461,109 @@
       };
     }
 
+    // --- Secret cookie quest factories ------------------------------------
+    // The Math.random() order is part of the iOS parity contract; each
+    // factory lists its draws in the order they happen.
+
+    // The lone cookie that drifts across a Hard run. Randoms, in order:
+    // 1 side (left/right), 2 y (drawn and ignored with cookieAimAtShip),
+    // 3 wobble phase.
+    function createDriftingCookie(width, height) {
+      var fromLeft = Math.random() < 0.5;             // 1: side
+      var y = height * (0.2 + Math.random() * 0.6);   // 2: y
+      if (config.cookieAimAtShip) y = state.player.y; // test hook (random above still consumed)
+      var wobble = Math.random() * Math.PI * 2;       // 3: wobble phase
+      return {
+        id: 'secret_cookie',
+        x: fromLeft ? -30 : width + 30,
+        y: y,
+        vx: fromLeft ? 2.4 : -2.4,
+        radius: 16,
+        wobble: wobble,
+        rotation: 0,
+        spin: 0.01,
+        type: 'cookie'
+      };
+    }
+
+    // A cookie raining down in quest levels 1 and 2. Randoms, in order:
+    // 1 x, 2 vx, 3 vy, 4 rotation, 5 spin, 6 id (randomId).
+    function createQuestCookie(width) {
+      var x = 30 + Math.random() * (width - 60);      // 1
+      var vx = (Math.random() - 0.5) * 1.2;           // 2
+      var vy = 2.2 + Math.random() * 1.6;             // 3
+      var rotation = Math.random() * Math.PI * 2;     // 4
+      var spin = (Math.random() - 0.5) * 0.08;        // 5
+      return {
+        id: randomId(),                                // 6
+        x: x,
+        y: -30,
+        vx: vx,
+        vy: vy,
+        radius: 13,
+        rotation: rotation,
+        spin: spin,
+        type: 'cookie'
+      };
+    }
+
+    // Burnt cookie: a regular asteroid object (style/tint 'burnt') so every
+    // asteroid rule — collisions, shield, ram, shooting, +20 on destroy,
+    // debris — applies unchanged; only the off-screen +10 is skipped.
+    // Randoms, in order: 1 radius, 2 x, 3 vx, 4 vy, 5 rotation, 6 spinSpeed,
+    // 7–16 the ten vertices, 17 id (randomId).
+    function createBurntCookie(width, height) {
+      var radius = 14 + Math.random() * 10;           // 1
+      var x = Math.random() * width;                  // 2
+      var vx = (Math.random() - 0.5) * 1.5;           // 3
+      var vy = 2.8 + Math.random() * 2.2;             // 4
+      var rotation = Math.random() * Math.PI * 2;     // 5
+      var spinSpeed = (Math.random() - 0.5) * 0.05;   // 6
+      var vertices = [];
+      for (var i = 0; i < 10; i++) {
+        vertices.push(0.9 + Math.random() * 0.12);    // 7..16
+      }
+      return {
+        id: randomId(),                                // 17
+        x: x,
+        y: -40,
+        vx: vx,
+        vy: vy,
+        radius: radius,
+        color: '#3b2314',
+        type: 'asteroid',
+        style: 'burnt',
+        tint: 'burnt',
+        vertices: vertices,
+        craters: [],
+        speckles: [],
+        rotation: rotation,
+        spinSpeed: spinSpeed
+      };
+    }
+
+    // A crumb fired by the Giant Cookie: a small burnt cookie flying along
+    // `angle` at 3.2 px/frame. Only random: id (randomId).
+    function createCrumb(x, y, angle) {
+      return {
+        id: randomId(),
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * 3.2,
+        vy: Math.sin(angle) * 3.2,
+        radius: 9,
+        color: '#3b2314',
+        type: 'asteroid',
+        style: 'burnt',
+        tint: 'burnt',
+        vertices: CRUMB_VERTICES.slice(),
+        craters: [],
+        speckles: [],
+        rotation: angle,
+        spinSpeed: 0.04
+      };
+    }
+
     // --- Setup ------------------------------------------------------------
 
     // --- Phone layout -------------------------------------------------------
@@ -473,7 +627,12 @@
           speedBoost: 0,
           weaponUpgrade: 0,
           magnet: 0
-        }
+        },
+        // Secret cookie quest (see QUEST_LEVELS)
+        frame: 0,             // update() calls so far this run
+        cookieSpawnFrame: -1, // frame the drifting cookie appears on (-1: never)
+        cookie: null,         // the drifting cookie while it is on screen
+        quest: null           // active quest, see startQuest()
       };
 
       mousePos = { x: w / 2, y: h / 2 };
@@ -506,6 +665,19 @@
           y: Math.random() * h,
           s: Math.random() * 2 + 0.5
         });
+      }
+
+      // Secret cookie quest: Hard runs only (not Super Hard, never online).
+      // One Math.random() here, AFTER the stars and only when eligible, so
+      // Easy / Medium / Super Hard / online runs draw exactly what they did
+      // before the quest existed.
+      var questEligible = config.initialDifficulty >= 1.0 && config.initialDifficulty < 5.0 && !config.online;
+      if (!questEligible) {
+        state.cookieSpawnFrame = -1;
+      } else if (typeof config.cookieSpawnFrame === 'number') {
+        state.cookieSpawnFrame = config.cookieSpawnFrame; // test hook: no random consumed
+      } else {
+        state.cookieSpawnFrame = 1200 + Math.floor(Math.random() * 2401); // 20–60 s in
       }
 
       keysPressed = {};
@@ -671,7 +843,8 @@
 
       var targetCollectible = null;
       var minDistCollectible = Infinity;
-      var pickups = state.collectibles.concat(state.powerUps);
+      // (the wingman also harvests the cookie quest's raining cookies)
+      var pickups = state.collectibles.concat(state.powerUps, state.quest ? state.quest.cookies : []);
       for (var j = 0; j < pickups.length; j++) {
         var coll = pickups[j];
         var cdx = coll.x - p2.x;
@@ -889,37 +1062,42 @@
       }
     }
 
+    // Magnetic pull when the magnet power-up is active: `c` (a treat, or a
+    // quest cookie — both use exactly this math) is sucked toward the
+    // nearest ship within 500 px, capped at 10 px/frame. No randoms.
+    function applyMagnetPull(c) {
+      if (state.activeEffects.magnet <= 0) return;
+      var closestPlayer = null;
+      var minDist = Infinity;
+      var candidates = [state.player, state.player2];
+      for (var m = 0; m < candidates.length; m++) {
+        var cp = candidates[m];
+        if (!cp) continue;
+        var mdx = cp.x - c.x;
+        var mdy = cp.y - c.y;
+        var mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+        if (mdist < minDist) {
+          minDist = mdist;
+          closestPlayer = cp;
+        }
+      }
+      if (closestPlayer && minDist < 500) {
+        // Magnetic suction force towards player
+        c.vx += ((closestPlayer.x - c.x) / minDist) * 0.95;
+        c.vy += ((closestPlayer.y - c.y) / minDist) * 0.95;
+        var coinSpeed = Math.sqrt(c.vx * c.vx + c.vy * c.vy);
+        if (coinSpeed > 10) {
+          c.vx = (c.vx / coinSpeed) * 10;
+          c.vy = (c.vy / coinSpeed) * 10;
+        }
+      }
+    }
+
     function updateCollectibles() {
       for (var i = state.collectibles.length - 1; i >= 0; i--) {
         var c = state.collectibles[i];
 
-        // Magnetic pull when magnet power-up is active
-        if (state.activeEffects.magnet > 0) {
-          var closestPlayer = null;
-          var minDist = Infinity;
-          var candidates = [state.player, state.player2];
-          for (var m = 0; m < candidates.length; m++) {
-            var cp = candidates[m];
-            if (!cp) continue;
-            var mdx = cp.x - c.x;
-            var mdy = cp.y - c.y;
-            var mdist = Math.sqrt(mdx * mdx + mdy * mdy);
-            if (mdist < minDist) {
-              minDist = mdist;
-              closestPlayer = cp;
-            }
-          }
-          if (closestPlayer && minDist < 500) {
-            // Magnetic suction force towards player
-            c.vx += ((closestPlayer.x - c.x) / minDist) * 0.95;
-            c.vy += ((closestPlayer.y - c.y) / minDist) * 0.95;
-            var coinSpeed = Math.sqrt(c.vx * c.vx + c.vy * c.vy);
-            if (coinSpeed > 10) {
-              c.vx = (c.vx / coinSpeed) * 10;
-              c.vy = (c.vy / coinSpeed) * 10;
-            }
-          }
-        }
+        applyMagnetPull(c);
 
         c.x += c.vx;
         c.y += c.vy;
@@ -1050,12 +1228,15 @@
           continue;
         }
 
-        // Remove off-screen asteroids
+        // Remove off-screen asteroids (burnt cookies from the cookie quest
+        // pay nothing for leaving)
         if (asteroid.x < -100 || asteroid.x > canvas.width + 100 ||
             asteroid.y < -100 || asteroid.y > canvas.height + 100) {
           state.asteroids.splice(i, 1);
-          state.score += 10;
-          handlers.onScoreUpdate(state.score);
+          if (asteroid.style !== 'burnt') {
+            state.score += 10;
+            handlers.onScoreUpdate(state.score);
+          }
         }
       }
     }
@@ -1127,8 +1308,322 @@
       }
     }
 
+    // --- Secret cookie quest ------------------------------------------------
+    // Everything below only runs for local (never online) Hard runs; see
+    // reset() for the eligibility rule and update() for where each piece
+    // sits in the frame.
+
+    // The drifting cookie: appears on state.cookieSpawnFrame (only while no
+    // quest is running — this is only called then), wobbles across the
+    // screen and starts the quest when a ship touches it. Runs in
+    // updateSpawns()'s slot, right after updateSpawns(). Randoms: the
+    // factory's three on the spawn frame; on a catch, startQuest()'s bursts
+    // and then the "SECRET LEVEL!" text id.
+    function updateDriftingCookie() {
+      if (state.frame === state.cookieSpawnFrame && !state.cookie) {
+        state.cookie = createDriftingCookie(canvas.width, canvas.height);
+      }
+      var c = state.cookie;
+      if (!c) return;
+      c.x += c.vx;
+      c.y += Math.sin(state.frame / 25 + c.wobble) * 0.7;
+      c.rotation += c.spin;
+      var ships = [state.player, state.player2];
+      for (var k = 0; k < ships.length; k++) {
+        var p = ships[k];
+        if (!p) continue;
+        var dx = p.x - c.x;
+        var dy = p.y - c.y;
+        if (Math.sqrt(dx * dx + dy * dy) < c.radius + p.radius + 8) {
+          var cx = c.x;
+          var cy = c.y;
+          startQuest();
+          addFloatingText(cx, cy, 'SECRET LEVEL!', COOKIE_GOLD, 1.6);
+          shake = 8;
+          return;
+        }
+      }
+      // Gone once it is 60 px past the far edge
+      if ((c.vx > 0 && c.x > canvas.width + 60) || (c.vx < 0 && c.x < -60)) {
+        state.cookie = null;
+      }
+    }
+
+    // Catching the cookie: wipe the field — every asteroid bursts into 6 of
+    // its own-colored particles (createParticle, asteroid array order), then
+    // asteroids, orbs and treats are cleared — and level 1's intro begins.
+    function startQuest() {
+      for (var i = 0; i < state.asteroids.length; i++) {
+        var a = state.asteroids[i];
+        for (var n = 0; n < 6; n++) state.particles.push(createParticle(a.x, a.y, a.color));
+      }
+      state.asteroids = [];
+      state.powerUps = [];
+      state.collectibles = [];
+      state.cookie = null;
+      state.quest = {
+        level: 1,
+        phase: 'intro',   // 'intro' | 'play' | 'won' | 'complete' | 'failed'
+        phaseTimer: 120,  // frames left in a banner phase
+        timer: 0,         // play frames elapsed in this level
+        goal: QUEST_LEVELS[0].goal,
+        collected: 0,
+        cookies: [],      // the raining quest cookies
+        boss: null        // the Giant Cookie (level 3 only)
+      };
+      handlers.onQuestEvent('start', 1);
+    }
+
+    function questLevelDef() {
+      return QUEST_LEVELS[state.quest.level - 1];
+    }
+
+    // intro -> play: the blasters are granted for the whole level (plus
+    // 300 frames of slack) and level 3 gets its boss. No randoms.
+    function beginQuestPlay() {
+      var q = state.quest;
+      var def = questLevelDef();
+      q.phase = 'play';
+      q.timer = 0;
+      state.activeEffects.weaponUpgrade = Math.max(state.activeEffects.weaponUpgrade, def.duration + 300);
+      if (q.level === 3) {
+        q.boss = {
+          x: canvas.width / 2,
+          y: canvas.height * 0.28,
+          vx: 2.2,
+          vy: 1.3,
+          radius: 58,
+          hp: QUEST_BOSS_HP,
+          maxHp: QUEST_BOSS_HP,
+          rotation: 0,
+          hitFlash: 0,
+          contactCooldown: 0 // ship-bump immunity frames (see updateQuestBoss)
+        };
+      }
+    }
+
+    function questLevelWon() {
+      var q = state.quest;
+      q.phase = 'won';
+      q.phaseTimer = 120;
+      q.boss = null;
+      handlers.onQuestEvent('levelWon', q.level);
+    }
+
+    function questFailed() {
+      var q = state.quest;
+      q.phase = 'failed';
+      q.phaseTimer = 120;
+      q.boss = null;
+      handlers.onQuestEvent('failed', q.level);
+    }
+
+    // Phase machine + per-frame spawn rolls + boss motion. Runs in
+    // updateSpawns()'s slot while a quest is active (after the players,
+    // shooting, the effects tick and the wall clamp; before projectiles
+    // move), so no asteroids, treats or orbs spawn during a quest.
+    // Randoms per play frame, in order: the cookie-rain roll (levels 1–2;
+    // not rolled when `rain` is 0), then the burnt-cookie roll (levels 2–3;
+    // not rolled when `burnt` is 0), each followed by its factory's draws on
+    // a hit; then, on level 3 every 150th play frame, the 8 crumb ids. Banner
+    // phases and the intro draw nothing.
+    function updateQuest() {
+      var q = state.quest;
+      var def = questLevelDef();
+      if (q.phase === 'intro') {
+        q.phaseTimer--;
+        if (q.phaseTimer <= 0) beginQuestPlay();
+        return;
+      }
+      if (q.phase === 'play') {
+        q.timer++;
+        if (def.rain > 0 && Math.random() < def.rain) {
+          q.cookies.push(createQuestCookie(canvas.width));
+        }
+        if (def.burnt > 0 && Math.random() < def.burnt) {
+          state.asteroids.push(createBurntCookie(canvas.width, canvas.height));
+        }
+        var b = q.boss;
+        if (b) {
+          b.x += b.vx;
+          b.y += b.vy;
+          b.rotation += 0.004;
+          // Bounce off the world bounds, `radius` in from each edge
+          if (b.x < b.radius) { b.x = b.radius; b.vx = Math.abs(b.vx); }
+          if (b.x > canvas.width - b.radius) { b.x = canvas.width - b.radius; b.vx = -Math.abs(b.vx); }
+          if (b.y < b.radius) { b.y = b.radius; b.vy = Math.abs(b.vy); }
+          if (b.y > canvas.height - b.radius) { b.y = canvas.height - b.radius; b.vy = -Math.abs(b.vy); }
+          if (b.hitFlash > 0) b.hitFlash--;
+          if (b.contactCooldown > 0) b.contactCooldown--;
+          if (q.timer % QUEST_BOSS_FIRE_INTERVAL === 0) {
+            for (var i = 0; i < 8; i++) {
+              var ang = (i / 8) * Math.PI * 2;
+              state.asteroids.push(createCrumb(
+                b.x + Math.cos(ang) * (b.radius + 12),
+                b.y + Math.sin(ang) * (b.radius + 12),
+                ang));
+            }
+          }
+        }
+        if (q.timer >= def.duration) questFailed();
+        return;
+      }
+      // Banner phases: 'won', 'failed', 'complete'
+      q.phaseTimer--;
+      if (q.phaseTimer > 0) return;
+      if (q.phase === 'won') {
+        if (q.level < 3) {
+          q.level++;
+          q.phase = 'intro';
+          q.phaseTimer = 120;
+          q.timer = 0;
+          q.goal = QUEST_LEVELS[q.level - 1].goal;
+          q.collected = 0;
+          q.cookies = [];
+        } else {
+          q.phase = 'complete';
+          q.phaseTimer = 180;
+          handlers.onQuestComplete();
+        }
+      } else {
+        state.quest = null; // 'complete' or 'failed': back to the nebula
+      }
+    }
+
+    // Quest cookies fall (magnet pulls them exactly like treats) and are
+    // picked up during the play phase: +50, collected++. Runs right after
+    // updateCollectibles(). Randoms per pickup, in order: the "+50" text
+    // id, then createShockwaveRing's 6 particles (life + id each).
+    function updateQuestCookies() {
+      var q = state.quest;
+      for (var i = q.cookies.length - 1; i >= 0; i--) {
+        var c = q.cookies[i];
+        applyMagnetPull(c);
+        c.x += c.vx;
+        c.y += c.vy;
+        c.rotation += c.spin;
+        // Gone below the screen (or flung far off by the magnet)
+        if (c.y > canvas.height + 40 || c.y < -300 || c.x < -300 || c.x > canvas.width + 300) {
+          q.cookies.splice(i, 1);
+          continue;
+        }
+        if (q.phase !== 'play') continue;
+        var players = [state.player, state.player2];
+        for (var k = 0; k < players.length; k++) {
+          var p = players[k];
+          if (!p) continue;
+          var dx = p.x - c.x;
+          var dy = p.y - c.y;
+          if (Math.sqrt(dx * dx + dy * dy) < c.radius + p.radius + 10) {
+            state.score += 50;
+            q.collected++;
+            handlers.onScoreUpdate(state.score);
+            addFloatingText(c.x, c.y, '+50', COOKIE_GOLD, 0.95);
+            createShockwaveRing(c.x, c.y, COOKIE_COLOR, 6);
+            q.cookies.splice(i, 1);
+            if (q.collected >= q.goal && q.level < 3) questLevelWon();
+            break;
+          }
+        }
+      }
+    }
+
+    // The Giant Cookie's collisions. Runs right after updateAsteroids().
+    // Projectiles within radius + 4 hit (+5, hp--, flash, ring); a ship
+    // touching it is pushed out along the normal with its inward velocity
+    // zeroed and takes the asteroid damage path (overthrusters: no damage,
+    // the boss is NOT destroyed; shield absorbs; else hull damage with the
+    // armor/fragile rules), with a 45-frame contact cooldown so one bump
+    // doesn't drain the hull every frame. Randoms, in order: per projectile
+    // hit (projectile array order, last to first; the loop stops once hp
+    // reaches 0) the ring's 5 particles; if hp <= 0: 3 rings of 16, 40
+    // createParticle, the "COOKIE JAR CRACKED!" text id; else per ship bump
+    // the same particles/text as the matching asteroid-hit branch.
+    function updateQuestBoss() {
+      var q = state.quest;
+      var b = q.boss;
+      if (q.phase !== 'play') return;
+      for (var j = state.projectiles.length - 1; j >= 0; j--) {
+        var proj = state.projectiles[j];
+        var pdx = proj.x - b.x;
+        var pdy = proj.y - b.y;
+        if (Math.sqrt(pdx * pdx + pdy * pdy) < b.radius + 4) {
+          state.projectiles.splice(j, 1);
+          b.hp--;
+          b.hitFlash = 8;
+          state.score += 5;
+          handlers.onScoreUpdate(state.score);
+          createShockwaveRing(proj.x, proj.y, COOKIE_COLOR, 5);
+          if (b.hp <= 0) break;
+        }
+      }
+      if (b.hp <= 0) {
+        var colors = [COOKIE_COLOR, '#8b5a2b', '#fde68a'];
+        for (var r = 0; r < 3; r++) createShockwaveRing(b.x, b.y, colors[r], 16);
+        for (var n = 0; n < 40; n++) state.particles.push(createParticle(b.x, b.y, colors[n % 3]));
+        addFloatingText(b.x, b.y, 'COOKIE JAR CRACKED!', COOKIE_GOLD, 1.8);
+        state.score += 500;
+        handlers.onScoreUpdate(state.score);
+        shake = 18;
+        questLevelWon();
+        return;
+      }
+      var ships = [state.player, state.player2];
+      for (var k = 0; k < ships.length; k++) {
+        var p = ships[k];
+        if (!p) continue;
+        var dx = p.x - b.x;
+        var dy = p.y - b.y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist >= b.radius + p.radius) continue;
+        var nx = dist > 0 ? dx / dist : 0;
+        var ny = dist > 0 ? dy / dist : -1;
+        // Push the ship out along the normal and kill its inward velocity
+        p.x = b.x + nx * (b.radius + p.radius);
+        p.y = b.y + ny * (b.radius + p.radius);
+        var dot = p.vx * nx + p.vy * ny;
+        if (dot < 0) {
+          p.vx -= dot * nx;
+          p.vy -= dot * ny;
+        }
+        if (state.activeEffects.speedBoost > 0) {
+          // Ramming only bounces the ship off — the jar doesn't budge
+          shake = 5;
+          for (var s = 0; s < 8; s++) state.particles.push(createParticle(p.x, p.y, '#22c55e'));
+          continue;
+        }
+        if (b.contactCooldown > 0) continue;
+        b.contactCooldown = QUEST_BOSS_CONTACT_COOLDOWN;
+        if (state.activeEffects.shield > 0) {
+          state.activeEffects.shield = Math.max(0, state.activeEffects.shield - 100);
+          shake = 6;
+          addFloatingText(p.x, p.y, 'SHIELD ABSORBED', '#a855f7', 0.95);
+          createShockwaveRing(p.x, p.y, '#a855f7', 15);
+          for (var t = 0; t < 10; t++) state.particles.push(createParticle(p.x, p.y, '#a855f7'));
+        } else {
+          var damage = (config.isLocalMultiplayer || config.isCPUMultiplayer || config.online) ? 18 : 25;
+          var hitFlame = p.id === 'player1' ? config.flame : config.flame2;
+          if (hitFlame && hitFlame.power === 'armor') damage = Math.round(damage * 0.6);
+          if (hitFlame && hitFlame.power === 'fragile') damage *= 2;
+          state.health -= damage;
+          handlers.onHealthUpdate(state.health);
+          shake = 22;
+          addFloatingText(p.x, p.y, '-' + damage + '% HULL DAMAGE', '#ff0000', 1.25);
+          createShockwaveRing(p.x, p.y, '#ff0000', 20);
+          for (var u = 0; u < 12; u++) state.particles.push(createParticle(p.x, p.y, '#ff0000'));
+          if (state.health <= 0) {
+            startDeathSequence(p, { x: b.x, y: b.y, color: COOKIE_COLOR });
+            return;
+          }
+          state.hitCount++;
+          handlers.onHit();
+        }
+      }
+    }
+
     function update() {
       if (isPaused || !state || state.isGameOver) return;
+      state.frame++; // counts every simulated frame (cookie quest timing)
 
       if (config.online && config.online.role === 'guest') {
         // The host simulates; we mirror it. Keep the star parallax local so
@@ -1173,7 +1668,7 @@
       updatePlayer1(accel, friction, moveSpeed);
       updatePlayer2(accel, friction, moveSpeed);
       updateShooting();
-      updateDifficulty();
+      if (!state.quest) updateDifficulty(); // difficulty is frozen during the cookie quest
 
       // Magnet Muzzle: the treat magnet never switches off (kept one tick
       // ahead of the per-frame decay below)
@@ -1206,7 +1701,14 @@
         p.y = clampedY;
       }
 
-      updateSpawns();
+      if (state.quest) {
+        // Cookie quest: no asteroid/treat/orb spawns; cookie rain, burnt
+        // cookies and the boss's motion instead.
+        updateQuest();
+      } else {
+        updateSpawns();
+        updateDriftingCookie(); // the secret cookie: spawn on its frame, drift, catch
+      }
 
       // Update Projectiles
       for (var pi = state.projectiles.length - 1; pi >= 0; pi--) {
@@ -1221,7 +1723,9 @@
       updatePowerUps();
 
       updateCollectibles();
+      if (state.quest) updateQuestCookies(); // raining cookies: fall, magnet, pickup
       updateAsteroids();
+      if (state.quest && state.quest.boss) updateQuestBoss(); // Giant Cookie: shots, ship bumps, death
 
       // Magnet burns twice as fast as the other effects (also ticked in the
       // effects loop above). This second tick must come AFTER
@@ -1643,6 +2147,40 @@
       ctx.restore();
     }
 
+    // Charred cookie — the cookie quest's burnt cookies and crumbs. A round
+    // silhouette from the vertex list, a charred edge and 5 darker chips
+    // placed from the vertices, so nothing is random at draw time.
+    function drawBurntCookie(a) {
+      var R = a.radius;
+      var P = ASTEROID_PALETTES.burnt;
+      var g = ctx.createRadialGradient(-R * 0.3, -R * 0.3, R * 0.1, 0, 0, R);
+      g.addColorStop(0, P.gradient[0]);
+      g.addColorStop(0.6, P.gradient[1]);
+      g.addColorStop(1, P.gradient[2]);
+      ctx.fillStyle = g;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = P.glow;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = P.outline; // charred edge
+      ctx.stroke();
+
+      ctx.save();
+      ctx.clip();
+      ctx.fillStyle = P.hole;
+      var steps = a.vertices.length;
+      for (var k = 0; k < 5; k++) {
+        var idx = Math.floor(k * steps / 5);
+        var ang = (idx / steps) * Math.PI * 2 + 0.5;
+        var dist = R * a.vertices[idx] * (k % 2 ? 0.55 : 0.3);
+        ctx.beginPath();
+        ctx.arc(Math.cos(ang) * dist, Math.sin(ang) * dist, R * 0.15, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
     function drawAsteroids() {
       state.asteroids.forEach(function (a) {
         ctx.save();
@@ -1651,9 +2189,207 @@
         traceAsteroidPath(a);
         if (a.style === 'faceted') drawFacetedAsteroid(a);
         else if (a.style === 'blobby') drawBlobbyAsteroid(a);
+        else if (a.style === 'burnt') drawBurntCookie(a);
         else drawRockyAsteroid(a);
         ctx.restore();
       });
+    }
+
+    // --- Secret cookie quest: drawing (no Math.random() anywhere here) ------
+
+    // A chocolate-chip cookie disc in local coordinates: tan dough with a
+    // soft glow and 6 chips at fixed angles from `rotation`.
+    function drawCookieDisc(R, rotation) {
+      ctx.save();
+      ctx.rotate(rotation);
+      var g = ctx.createRadialGradient(-R * 0.3, -R * 0.3, R * 0.1, 0, 0, R);
+      g.addColorStop(0, '#f1c27d');
+      g.addColorStop(0.7, '#d4a373');
+      g.addColorStop(1, '#a86f3a');
+      ctx.beginPath();
+      ctx.arc(0, 0, R, 0, Math.PI * 2);
+      ctx.fillStyle = g;
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = COOKIE_COLOR;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#8b5a2b';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.fillStyle = '#3b2314';
+      for (var i = 0; i < 6; i++) {
+        var a = i * (Math.PI / 3) + 0.4;
+        var d = R * (i % 2 ? 0.55 : 0.3);
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * d, Math.sin(a) * d, R * 0.16, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // Outline of a cookie with a bite out of its upper right, as one path:
+    // the disc's arc around to the bite, then the bite circle's inner arc
+    // back to the start (so it can be filled, stroked and clipped as one).
+    function traceBittenCookie(R) {
+      var TAU = Math.PI * 2;
+      var theta = -Math.PI / 4; // bite direction
+      var d = R * 0.92;         // bite circle center distance
+      var r = R * 0.42;         // bite circle radius
+      var cx = Math.cos(theta) * d;
+      var cy = Math.sin(theta) * d;
+      var alpha = Math.acos((R * R + d * d - r * r) / (2 * R * d));
+      var a1 = theta + alpha;
+      var a2 = theta - alpha;
+      var p1x = Math.cos(a1) * R;
+      var p1y = Math.sin(a1) * R;
+      var p2x = Math.cos(a2) * R;
+      var p2y = Math.sin(a2) * R;
+      ctx.beginPath();
+      ctx.arc(0, 0, R, a1, a2 + TAU);
+      var b2 = Math.atan2(p2y - cy, p2x - cx);
+      var b1 = Math.atan2(p1y - cy, p1x - cx);
+      var mid = theta + Math.PI; // the bite arc inside the disc faces the center
+      var clockwise = ((mid - b2 + TAU * 2) % TAU) < ((b1 - b2 + TAU * 2) % TAU);
+      ctx.arc(cx, cy, r, b2, b1, !clockwise);
+      ctx.closePath();
+    }
+
+    // The Giant Cookie: a big bitten cookie with chips, a white flash while
+    // hitFlash > 0 and an hp bar above it.
+    function drawQuestBoss(b) {
+      var R = b.radius;
+      ctx.save();
+      ctx.translate(b.x, b.y);
+      ctx.rotate(b.rotation);
+      traceBittenCookie(R);
+      var g = ctx.createRadialGradient(-R * 0.3, -R * 0.3, R * 0.1, 0, 0, R);
+      g.addColorStop(0, '#f1c27d');
+      g.addColorStop(0.7, '#d4a373');
+      g.addColorStop(1, '#a86f3a');
+      ctx.fillStyle = g;
+      ctx.shadowBlur = 28;
+      ctx.shadowColor = COOKIE_COLOR;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#8b5a2b';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.save();
+      ctx.clip();
+      ctx.fillStyle = '#3b2314';
+      var chips = [[-0.45, -0.35], [0.1, -0.55], [-0.6, 0.2], [0, 0.05], [0.5, 0.3], [-0.25, 0.6], [0.3, 0.65]];
+      for (var i = 0; i < chips.length; i++) {
+        ctx.beginPath();
+        ctx.arc(chips[i][0] * R, chips[i][1] * R, R * (0.11 + 0.02 * (i % 3)), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (b.hitFlash > 0) {
+        ctx.fillStyle = 'rgba(255, 255, 255, ' + (0.7 * b.hitFlash / 8) + ')';
+        ctx.fillRect(-R, -R, R * 2, R * 2);
+      }
+      ctx.restore();
+      ctx.restore();
+
+      // HP bar above the jar: dark track, gold fill
+      var w = 110;
+      var h = 7;
+      var x = b.x - w / 2;
+      var y = b.y - R - 22;
+      ctx.save();
+      ctx.fillStyle = 'rgba(9, 12, 28, 0.8)';
+      roundedRect(x - 1, y - 1, w + 2, h + 2, 4);
+      ctx.fill();
+      ctx.fillStyle = COOKIE_GOLD;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = COOKIE_GOLD;
+      roundedRect(x, y, w * Math.max(0, b.hp / b.maxHp), h, 3);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Drifting cookie, raining quest cookies and the boss — drawn after the
+    // asteroids and before the ships.
+    function drawCookies() {
+      if (state.cookie) {
+        ctx.save();
+        ctx.translate(state.cookie.x, state.cookie.y);
+        drawCookieDisc(state.cookie.radius, state.cookie.rotation);
+        ctx.restore();
+      }
+      if (!state.quest) return;
+      state.quest.cookies.forEach(function (c) {
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        drawCookieDisc(c.radius, c.rotation);
+        ctx.restore();
+      });
+      if (state.quest.boss) drawQuestBoss(state.quest.boss);
+    }
+
+    function formatClock(frames) {
+      var secs = Math.max(0, Math.ceil(frames / 60));
+      var m = Math.floor(secs / 60);
+      var s = secs % 60;
+      return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    // Quest status line under the HUD bar plus the phase banners (drawn
+    // last, after the tutorial card).
+    function drawQuestOverlay() {
+      var q = state.quest;
+      if (!q) return;
+      var def = QUEST_LEVELS[q.level - 1];
+      var cx = canvas.width / 2;
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      var progress = q.level === 3
+        ? 'GIANT COOKIE ' + (q.boss ? (q.boss.maxHp - q.boss.hp) : QUEST_BOSS_HP) + '/' + QUEST_BOSS_HP
+        : q.collected + '/' + q.goal;
+      ctx.font = '12px monospace';
+      ctx.fillStyle = '#fde68a';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = COOKIE_GOLD;
+      ctx.fillText('SECRET LEVEL ' + q.level + '/3 · ' + def.name + ' · ' + progress + ' · ' +
+        formatClock(def.duration - q.timer), cx, 120);
+
+      var title = null;
+      var sub = null;
+      var total = 0;
+      if (q.phase === 'intro') {
+        title = 'SECRET LEVEL ' + q.level;
+        sub = def.name + ' · ' + def.hint;
+        total = 120;
+      } else if (q.phase === 'won') {
+        title = 'LEVEL CLEARED!';
+        total = 120;
+      } else if (q.phase === 'failed') {
+        title = "TIME'S UP";
+        sub = 'BACK TO THE NEBULA';
+        total = 120;
+      } else if (q.phase === 'complete') {
+        title = 'COOKIE QUEST COMPLETE!';
+        sub = '+1000 COINS · 3 SECRET SKINS UNLOCKED';
+        total = 180;
+      }
+      if (title) {
+        // fade in over the first 15 frames, out over the last 20
+        var alpha = Math.max(0, Math.min(1, (total - q.phaseTimer) / 15, q.phaseTimer / 20));
+        ctx.globalAlpha = alpha;
+        ctx.font = '900 34px sans-serif';
+        ctx.fillStyle = COOKIE_GOLD;
+        ctx.shadowBlur = 24;
+        ctx.shadowColor = COOKIE_GOLD;
+        ctx.fillText(title, cx, canvas.height / 2 - 30);
+        if (sub) {
+          ctx.font = 'bold 14px monospace';
+          ctx.fillStyle = '#fde68a';
+          ctx.shadowBlur = 10;
+          ctx.fillText(sub, cx, canvas.height / 2 + 10);
+        }
+      }
+      ctx.restore();
     }
 
     function drawShips() {
@@ -2197,10 +2933,12 @@
       drawProjectiles();
       drawParticles();
       drawAsteroids();
+      drawCookies(); // secret cookie, quest cookies, the Giant Cookie
       drawShips();
       drawFloatingTexts();
       drawEffectsHud();
       drawTutorial();
+      drawQuestOverlay(); // quest status line and banners
 
       ctx.restore();
     }
@@ -2214,6 +2952,8 @@
     }
 
     function buildSnapshot() {
+      // The secret cookie quest never runs online (cookieSpawnFrame is -1
+      // whenever config.online is set), so snapshots carry no quest fields.
       var snap = {
         t: 's',
         sc: Math.round(state.score),
@@ -2449,6 +3189,10 @@
         if (config.flame && config.flame.power === 'fast') config.flameSpeedMult = 1.35;
         if (config.flame && config.flame.power === 'slow') config.flameSpeedMult = 0.65;
         config.online = options.online || null; // {role, send} for internet play
+        // Cookie quest test hooks (see config): a fixed spawn frame and/or a
+        // cookie aimed at the ship's y. Production callers pass neither.
+        config.cookieSpawnFrame = typeof options.cookieSpawnFrame === 'number' ? options.cookieSpawnFrame : undefined;
+        config.cookieAimAtShip = !!options.cookieAimAtShip;
         resetNet();
 
         resizeCanvas();
@@ -2515,6 +3259,27 @@
               vy: Math.round(pair[1].vy * 100) / 100
             };
           }
+        });
+        // Secret cookie quest telemetry (compared by the iOS parity test)
+        out.frame = state.frame;
+        out.cookieSpawnFrame = state.cookieSpawnFrame;
+        out.cookie = state.cookie ? { x: r1(state.cookie.x), y: r1(state.cookie.y) } : null;
+        out.quest = state.quest ? {
+          level: state.quest.level,
+          phase: state.quest.phase,
+          collected: state.quest.collected,
+          timer: state.quest.timer,
+          bossHp: state.quest.boss ? state.quest.boss.hp : null
+        } : null;
+        out.questCookies = state.quest ? state.quest.cookies.map(function (c) {
+          return { x: r1(c.x), y: r1(c.y) };
+        }) : [];
+        out.boss = state.quest && state.quest.boss ? {
+          x: r1(state.quest.boss.x), y: r1(state.quest.boss.y),
+          vx: r1(state.quest.boss.vx), vy: r1(state.quest.boss.vy), hp: state.quest.boss.hp
+        } : null;
+        out.asteroids = state.asteroids.map(function (a) {
+          return { x: r1(a.x), y: r1(a.y), vx: r1(a.vx), vy: r1(a.vy), r: r1(a.radius), style: a.style };
         });
         return out;
       }
