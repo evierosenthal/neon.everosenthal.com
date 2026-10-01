@@ -38,8 +38,11 @@ extension AppState {
         config.isCPUMultiplayer = isCPUMultiplayer
         config.controlModePreference = .keyboard
         config.speedFactor = Double(speedPercent) / 100
-        config.cookieSpawnFrame = debugCookieSpawnFrame
-        config.cookieAimAtShip = debugCookieAimAtShip
+        // Lead developers test the cookie quest a lot: the cookie shows up 3 s
+        // into every Hard run, aimed at the ship (ui.js does the same). The
+        // debug launch hooks still win when set.
+        config.cookieSpawnFrame = debugCookieSpawnFrame ?? (isLeadDeveloper ? 180 : nil)
+        config.cookieAimAtShip = debugCookieAimAtShip || isLeadDeveloper
         let gear1 = loadout1.resolved
         config.skin = gear1.skin
         config.trail = gear1.trail

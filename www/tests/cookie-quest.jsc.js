@@ -160,14 +160,14 @@ section('fail path: catch the cookie, dodge, let level 1 time out');
     } else if (failedFrame >= 0 && clearedFrame < 0) {
       clearedFrame = f;
     }
-    if (clearedFrame >= 0 && f > clearedFrame + 400) break;
+    if (clearedFrame >= 0 && f > clearedFrame + 60) break;
     if (__events.gameOver !== null) break;
   }
   check(sawCookie, 'the drifting cookie appeared');
   check(cookieEndX !== cookieStartX, 'the cookie drifted');
   check(questStartFrame > 0, 'the still ship caught the cookie aimed at it');
   check(playStartFrame === questStartFrame + 120, 'intro banner lasts 120 frames (' + questStartFrame + ' -> ' + playStartFrame + ')');
-  check(__events.gameOver === null, 'ship survived the fail path (died at score ' + __events.gameOver + ', collected ' + maxCollected + ')');
+  check(__events.gameOver === null, 'ship survived through the quest (died at score ' + __events.gameOver + ', collected ' + maxCollected + ')');
   check(failedFrame === playStartFrame + 1800, 'level 1 times out after 1800 play frames (' + playStartFrame + ' -> ' + failedFrame + ', collected ' + maxCollected + '/10)');
   check(clearedFrame === failedFrame + 120, 'failed banner lasts 120 frames then the quest ends');
   check(asteroidsDuringPlay > 0, 'the normal asteroids keep spawning during level 1');

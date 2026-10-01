@@ -126,9 +126,10 @@
   // starts a three-level side quest (startQuest / updateQuest below).
   // Durations are frames at 60 fps; `rain` / `burnt` are per-frame spawn
   // chances during that level's play phase; `asteroids` keeps the normal
-  // asteroid spawns running (at the frozen difficulty) during the level.
+  // asteroid spawns running during the level, scaled by that factor (0 =
+  // none; 0.65 = about two thirds of the frozen difficulty's density).
   var QUEST_LEVELS = [
-    { name: 'COOKIE CRUMBS', duration: 1800, goal: 10, rain: 0.035, burnt: 0, asteroids: true,
+    { name: 'COOKIE CRUMBS', duration: 1800, goal: 10, rain: 0.045, burnt: 0, asteroids: 0.65,
       hint: 'COLLECT 10 COOKIES · MIND THE ASTEROIDS' },
     { name: 'CRUMB STORM', duration: 2100, goal: 15, rain: 0.04, burnt: 0.02,
       hint: 'COLLECT 15 COOKIES · DODGE THE BURNT ONES' },
@@ -971,10 +972,11 @@
 
     // Spawn asteroids. The medium-tier band gets a small density boost so it
     // clearly outnumbers Easy while staying below Hard's starting density.
-    // (Also used by cookie quest levels that keep asteroids.)
-    function spawnAsteroids() {
+    // (Also used by cookie quest levels that keep asteroids, with `scale`
+    // thinning the density; the random-roll loop is the same either way.)
+    function spawnAsteroids(scale) {
       var mediumSpawnBoost = (state.difficulty >= 0.6 && state.difficulty < 1.2) ? 1.45 : 1.0;
-      var spawnChance = SPAWN_RATE * Math.pow(state.difficulty, 2) * mediumSpawnBoost;
+      var spawnChance = SPAWN_RATE * Math.pow(state.difficulty, 2) * mediumSpawnBoost * (scale || 1);
       while (spawnChance > 0) {
         if (Math.random() < Math.min(1, spawnChance)) {
           state.asteroids.push(createAsteroid(canvas.width, canvas.height, state.difficulty));
@@ -984,7 +986,7 @@
     }
 
     function updateSpawns() {
-      spawnAsteroids();
+      spawnAsteroids(1);
 
       // Spawn collectibles
       if (state.collectibles.length < 12 && Math.random() < 0.02 / Math.sqrt(state.difficulty)) {
@@ -1445,7 +1447,7 @@
       }
       if (q.phase === 'play') {
         q.timer++;
-        if (def.asteroids) spawnAsteroids();
+        if (def.asteroids) spawnAsteroids(def.asteroids);
         if (def.rain > 0 && Math.random() < def.rain) {
           q.cookies.push(createQuestCookie(canvas.width));
         }

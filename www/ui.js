@@ -1643,6 +1643,11 @@
     return !!user && (user.role === 'developer' || user.role === 'lead_developer');
   }
 
+  function isLeadDeveloper() {
+    var user = window.NeonAuth ? window.NeonAuth.state.user : null;
+    return !!user && user.role === 'lead_developer';
+  }
+
   // Secret skins stay locked (dev or not) until the cookie quest awards them.
   function isSecretLocked(skin) {
     return !!skin.secret && ownedSkins.indexOf(skin.id) === -1;
@@ -2024,7 +2029,12 @@
       flame: getFlame(selectedFlame),
       skin2: localMultiplayer ? getSkin(selectedSkin2) : null,
       trail2: localMultiplayer ? getTrail(selectedTrail2) : null,
-      flame2: localMultiplayer ? getFlame(selectedFlame2) : null
+      flame2: localMultiplayer ? getFlame(selectedFlame2) : null,
+      // Lead developers test the cookie quest a lot: the cookie shows up
+      // 3 s into every Hard run, aimed at the ship (the game's own test
+      // hooks; everyone else waits the random 20–60 s).
+      cookieSpawnFrame: isLeadDeveloper() ? 180 : undefined,
+      cookieAimAtShip: isLeadDeveloper()
     });
   }
 

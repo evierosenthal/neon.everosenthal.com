@@ -65,8 +65,10 @@ on the web because of an effect-timer ordering bug, is fixed on both sides.
 
 Hard runs (never Super Hard, never online) hide a side quest: once per run a
 cookie drifts across the screen 20–60 s in, and catching it starts three
-timed levels (collect 10 cookies among the usual asteroids, collect 15 while
-dodging burnt ones, crack the Giant Cookie). Clearing all three pays 1000 coins and unlocks the three
+timed levels (collect 10 cookies among a thinned stream of the usual
+asteroids, collect 15 while dodging burnt ones, crack the Giant Cookie). The
+cookie can appear in every Hard run; lead developers get it 3 s in, aimed at
+their ship, so it can be tested quickly. Clearing all three pays 1000 coins and unlocks the three
 secret Tailor skins (`cookie`, `chocochip`, `goldencookie`); the win is stored
 under `neon_nebula_cookie_quest` like the web. `Quest.swift` ports the web's
 quest frame for frame; `OracleParityTests` drives a scripted ship through the

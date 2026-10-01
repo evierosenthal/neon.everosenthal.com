@@ -186,7 +186,7 @@ either ship and the field clears into a three-level side quest with the blasters
 difficulty frozen:
 
 1. **Cookie Crumbs** — collect 10 falling cookies in 30 s (50 points each; the magnet pulls them)
-   while the usual Hard asteroids keep coming
+   while a thinned-out stream of the usual Hard asteroids keeps coming
 2. **Crumb Storm** — collect 15 in 35 s while dodging burnt cookies (they hit like asteroids and
    can be shot for 20, but pay nothing for drifting off)
 3. **The Cookie Jar** — crack the Giant Cookie (36 blaster hits, 5 points each, 500 for the crack)
@@ -196,6 +196,9 @@ Running out of time drops you straight back into the normal run with no reward. 
 three pays **1000 coins** (Star Fire / Money Storm multipliers apply) and unlocks the three
 secret Tailor skins — Cookie Crumb, Choco Chip and Golden Cookie — which can't be bought and
 aren't free for developers. `localStorage` remembers the win under `neon_nebula_cookie_quest`.
+
+The cookie can appear in every Hard run, whether or not the quest has been won before. Lead
+developers get it 3 seconds into every Hard run, aimed at their ship, so it can be tested quickly.
 
 Test hooks on `game.start(options)`: `cookieSpawnFrame` (a number) fixes the frame the cookie
 appears on instead of the random draw, and `cookieAimAtShip: true` spawns it at the player's y.

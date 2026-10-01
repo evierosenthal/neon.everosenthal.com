@@ -326,11 +326,15 @@ final class OracleParityTests: XCTestCase {
     /// (www/tests/cookie-quest.jsc.js "fail path").
     func testCookieQuestFailParity() throws {
         let delegateRef = RecordingDelegateBox()
+        var framesSinceEnd = 0
         try run(Scenario(name: "cookie quest fail", frames: 2700, seed: 8,
                          input: OracleParityTests.cookieQuestFailSteering,
-                         stopWhen: { _, delegate in
+                         stopWhen: { positions, delegate in
                              delegateRef.delegate = delegate
-                             return false
+                             // 60 frames after the "TIME'S UP" banner ends; the
+                             // resumed Hard run is not under test here.
+                             if delegate.questEvents.contains("failed:1") && positions.quest == nil { framesSinceEnd += 1 }
+                             return framesSinceEnd > 60
                          }) { c in
             c.initialDifficulty = 1.3
             c.controlModePreference = .keyboard
@@ -340,7 +344,7 @@ final class OracleParityTests: XCTestCase {
         let delegate = try XCTUnwrap(delegateRef.delegate)
         XCTAssertEqual(delegate.questEvents, ["start:1", "failed:1"])
         XCTAssertEqual(delegate.questCompletes, 0)
-        XCTAssertNil(delegate.gameOverScore, "ship survived the fail path")
+        XCTAssertNil(delegate.gameOverScore, "ship survived through the quest")
     }
 
     typealias ShipPos = (x: Double, y: Double, vx: Double, vy: Double)

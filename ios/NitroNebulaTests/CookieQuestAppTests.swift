@@ -85,6 +85,28 @@ nonisolated final class CookieQuestAppTests: XCTestCase {
         XCTAssertNil(app.questToast)
     }
 
+    @MainActor func testLeadDevelopersGetTheCookieEarly() {
+        let (app, _, _) = AppStateFixtures.makeApp(suite: suite)
+        app.startGame(difficulty: 1.3, mode: .single)
+        XCTAssertNil(app.pendingStart?.cookieSpawnFrame, "players wait the random 20–60 s")
+        XCTAssertEqual(app.pendingStart?.cookieAimAtShip, false)
+
+        app.session.user = APIUser(id: 1, username: "dev", role: "developer", bestScores: [:],
+                                   email: nil, provider: "password", hasPassword: true)
+        app.startGame(difficulty: 1.3, mode: .single)
+        XCTAssertNil(app.pendingStart?.cookieSpawnFrame, "plain developers play it straight too")
+
+        app.session.user = APIUser(id: 2, username: "lead", role: "lead_developer", bestScores: [:],
+                                   email: nil, provider: "password", hasPassword: true)
+        app.startGame(difficulty: 1.3, mode: .single)
+        XCTAssertEqual(app.pendingStart?.cookieSpawnFrame, 180)
+        XCTAssertEqual(app.pendingStart?.cookieAimAtShip, true)
+
+        app.debugCookieSpawnFrame = 60
+        app.startGame(difficulty: 1.3, mode: .single)
+        XCTAssertEqual(app.pendingStart?.cookieSpawnFrame, 60, "the debug hook still wins")
+    }
+
     @MainActor func testDebugHooksReachTheEngineConfig() {
         let (app, _, _) = AppStateFixtures.makeApp(suite: suite)
         app.debugCookieSpawnFrame = 180

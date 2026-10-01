@@ -319,11 +319,12 @@ public struct QuestLevelDef: Hashable, Codable, Sendable {
     public let goal: Int
     public let rain: Double
     public let burnt: Double
-    /// Keep the normal asteroid spawns running during this level.
-    public let asteroids: Bool
+    /// Keep the normal asteroid spawns running during this level, scaled
+    /// by this factor (0 = none).
+    public let asteroids: Double
     public let hint: String
 
-    public init(name: String, duration: Int, goal: Int, rain: Double, burnt: Double, asteroids: Bool = false, hint: String) {
+    public init(name: String, duration: Int, goal: Int, rain: Double, burnt: Double, asteroids: Double = 0, hint: String) {
         self.name = name; self.duration = duration; self.goal = goal
         self.rain = rain; self.burnt = burnt; self.hint = hint
         self.asteroids = asteroids
