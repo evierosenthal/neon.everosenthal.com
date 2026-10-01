@@ -126,6 +126,7 @@ extension GameEngine {
         }
         if s.quest!.phase == .play {
             s.quest!.timer += 1
+            if def.asteroids { spawnAsteroids() } // normal asteroid rolls first (game.js updateQuest)
             if def.rain > 0 && random() < def.rain {
                 s.quest!.cookies.append(createQuestCookie(width: worldSize.width))
             }

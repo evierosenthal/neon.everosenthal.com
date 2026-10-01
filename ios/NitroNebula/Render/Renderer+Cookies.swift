@@ -175,7 +175,7 @@ extension Renderer {
             let dealt = q.boss.map { $0.maxHp - $0.hp } ?? GameConstants.questBossHP
             progress = "GIANT COOKIE \(dealt)/\(GameConstants.questBossHP)"
         } else {
-            progress = "\(q.collected)/\(q.goal)"
+            progress = "\(q.collected)/\(q.goal) COOKIES"
         }
         ctx.canvasShadow(blur: 10, color: Renderer.cookieGold)
         ctx.fillText("SECRET LEVEL \(q.level)/3 · \(def.name) · \(progress) · \(Renderer.formatClock(frames: def.duration - q.timer))",

@@ -125,10 +125,11 @@
   // In a Hard run a lone cookie drifts across the screen once; catching it
   // starts a three-level side quest (startQuest / updateQuest below).
   // Durations are frames at 60 fps; `rain` / `burnt` are per-frame spawn
-  // chances during that level's play phase.
+  // chances during that level's play phase; `asteroids` keeps the normal
+  // asteroid spawns running (at the frozen difficulty) during the level.
   var QUEST_LEVELS = [
-    { name: 'COOKIE CRUMBS', duration: 1800, goal: 10, rain: 0.035, burnt: 0,
-      hint: 'COLLECT 10 COOKIES' },
+    { name: 'COOKIE CRUMBS', duration: 1800, goal: 10, rain: 0.035, burnt: 0, asteroids: true,
+      hint: 'COLLECT 10 COOKIES · MIND THE ASTEROIDS' },
     { name: 'CRUMB STORM', duration: 2100, goal: 15, rain: 0.04, burnt: 0.02,
       hint: 'COLLECT 15 COOKIES · DODGE THE BURNT ONES' },
     { name: 'THE COOKIE JAR', duration: 2700, goal: 1, rain: 0, burnt: 0.012,
@@ -478,7 +479,7 @@
         x: fromLeft ? -30 : width + 30,
         y: y,
         vx: fromLeft ? 2.4 : -2.4,
-        radius: 16,
+        radius: 11, // donut-sized (a donut draws at 9 * 1.25)
         wobble: wobble,
         rotation: 0,
         spin: 0.01,
@@ -968,9 +969,10 @@
       handlers.onDifficultyUpdate(state.difficulty);
     }
 
-    function updateSpawns() {
-      // Spawn asteroids. The medium-tier band gets a small density boost so it
-      // clearly outnumbers Easy while staying below Hard's starting density.
+    // Spawn asteroids. The medium-tier band gets a small density boost so it
+    // clearly outnumbers Easy while staying below Hard's starting density.
+    // (Also used by cookie quest levels that keep asteroids.)
+    function spawnAsteroids() {
       var mediumSpawnBoost = (state.difficulty >= 0.6 && state.difficulty < 1.2) ? 1.45 : 1.0;
       var spawnChance = SPAWN_RATE * Math.pow(state.difficulty, 2) * mediumSpawnBoost;
       while (spawnChance > 0) {
@@ -979,6 +981,10 @@
         }
         spawnChance -= 1;
       }
+    }
+
+    function updateSpawns() {
+      spawnAsteroids();
 
       // Spawn collectibles
       if (state.collectibles.length < 12 && Math.random() < 0.02 / Math.sqrt(state.difficulty)) {
@@ -1422,7 +1428,9 @@
     // updateSpawns()'s slot while a quest is active (after the players,
     // shooting, the effects tick and the wall clamp; before projectiles
     // move), so no asteroids, treats or orbs spawn during a quest.
-    // Randoms per play frame, in order: the cookie-rain roll (levels 1–2;
+    // Randoms per play frame, in order: the normal asteroid spawn rolls
+    // (levels with `asteroids`, exactly as spawnAsteroids() draws them), then
+    // the cookie-rain roll (levels 1–2;
     // not rolled when `rain` is 0), then the burnt-cookie roll (levels 2–3;
     // not rolled when `burnt` is 0), each followed by its factory's draws on
     // a hit; then, on level 3 every 150th play frame, the 8 crumb ids. Banner
@@ -1437,6 +1445,7 @@
       }
       if (q.phase === 'play') {
         q.timer++;
+        if (def.asteroids) spawnAsteroids();
         if (def.rain > 0 && Math.random() < def.rain) {
           q.cookies.push(createQuestCookie(canvas.width));
         }
@@ -2346,7 +2355,7 @@
 
       var progress = q.level === 3
         ? 'GIANT COOKIE ' + (q.boss ? (q.boss.maxHp - q.boss.hp) : QUEST_BOSS_HP) + '/' + QUEST_BOSS_HP
-        : q.collected + '/' + q.goal;
+        : q.collected + '/' + q.goal + ' COOKIES';
       ctx.font = '12px monospace';
       ctx.fillStyle = '#fde68a';
       ctx.shadowBlur = 10;

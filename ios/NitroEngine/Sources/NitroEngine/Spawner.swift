@@ -235,9 +235,10 @@ extension GameEngine {
 
     // MARK: updateSpawns (game.js:798-832)
 
-    func updateSpawns() {
+    /// spawnAsteroids(): the medium-tier band gets a small density boost.
+    /// Also used by cookie quest levels that keep asteroids.
+    func spawnAsteroids() {
         let w = worldSize.width, h = worldSize.height
-        // The medium-tier band gets a small density boost.
         let mediumSpawnBoost = (s.difficulty >= 0.6 && s.difficulty < 1.2) ? 1.45 : 1.0
         var spawnChance = GameConstants.spawnRate * pow(s.difficulty, 2) * mediumSpawnBoost
         while spawnChance > 0 {
@@ -247,6 +248,11 @@ extension GameEngine {
             }
             spawnChance -= 1
         }
+    }
+
+    func updateSpawns() {
+        let w = worldSize.width, h = worldSize.height
+        spawnAsteroids()
 
         // Spawn collectibles
         if s.collectibles.count < 12 && random() < 0.02 / s.difficulty.squareRoot() {

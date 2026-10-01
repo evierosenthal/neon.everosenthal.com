@@ -186,6 +186,7 @@ either ship and the field clears into a three-level side quest with the blasters
 difficulty frozen:
 
 1. **Cookie Crumbs** — collect 10 falling cookies in 30 s (50 points each; the magnet pulls them)
+   while the usual Hard asteroids keep coming
 2. **Crumb Storm** — collect 15 in 35 s while dodging burnt cookies (they hit like asteroids and
    can be shot for 20, but pay nothing for drifting off)
 3. **The Cookie Jar** — crack the Giant Cookie (36 blaster hits, 5 points each, 500 for the crack)

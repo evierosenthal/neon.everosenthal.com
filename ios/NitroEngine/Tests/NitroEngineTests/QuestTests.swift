@@ -95,7 +95,7 @@ final class QuestTests: XCTestCase {
         let cookie = engine.createDriftingCookie(width: 800, height: 600)
         XCTAssertEqual(engine.rngCalls - d0, 3, "side, y, wobble")
         XCTAssertEqual(cookie.id, "secret_cookie")
-        XCTAssertEqual(cookie.radius, 16)
+        XCTAssertEqual(cookie.radius, 11)
     }
 
     /// The cookie aimed at the still ship is caught, the field is wiped and

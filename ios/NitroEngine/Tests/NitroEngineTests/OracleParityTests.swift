@@ -320,25 +320,90 @@ final class OracleParityTests: XCTestCase {
 
     // MARK: Secret cookie quest
 
-    /// The cookie is aimed at the still ship: catch (~frame 300) -> level 1
-    /// intro -> 1800-frame play phase with nothing collected -> "TIME'S UP"
-    /// banner -> the normal Hard run resumes (www/tests/cookie-quest.jsc.js
-    /// "fail path").
+    /// The cookie is aimed at the ship, which dodges and intercepts it: catch
+    /// -> level 1 intro -> 1800-frame play phase among the Hard asteroids,
+    /// dodging cookies -> "TIME'S UP" banner -> the normal Hard run resumes
+    /// (www/tests/cookie-quest.jsc.js "fail path").
     func testCookieQuestFailParity() throws {
-        try run(Scenario(name: "cookie quest fail", frames: 2700, seed: 42,
-                         input: { _ in .zero }) { c in
+        let delegateRef = RecordingDelegateBox()
+        try run(Scenario(name: "cookie quest fail", frames: 2700, seed: 8,
+                         input: OracleParityTests.cookieQuestFailSteering,
+                         stopWhen: { _, delegate in
+                             delegateRef.delegate = delegate
+                             return false
+                         }) { c in
             c.initialDifficulty = 1.3
             c.controlModePreference = .keyboard
             c.cookieSpawnFrame = 120
             c.cookieAimAtShip = true
         })
+        let delegate = try XCTUnwrap(delegateRef.delegate)
+        XCTAssertEqual(delegate.questEvents, ["start:1", "failed:1"])
+        XCTAssertEqual(delegate.questCompletes, 0)
+        XCTAssertNil(delegate.gameOverScore, "ship survived the fail path")
     }
 
-    /// The steering strategy of www/tests/cookie-quest.jsc.js ("complete
-    /// path"): levels 1-2 sit mid-screen with the Magnet Muzzle dragging
-    /// cookies in, nudge toward the nearest cookie and sidestep burnt ones;
-    /// level 3 shadows the jar from 150 px below, offset 34 px so the
-    /// straight-down crumb misses, and lets the blasters work.
+    typealias ShipPos = (x: Double, y: Double, vx: Double, vy: Double)
+
+    /// safeLaneX from www/tests/cookie-quest.jsc.js: the lane (x) with the
+    /// least predicted asteroid traffic over the next 60 frames around
+    /// `rowY`, pulled toward `wantX`, and (fail path) pushed away from
+    /// raining cookies.
+    static func safeLaneX(_ d: GameEngine.DebugPositions, p: ShipPos, wantX: Double,
+                          rowY: Double, avoidCookies: Bool) -> Double {
+        var bestX = p.x, bestDanger = Double.infinity
+        var lane = 60.0
+        while lane <= 740 {
+            var danger = abs(lane - wantX) / 150
+            for a in d.asteroids {
+                var closest = Double.infinity
+                var t = 0.0
+                while t <= 60 {
+                    let ax = a.x + a.vx * t, ay = a.y + a.vy * t
+                    let ddx = ax - lane, ddy = ay - rowY
+                    let dist = (ddx * ddx + ddy * ddy).squareRoot() - a.r - 15
+                    if dist < closest { closest = dist }
+                    t += 4
+                }
+                if closest < 70 { danger += 3 * (70 - closest) / 70 }
+            }
+            if avoidCookies {
+                for c in d.questCookies where c.y < rowY && abs(c.x - lane) < 50 { danger += 1.5 }
+            }
+            if danger < bestDanger { bestDanger = danger; bestX = lane }
+            lane += 40
+        }
+        return bestX
+    }
+
+    /// preQuestTarget: dodge while waiting, intercept the drifting cookie.
+    static func preQuestTarget(_ d: GameEngine.DebugPositions, p: ShipPos) -> (x: Double, y: Double) {
+        if let c = d.cookie { return (safeLaneX(d, p: p, wantX: c.x, rowY: c.y, avoidCookies: false), c.y) }
+        return (safeLaneX(d, p: p, wantX: 400, rowY: 300, avoidCookies: false), 300)
+    }
+
+    /// steer(dx, dy): a key is held past a 6 px dead zone.
+    static func keys(dx: Double, dy: Double) -> PilotInput {
+        let dead = 6.0
+        return PilotInput(dx: dx > dead ? 1 : (dx < -dead ? -1 : 0), dy: dy > dead ? 1 : (dy < -dead ? -1 : 0))
+    }
+
+    /// The "fail path" steering of www/tests/cookie-quest.jsc.js: dodge and
+    /// intercept the cookie, then keep to the safest lane while avoiding
+    /// cookies so level 1 times out.
+    static func cookieQuestFailSteering(_ d: GameEngine.DebugPositions) -> PilotInput {
+        let p = d.p1!
+        let target: (x: Double, y: Double) = d.quest != nil
+            ? (safeLaneX(d, p: p, wantX: p.x, rowY: 330, avoidCookies: true), 330)
+            : preQuestTarget(d, p: p)
+        return keys(dx: target.x - p.x, dy: target.y - p.y)
+    }
+
+    /// The "complete path" steering of www/tests/cookie-quest.jsc.js: levels
+    /// 1-2 head for the nearest cookie above (the Magnet Muzzle drags them
+    /// in) along the safest lane; level 3 shadows the jar from 150 px below,
+    /// offset 34 px so the straight-down crumb misses, and lets the blasters
+    /// work.
     static func cookieQuestSteering(_ d: GameEngine.DebugPositions) -> PilotInput {
         let p = d.p1!
         var dx = 0.0, dy = 0.0
@@ -346,24 +411,19 @@ final class OracleParityTests: XCTestCase {
             dx = (boss.x + 34) - p.x
             dy = min(boss.y + 150, 560) - p.y
         } else if let q = d.quest, q.phase == .play {
-            var tx = 400.0, ty = 330.0, best = Double.infinity
+            var wantX = 400.0, ty = 330.0, best = Double.infinity
             for c in d.questCookies {
                 let dist = abs(c.x - p.x) + abs(c.y - p.y)
-                if c.y < p.y + 40 && dist < best { best = dist; tx = c.x; ty = max(c.y + 60, 200) }
+                if c.y < p.y + 40 && dist < best { best = dist; wantX = c.x; ty = max(c.y + 60, 200) }
             }
-            for a in d.asteroids {
-                let framesToUs = (p.y - a.y) / max(a.vy, 0.1)
-                if framesToUs > 0 && framesToUs < 60 {
-                    let ax = a.x + a.vx * framesToUs
-                    if abs(ax - p.x) < a.r + 40 { tx = ax < p.x ? p.x + 90 : p.x - 90 }
-                }
-            }
-            dx = tx - p.x
+            dx = safeLaneX(d, p: p, wantX: wantX, rowY: ty, avoidCookies: false) - p.x
             dy = ty - p.y
+        } else if d.quest == nil {
+            let pre = preQuestTarget(d, p: p)
+            dx = pre.x - p.x
+            dy = pre.y - p.y
         }
-        // steer(dx, dy): a key is held past a 6 px dead zone
-        let dead = 6.0
-        return PilotInput(dx: dx > dead ? 1 : (dx < -dead ? -1 : 0), dy: dy > dead ? 1 : (dy < -dead ? -1 : 0))
+        return keys(dx: dx, dy: dy)
     }
 
     /// Seed 1234 + Magnet Muzzle + the steering above finish all three

@@ -19,8 +19,8 @@ public enum GameConstants {
 
     /// QUEST_LEVELS: the three secret levels, indexed by `quest.level - 1`.
     public static let questLevels: [QuestLevelDef] = [
-        QuestLevelDef(name: "COOKIE CRUMBS", duration: 1800, goal: 10, rain: 0.035, burnt: 0,
-                      hint: "COLLECT 10 COOKIES"),
+        QuestLevelDef(name: "COOKIE CRUMBS", duration: 1800, goal: 10, rain: 0.035, burnt: 0, asteroids: true,
+                      hint: "COLLECT 10 COOKIES · MIND THE ASTEROIDS"),
         QuestLevelDef(name: "CRUMB STORM", duration: 2100, goal: 15, rain: 0.04, burnt: 0.02,
                       hint: "COLLECT 15 COOKIES · DODGE THE BURNT ONES"),
         QuestLevelDef(name: "THE COOKIE JAR", duration: 2700, goal: 1, rain: 0, burnt: 0.012,

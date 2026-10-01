@@ -223,13 +223,14 @@ public struct DriftingCookie: Hashable, Codable, Sendable {
     public var y: Double
     /// +2.4 from the left edge, -2.4 from the right; vy is the wobble.
     public var vx: Double
-    public var radius: Double = 16
+    /// Donut-sized (a donut body draws at 9 * 1.25).
+    public var radius: Double = 11
     /// Phase of the vertical wobble (y += sin(frame / 25 + wobble) * 0.7).
     public var wobble: Double
     public var rotation: Double = 0
     public var spin: Double = 0.01
 
-    public init(id: EntityID = "secret_cookie", x: Double, y: Double, vx: Double, radius: Double = 16,
+    public init(id: EntityID = "secret_cookie", x: Double, y: Double, vx: Double, radius: Double = 11,
                 wobble: Double, rotation: Double = 0, spin: Double = 0.01) {
         self.id = id; self.x = x; self.y = y; self.vx = vx; self.radius = radius
         self.wobble = wobble; self.rotation = rotation; self.spin = spin
@@ -318,10 +319,13 @@ public struct QuestLevelDef: Hashable, Codable, Sendable {
     public let goal: Int
     public let rain: Double
     public let burnt: Double
+    /// Keep the normal asteroid spawns running during this level.
+    public let asteroids: Bool
     public let hint: String
 
-    public init(name: String, duration: Int, goal: Int, rain: Double, burnt: Double, hint: String) {
+    public init(name: String, duration: Int, goal: Int, rain: Double, burnt: Double, asteroids: Bool = false, hint: String) {
         self.name = name; self.duration = duration; self.goal = goal
         self.rain = rain; self.burnt = burnt; self.hint = hint
+        self.asteroids = asteroids
     }
 }
