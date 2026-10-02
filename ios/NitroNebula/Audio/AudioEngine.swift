@@ -16,6 +16,10 @@ final class AudioEngine {
 
     let bgMusic = MusicTrack(resource: "background-music", ext: "m4a", level: AudioEngine.bgMusicLevel)
     let homeMusic = MusicTrack(resource: "home-music", ext: "m4a", level: AudioEngine.homeMusicLevel)
+    /// The secret cookie quest's own loop; takes over from `bgMusic` while a
+    /// quest runs (ui.js setQuestMusic).
+    let questMusic = MusicTrack(resource: "cookie-quest-music", ext: "m4a", level: AudioEngine.bgMusicLevel)
+    private(set) var questMusicActive = false
     let fanfare = SoundEffect(resource: "new-high-score", ext: "mp3", level: AudioEngine.newHighLevel)
     let death = SoundEffect(resource: "crash-death", ext: "mp3", level: AudioEngine.deathLevel, tail: AudioEngine.deathTail)
     let hit = SoundEffect(resource: "asteroid-hit", ext: "mp3", level: AudioEngine.hitLevel, tail: AudioEngine.hitTail)
@@ -54,9 +58,10 @@ final class AudioEngine {
 
         #if DEBUG
         let missing = [("background-music.m4a", bgMusic.isLoaded), ("home-music.m4a", homeMusic.isLoaded),
+                       ("cookie-quest-music.m4a", questMusic.isLoaded),
                        ("new-high-score.mp3", fanfare.isLoaded), ("crash-death.mp3", death.isLoaded),
                        ("asteroid-hit.mp3", hit.isLoaded)].filter { !$0.1 }.map(\.0)
-        NSLog("AudioEngine: %d/5 sound files loaded%@", 5 - missing.count,
+        NSLog("AudioEngine: %d/6 sound files loaded%@", 6 - missing.count,
               missing.isEmpty ? "" : " — missing: " + missing.joined(separator: ", "))
         #endif
     }
@@ -74,13 +79,34 @@ final class AudioEngine {
         let sfx = Float(max(0, min(100, sfxPercent))) / 100
         bgMusic.setVolume(scale: music, muted: music == 0)
         homeMusic.setVolume(scale: music, muted: music == 0)
+        questMusic.setVolume(scale: music, muted: music == 0)
         for effect in [fanfare, death, hit] { effect.setVolume(scale: sfx, muted: sfx == 0) }
     }
 
     // MARK: Music (ui.js:643-661)
 
+    /// Gameplay music: the cookie quest's loop while a quest is on, else the
+    /// mission loop. Both pause together.
     func setMusicPlaying(_ playing: Bool) {
-        if playing { bgMusic.play() } else { bgMusic.pause() }
+        if playing && questMusicActive {
+            bgMusic.pause()
+            questMusic.play()
+        } else if playing {
+            questMusic.pause()
+            bgMusic.play()
+        } else {
+            bgMusic.pause()
+            questMusic.pause()
+        }
+    }
+
+    /// Swap the gameplay loop in or out of quest mode (ui.js setQuestMusic);
+    /// the caller re-syncs playback. The quest loop starts from the top each
+    /// time; the mission loop resumes where it left off.
+    func setQuestMusic(_ active: Bool) {
+        guard questMusicActive != active else { return }
+        questMusicActive = active
+        if active { questMusic.rewind() }
     }
 
     func setHomeMusicPlaying(_ playing: Bool) {
@@ -89,6 +115,7 @@ final class AudioEngine {
 
     /// Each mission starts the gameplay loop from the top (ui.js:1921).
     func rewindMusic() {
+        setQuestMusic(false)
         bgMusic.rewind()
     }
 
@@ -111,6 +138,7 @@ final class AudioEngine {
     private func interruptionBegan() {
         bgMusic.suspend()
         homeMusic.suspend()
+        questMusic.suspend()
     }
 
     private func interruptionEnded(shouldResume: Bool) {
@@ -118,6 +146,7 @@ final class AudioEngine {
         guard shouldResume else { return }
         bgMusic.resumeIfWanted()
         homeMusic.resumeIfWanted()
+        questMusic.resumeIfWanted()
     }
 
     private func routeLost() {

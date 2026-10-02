@@ -45,6 +45,9 @@ Sound effects (from [Pixabay](https://pixabay.com/)):
 - `sounds/background-music.m4a` — original synthwave loop composed for this game
   (8 bars, 112 BPM, Am-F-C-G); loops during gameplay, pauses with the game
 - `sounds/home-music.m4a` — original chiptune-pop loop composed for the home screen
+- `sounds/cookie-quest-music.m4a` — original quirky chiptune loop for the secret cookie quest,
+  synthesised by `tools/compose-cookie-quest-music.py` (edit the note tables there and re-run
+  it to change the tune; it writes the web and iOS copies)
   (16 bars, 104 BPM, E-B-C#m-A); loops while the menu is up and stops when a mission starts
 
 Both music loops are decoded once and looped by the Web Audio API (sample-accurate, never

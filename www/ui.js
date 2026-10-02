@@ -654,6 +654,10 @@
   // Home screen loop: original chiptune-pop, plays whenever the menu is up.
   var HOME_MUSIC_LEVEL = 0.22; // the loop is denser than the gameplay track, so it sits a little lower
   var homeMusic = new MusicTrack('sounds/home-music.m4a', HOME_MUSIC_LEVEL);
+  // The secret cookie quest's own loop: takes over from bgMusic while the
+  // quest runs (see setQuestMusic), at the gameplay music level.
+  var questMusic = new MusicTrack('sounds/cookie-quest-music.m4a', BG_MUSIC_LEVEL);
+  var questMusicActive = false;
 
   function setHomeMusicPlaying(playing) {
     if (playing) homeMusic.play();
@@ -667,12 +671,32 @@
       if (ctx && ctx.state === 'suspended') ctx.resume().catch(function () { /* still blocked */ });
       bgMusic.kick();
       homeMusic.kick();
+      questMusic.kick();
     });
   });
 
+  // Gameplay music: the cookie quest's loop while a quest is on, else the
+  // mission loop. Both pause together (pause screen, settings, game over).
   function setMusicPlaying(playing) {
-    if (playing) bgMusic.play();
-    else bgMusic.pause();
+    if (playing && questMusicActive) {
+      bgMusic.pause();
+      questMusic.play();
+    } else if (playing) {
+      questMusic.pause();
+      bgMusic.play();
+    } else {
+      bgMusic.pause();
+      questMusic.pause();
+    }
+  }
+
+  // Swap the gameplay loop in or out of quest mode. The quest loop starts
+  // from the top each time; the mission loop resumes where it left off.
+  function setQuestMusic(active) {
+    if (questMusicActive === active) return;
+    questMusicActive = active;
+    if (active) questMusic.rewind();
+    setMusicPlaying(gameState === 'PLAYING' && !isPaused);
   }
 
   // "You Win" fanfare by floraphonic (pixabay.com, sound #183950) — played
@@ -708,6 +732,7 @@
     el.sfxValue.textContent = sfx === 0 ? 'OFF' : Math.round(sfx * 100) + '%';
     bgMusic.setVolume(music, music === 0);
     homeMusic.setVolume(music, music === 0);
+    questMusic.setVolume(music, music === 0);
     newHighSound.volume = NEW_HIGH_LEVEL * sfx;
     deathSound.volume = DEATH_LEVEL * sfx;
     hitSound.volume = HIT_LEVEL * sfx;
@@ -763,14 +788,20 @@
   }
 
   function handleQuestEvent(kind, level) {
-    if (kind === 'start') showGameToast('SECRET LEVEL FOUND · THE COOKIE QUEST BEGINS', 4000);
-    else if (kind === 'failed') showGameToast('COOKIE QUEST OVER · BACK TO THE NEBULA', 4000);
+    if (kind === 'start') {
+      setQuestMusic(true);
+      showGameToast('SECRET LEVEL FOUND · THE COOKIE QUEST BEGINS', 4000);
+    } else if (kind === 'failed') {
+      setQuestMusic(false);
+      showGameToast('COOKIE QUEST OVER · BACK TO THE NEBULA', 4000);
+    }
     // 'levelWon' is celebrated by the canvas banner (level is unused here)
   }
 
   // Level 3 cleared: pay out (fire coin powers apply like mission pay),
   // unlock the three secret skins, remember it, and celebrate.
   function handleQuestComplete() {
+    setQuestMusic(false); // the mission loop returns under the fanfare
     var earned = applyCoinPowers(COOKIE_QUEST_COINS);
     coins += earned;
     SECRET_SKIN_IDS.forEach(function (id) {
@@ -2008,6 +2039,7 @@
     currentMode = (localMultiplayer ? '2p_' : '') + modeFromDifficulty(diff);
     refreshHighScoreDisplays();
     buildModeStrip();
+    setQuestMusic(false);
     bgMusic.rewind(); // each mission starts the track from the top
     isLocalMultiplayer = !!localMultiplayer;
     isCPUMultiplayer = !!cpuMultiplayer;

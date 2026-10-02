@@ -18,9 +18,16 @@ extension AppState {
     /// a cleared level is celebrated by the canvas banner.
     func engine(_ engine: GameEngine, questEvent: QuestEvent, level: Int) {
         switch questEvent {
-        case .start: showGameToast("SECRET LEVEL FOUND · THE COOKIE QUEST BEGINS", seconds: 4)
-        case .failed: showGameToast("COOKIE QUEST OVER · BACK TO THE NEBULA", seconds: 4)
-        case .levelWon: break
+        case .start:
+            audio.setQuestMusic(true)
+            sync()
+            showGameToast("SECRET LEVEL FOUND · THE COOKIE QUEST BEGINS", seconds: 4)
+        case .failed:
+            audio.setQuestMusic(false)
+            sync()
+            showGameToast("COOKIE QUEST OVER · BACK TO THE NEBULA", seconds: 4)
+        case .levelWon:
+            break
         }
     }
 
@@ -35,6 +42,8 @@ extension AppState {
     /// handleQuestComplete (ui.js): pay out (fire coin powers apply like
     /// mission pay), unlock the three secret skins, remember it, celebrate.
     func handleQuestComplete() {
+        audio.setQuestMusic(false) // the mission loop returns under the fanfare
+        sync()
         let earned = Economy.applyCoinPowers(Economy.cookieQuestCoins, flamePower: loadout1.resolved.flame.power)
         coins += earned
         for id in AppState.secretSkinIDs where !ownedSkins.contains(id) {

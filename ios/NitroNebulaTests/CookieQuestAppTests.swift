@@ -72,6 +72,26 @@ nonisolated final class CookieQuestAppTests: XCTestCase {
         XCTAssertEqual(app.loadout1.skin, "cookie")
     }
 
+    @MainActor func testQuestMusicSwapsWithTheQuest() {
+        let (app, _, _) = AppStateFixtures.makeApp(suite: suite)
+        XCTAssertTrue(app.audio.questMusic.isLoaded, "cookie-quest-music.m4a is bundled")
+        XCTAssertFalse(app.audio.questMusicActive)
+        app.engine(app.engine, questEvent: .start, level: 1)
+        XCTAssertTrue(app.audio.questMusicActive)
+        app.engine(app.engine, questEvent: .levelWon, level: 1)
+        XCTAssertTrue(app.audio.questMusicActive, "level banners keep the quest loop")
+        app.engine(app.engine, questEvent: .failed, level: 2)
+        XCTAssertFalse(app.audio.questMusicActive)
+
+        app.engine(app.engine, questEvent: .start, level: 1)
+        app.handleQuestComplete()
+        XCTAssertFalse(app.audio.questMusicActive, "completion hands back to the mission loop")
+
+        app.engine(app.engine, questEvent: .start, level: 1)
+        app.startGame(difficulty: 1.3, mode: .single)
+        XCTAssertFalse(app.audio.questMusicActive, "a new mission always starts on the mission loop")
+    }
+
     @MainActor func testQuestEventsToastAndClearOffMission() {
         let (app, _, _) = AppStateFixtures.makeApp(suite: suite)
         app.engine(app.engine, questEvent: .start, level: 1)
