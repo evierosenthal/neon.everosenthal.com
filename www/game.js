@@ -143,6 +143,25 @@
   var COOKIE_GOLD = '#fbbf24';
   // Crumb outline (no randoms): ten near-round vertices
   var CRUMB_VERTICES = [1, 0.96, 1.02, 0.95, 1, 0.97, 1.03, 0.96, 1, 0.98];
+  // Chocolate chips, hand-scattered so they don't read as a pattern: three
+  // layouts of [x, y, radius] as fractions of the cookie radius; each cookie
+  // picks one from its id (cookieChipLayout). Nothing is random at draw time.
+  var COOKIE_CHIP_LAYOUTS = [
+    [[-0.42, -0.30, 0.17], [0.15, -0.48, 0.14], [0.47, -0.05, 0.16], [-0.05, 0.08, 0.13],
+      [-0.48, 0.33, 0.15], [0.22, 0.46, 0.17], [0.50, 0.40, 0.11]],
+    [[-0.20, -0.52, 0.15], [0.35, -0.35, 0.17], [-0.52, -0.02, 0.14], [0.08, -0.02, 0.16],
+      [0.52, 0.22, 0.13], [-0.28, 0.40, 0.17], [0.18, 0.50, 0.12]],
+    [[0.02, -0.50, 0.16], [-0.45, -0.22, 0.13], [0.45, -0.28, 0.14], [-0.15, 0.15, 0.17],
+      [0.30, 0.12, 0.15], [-0.40, 0.48, 0.14], [0.25, 0.50, 0.16]]
+  ];
+  // Darker charred chips on the burnt cookies, likewise scattered.
+  var BURNT_CHIPS = [[-0.35, -0.28, 0.15], [0.30, -0.40, 0.13], [0.42, 0.15, 0.16], [-0.45, 0.30, 0.14], [0.0, 0.42, 0.12]];
+
+  function cookieChipLayout(id) {
+    var h = 0;
+    for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) & 0xffff;
+    return COOKIE_CHIP_LAYOUTS[h % COOKIE_CHIP_LAYOUTS.length];
+  }
 
   var MOVE_KEYS = [
     'w', 'a', 's', 'd', 'W', 'A', 'S', 'D', 'KeyW', 'KeyA', 'KeyS', 'KeyD',
@@ -2180,13 +2199,10 @@
       ctx.save();
       ctx.clip();
       ctx.fillStyle = P.hole;
-      var steps = a.vertices.length;
-      for (var k = 0; k < 5; k++) {
-        var idx = Math.floor(k * steps / 5);
-        var ang = (idx / steps) * Math.PI * 2 + 0.5;
-        var dist = R * a.vertices[idx] * (k % 2 ? 0.55 : 0.3);
+      for (var k = 0; k < BURNT_CHIPS.length; k++) {
+        var chip = BURNT_CHIPS[k];
         ctx.beginPath();
-        ctx.arc(Math.cos(ang) * dist, Math.sin(ang) * dist, R * 0.15, 0, Math.PI * 2);
+        ctx.arc(chip[0] * R, chip[1] * R, chip[2] * R, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();
@@ -2209,8 +2225,8 @@
     // --- Secret cookie quest: drawing (no Math.random() anywhere here) ------
 
     // A chocolate-chip cookie disc in local coordinates: tan dough with a
-    // soft glow and 6 chips at fixed angles from `rotation`.
-    function drawCookieDisc(R, rotation) {
+    // soft glow and a scattered handful of chips (one of the layouts above).
+    function drawCookieDisc(R, rotation, chips) {
       ctx.save();
       ctx.rotate(rotation);
       var g = ctx.createRadialGradient(-R * 0.3, -R * 0.3, R * 0.1, 0, 0, R);
@@ -2228,11 +2244,9 @@
       ctx.lineWidth = 1.5;
       ctx.stroke();
       ctx.fillStyle = '#3b2314';
-      for (var i = 0; i < 6; i++) {
-        var a = i * (Math.PI / 3) + 0.4;
-        var d = R * (i % 2 ? 0.55 : 0.3);
+      for (var i = 0; i < chips.length; i++) {
         ctx.beginPath();
-        ctx.arc(Math.cos(a) * d, Math.sin(a) * d, R * 0.16, 0, Math.PI * 2);
+        ctx.arc(chips[i][0] * R, chips[i][1] * R, chips[i][2] * R, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();
@@ -2324,14 +2338,14 @@
       if (state.cookie) {
         ctx.save();
         ctx.translate(state.cookie.x, state.cookie.y);
-        drawCookieDisc(state.cookie.radius, state.cookie.rotation);
+        drawCookieDisc(state.cookie.radius, state.cookie.rotation, cookieChipLayout(state.cookie.id));
         ctx.restore();
       }
       if (!state.quest) return;
       state.quest.cookies.forEach(function (c) {
         ctx.save();
         ctx.translate(c.x, c.y);
-        drawCookieDisc(c.radius, c.rotation);
+        drawCookieDisc(c.radius, c.rotation, cookieChipLayout(c.id));
         ctx.restore();
       });
       if (state.quest.boss) drawQuestBoss(state.quest.boss);

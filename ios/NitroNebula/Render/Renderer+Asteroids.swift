@@ -128,7 +128,7 @@ extension Renderer {
 
     // Charred cookie — the cookie quest's burnt cookies and crumbs
     // (game.js drawBurntCookie). A round silhouette from the vertex list, a
-    // charred edge and 5 darker chips placed from the vertices.
+    // charred edge and 5 scattered darker chips.
     func drawBurntCookie(_ a: Asteroid, path: CGPath, _ ctx: CGContext) {
         let R = CGFloat(a.radius)
         let P = AsteroidPalette.palette(for: .burnt)
@@ -143,14 +143,8 @@ extension Renderer {
 
         ctx.saveGState()
         ctx.clip(to: path)
-        let steps = a.vertices.count
-        if steps > 0 {
-            for k in 0..<5 {
-                let idx = Int(floor(Double(k * steps) / 5))
-                let ang = (CGFloat(idx) / CGFloat(steps)) * .pi * 2 + 0.5
-                let dist = R * CGFloat(a.vertices[idx]) * (k % 2 == 1 ? 0.55 : 0.3)
-                ctx.fillCircle(cos(ang) * dist, sin(ang) * dist, R * 0.15, color: P.hole)
-            }
+        for chip in Renderer.burntChips {
+            ctx.fillCircle(chip.0 * R, chip.1 * R, chip.2 * R, color: P.hole)
         }
         ctx.restoreGState()
     }

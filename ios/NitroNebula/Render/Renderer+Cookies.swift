@@ -12,11 +12,34 @@ extension Renderer {
     static let cookieGold: CSSColor = "#fbbf24"
     static let cookieCream: CSSColor = "#fde68a"
 
+    /// Chocolate chips, hand-scattered so they don't read as a pattern
+    /// (game.js COOKIE_CHIP_LAYOUTS): (x, y, radius) as fractions of the
+    /// cookie radius. Each cookie picks a layout from its id.
+    static let cookieChipLayouts: [[(CGFloat, CGFloat, CGFloat)]] = [
+        [(-0.42, -0.30, 0.17), (0.15, -0.48, 0.14), (0.47, -0.05, 0.16), (-0.05, 0.08, 0.13),
+         (-0.48, 0.33, 0.15), (0.22, 0.46, 0.17), (0.50, 0.40, 0.11)],
+        [(-0.20, -0.52, 0.15), (0.35, -0.35, 0.17), (-0.52, -0.02, 0.14), (0.08, -0.02, 0.16),
+         (0.52, 0.22, 0.13), (-0.28, 0.40, 0.17), (0.18, 0.50, 0.12)],
+        [(0.02, -0.50, 0.16), (-0.45, -0.22, 0.13), (0.45, -0.28, 0.14), (-0.15, 0.15, 0.17),
+         (0.30, 0.12, 0.15), (-0.40, 0.48, 0.14), (0.25, 0.50, 0.16)]
+    ]
+    /// Charred chips on the burnt cookies (game.js BURNT_CHIPS).
+    static let burntChips: [(CGFloat, CGFloat, CGFloat)] = [
+        (-0.35, -0.28, 0.15), (0.30, -0.40, 0.13), (0.42, 0.15, 0.16), (-0.45, 0.30, 0.14), (0.0, 0.42, 0.12)
+    ]
+
+    /// cookieChipLayout(id): the same string hash as the web.
+    static func cookieChipLayout(for id: String) -> Int {
+        var h = 0
+        for byte in id.utf8 { h = (h * 31 + Int(byte)) & 0xffff }
+        return h % cookieChipLayouts.count
+    }
+
     // MARK: Cookie disc
 
     /// A chocolate-chip cookie disc in local coordinates: tan dough with a
-    /// soft glow and 6 chips at fixed angles. The caller rotates.
-    func drawCookieDiscBody(_ R: CGFloat, _ ctx: CGContext) {
+    /// soft glow and a scattered handful of chips. The caller rotates.
+    func drawCookieDiscBody(_ R: CGFloat, layout: Int, _ ctx: CGContext) {
         let path = CGPath(ellipseIn: CGRect(x: -R, y: -R, width: R * 2, height: R * 2), transform: nil)
         ctx.fillRadialGradient(path: path, from: CGPoint(x: -R * 0.3, y: -R * 0.3), r0: R * 0.1,
                                to: .zero, r1: R,
@@ -24,18 +47,17 @@ extension Renderer {
                                shadow: (14, Colors.rgba(Renderer.cookieColor)))
         ctx.setStroke("#8b5a2b")
         ctx.stroke(path, lineWidth: 1.5)
-        for i in 0..<6 {
-            let a = CGFloat(i) * (.pi / 3) + 0.4
-            let d = R * (i % 2 == 1 ? 0.55 : 0.3)
-            ctx.fillCircle(cos(a) * d, sin(a) * d, R * 0.16, color: "#3b2314")
+        for chip in Renderer.cookieChipLayouts[layout] {
+            ctx.fillCircle(chip.0 * R, chip.1 * R, chip.2 * R, color: "#3b2314")
         }
     }
 
-    func drawCookieDisc(x: CGFloat, y: CGFloat, radius: CGFloat, rotation: CGFloat, tick: Int, _ ctx: CGContext) {
+    func drawCookieDisc(x: CGFloat, y: CGFloat, radius: CGFloat, rotation: CGFloat, id: String, tick: Int, _ ctx: CGContext) {
+        let layout = Renderer.cookieChipLayout(for: id)
         if Renderer.useSpriteCache {
             let half = radius + 1 + spritePad(blur: 14)
-            let key = "cookie:\(Int((radius * 10).rounded()))"
-            if let sprite = sprites.sprite(key: key, tick: tick, halfExtent: half, render: { sc in drawCookieDiscBody(radius, sc) }) {
+            let key = "cookie:\(Int((radius * 10).rounded())):\(layout)"
+            if let sprite = sprites.sprite(key: key, tick: tick, halfExtent: half, render: { sc in drawCookieDiscBody(radius, layout: layout, sc) }) {
                 ctx.drawSprite(sprite, at: x, y, rotation: rotation)
                 return
             }
@@ -43,7 +65,7 @@ extension Renderer {
         ctx.saveGState()
         ctx.translateBy(x: x, y: y)
         ctx.rotate(by: rotation)
-        drawCookieDiscBody(radius, ctx)
+        drawCookieDiscBody(radius, layout: layout, ctx)
         ctx.restoreGState()
     }
 
@@ -144,12 +166,12 @@ extension Renderer {
     func drawCookies(_ f: RenderFrame, _ ctx: CGContext) {
         if let c = f.state.cookie {
             drawCookieDisc(x: CGFloat(c.x), y: CGFloat(c.y), radius: CGFloat(c.radius), rotation: CGFloat(c.rotation),
-                           tick: f.tickCount, ctx)
+                           id: c.id, tick: f.tickCount, ctx)
         }
         guard let q = f.state.quest else { return }
         for c in q.cookies {
             drawCookieDisc(x: CGFloat(c.x), y: CGFloat(c.y), radius: CGFloat(c.radius), rotation: CGFloat(c.rotation),
-                           tick: f.tickCount, ctx)
+                           id: c.id, tick: f.tickCount, ctx)
         }
         if let b = q.boss { drawQuestBoss(b, tick: f.tickCount, ctx) }
     }
