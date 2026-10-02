@@ -74,17 +74,17 @@ private func breathe(_ t: TimeInterval, period: Double) -> Double {
 }
 
 /// `.menu-nebula` `.mn-1…5`: five soft clouds that drift and swell over
-/// 26-40s. Radial gradients stand in for the CSS blur.
+/// 40-60s. Radial gradients stand in for the CSS blur.
 private struct NebulaClouds: View {
     let t: TimeInterval
 
     private struct Cloud { let color: String; let size: CGFloat; let x, y: CGFloat; let opacity: Double; let period: Double }
     private let clouds: [Cloud] = [
-        Cloud(color: "#0e7490", size: 0.45, x: -0.10, y: -0.15, opacity: 0.5, period: 26),
-        Cloud(color: "#6d28d9", size: 0.40, x: 0.70, y: 0.80, opacity: 0.5, period: 34),
-        Cloud(color: "#be185d", size: 0.30, x: 0.55, y: 0.40, opacity: 0.4, period: 40),
-        Cloud(color: "#b45309", size: 0.36, x: 0.72, y: -0.12, opacity: 0.28, period: 38),
-        Cloud(color: "#0d9488", size: 0.28, x: 0.18, y: 0.80, opacity: 0.32, period: 30)
+        Cloud(color: "#0e7490", size: 0.45, x: -0.10, y: -0.15, opacity: 0.5, period: 40),
+        Cloud(color: "#6d28d9", size: 0.40, x: 0.70, y: 0.80, opacity: 0.5, period: 52),
+        Cloud(color: "#be185d", size: 0.30, x: 0.55, y: 0.40, opacity: 0.4, period: 60),
+        Cloud(color: "#b45309", size: 0.36, x: 0.72, y: -0.12, opacity: 0.28, period: 56),
+        Cloud(color: "#0d9488", size: 0.28, x: 0.18, y: 0.80, opacity: 0.32, period: 46)
     ]
 
     var body: some View {
@@ -93,15 +93,15 @@ private struct NebulaClouds: View {
             ZStack(alignment: .topLeading) {
                 ForEach(Array(clouds.enumerated()), id: \.offset) { i, c in
                     let d = w * c.size
-                    // mn-drift: translate(6vw, -4vh) scale(1.15), alternating
+                    // mn-drift: translate(5vw, -3vh) while the opacity breathes
+                    // up 18%, alternating (no scaling, like the web)
                     let p = breathe(t, period: c.period)
                     Circle()
                         .fill(RadialGradient(colors: [Color(css: c.color), Color(css: c.color).opacity(0.5), .clear],
                                              center: .center, startRadius: 0, endRadius: d / 2))
                         .frame(width: d, height: d)
-                        .opacity(c.opacity)
-                        .scaleEffect(1 + 0.15 * p)
-                        .offset(x: c.x * w + 0.06 * w * p, y: c.y * h - 0.04 * h * p)
+                        .opacity(c.opacity * (1 + 0.18 * p))
+                        .offset(x: c.x * w + 0.05 * w * p, y: c.y * h - 0.03 * h * p)
                         .accessibilityHidden(true)
                         .id(i)
                 }
@@ -118,9 +118,9 @@ private struct AuroraBand: View {
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width, h = geo.size.height
-            // aurora-sweep (26s, alternate): translateX -7% → 7%, skew -6° → 4°,
+            // aurora-sweep (40s, alternate): translateX -7% → 7%, skew -6° → 4°,
             // opacity 0.4 → 0.65 (midway) → 0.45
-            let p = breathe(t, period: 26)
+            let p = breathe(t, period: 40)
             let opacity = p < 0.5 ? 0.4 + 0.25 * (p / 0.5) : 0.65 - 0.2 * ((p - 0.5) / 0.5)
             LinearGradient(stops: [
                 .init(color: .clear, location: 0),

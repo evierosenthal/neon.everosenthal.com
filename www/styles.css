@@ -524,7 +524,11 @@ html.rotated .panel-settings {
   border-radius: 9999px;
   filter: blur(90px);
   mix-blend-mode: screen;
-  animation: mn-drift var(--t, 30s) ease-in-out infinite alternate;
+  /* Translate + opacity only: scaling a blurred, blended layer makes
+     browsers re-rasterise it at size thresholds, which reads as the colors
+     "switching". A composited transform glides. */
+  will-change: transform, opacity;
+  animation: mn-drift var(--t, 45s) ease-in-out infinite alternate;
 }
 
 .mn-1 {
@@ -533,8 +537,9 @@ html.rotated .panel-settings {
   background: #0e7490;
   top: -15%;
   left: -10%;
+  --o: 0.5;
   opacity: 0.5;
-  --t: 26s;
+  --t: 40s;
 }
 
 .mn-2 {
@@ -543,8 +548,9 @@ html.rotated .panel-settings {
   background: #6d28d9;
   bottom: -20%;
   right: -10%;
+  --o: 0.5;
   opacity: 0.5;
-  --t: 34s;
+  --t: 52s;
 }
 
 .mn-3 {
@@ -553,8 +559,9 @@ html.rotated .panel-settings {
   background: #be185d;
   top: 40%;
   left: 55%;
+  --o: 0.4;
   opacity: 0.4;
-  --t: 40s;
+  --t: 60s;
 }
 
 .mn-4 {
@@ -563,8 +570,9 @@ html.rotated .panel-settings {
   background: #b45309;
   top: -12%;
   right: -8%;
+  --o: 0.28;
   opacity: 0.28;
-  --t: 38s;
+  --t: 56s;
 }
 
 .mn-5 {
@@ -573,16 +581,19 @@ html.rotated .panel-settings {
   background: #0d9488;
   bottom: -8%;
   left: 18%;
+  --o: 0.32;
   opacity: 0.32;
-  --t: 30s;
+  --t: 46s;
 }
 
 @keyframes mn-drift {
   from {
-    transform: translate(0, 0) scale(1);
+    transform: translate(0, 0);
+    opacity: var(--o, 0.5);
   }
   to {
-    transform: translate(6vw, -4vh) scale(1.15);
+    transform: translate(5vw, -3vh);
+    opacity: calc(var(--o, 0.5) * 1.18);
   }
 }
 
@@ -604,7 +615,8 @@ html.rotated .panel-settings {
   filter: blur(70px);
   mix-blend-mode: screen;
   opacity: 0.55;
-  animation: aurora-sweep 26s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+  animation: aurora-sweep 40s ease-in-out infinite alternate;
 }
 
 @keyframes aurora-sweep {
