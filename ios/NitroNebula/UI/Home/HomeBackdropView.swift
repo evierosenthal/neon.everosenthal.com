@@ -16,41 +16,48 @@ struct HomeBackdropView: View {
         GeometryReader { geo in
             let w = geo.size.width, h = geo.size.height
             let motion = !reduceMotion
-            ZStack {
-                NebulaClouds(motion: motion)
-                    .offset(x: -8 * parallax.x, y: -6 * parallax.y)
-                AuroraBand(motion: motion)
-                if !metrics.midWidth {
-                    GalaxyView(motion: motion)
-                        .frame(width: 384, height: 384)
-                        .position(x: w * 0.14 + 192, y: h * 0.04 + 192)
-                        .offset(x: -10 * parallax.x, y: -8 * parallax.y)
-                }
-                let giantSize: CGFloat = metrics.midWidth ? 160 : 272
-                GasGiantView(motion: motion)
-                    .frame(width: giantSize, height: giantSize)
-                    .opacity(metrics.midWidth ? 0.5 : 0.72)
-                    .position(x: w - (metrics.midWidth ? -w * 0.03 : w * 0.05) - giantSize / 2,
-                              y: (metrics.midWidth ? h * 0.03 : h * 0.06) + giantSize / 2)
-                    .offset(x: -34 * parallax.x, y: -24 * parallax.y)
-                if !metrics.midWidth {
-                    RingedPlanetView(motion: motion)
-                        .frame(width: 208, height: 192)
-                        .opacity(0.7)
-                        .position(x: w * 0.06 + 104, y: h - h * 0.08 - 96)
-                        .offset(x: -26 * parallax.x, y: -18 * parallax.y)
-                }
-                TimelineView(.animation(paused: app.anyModalOpen || !motion)) { timeline in
-                    let t = timeline.date.timeIntervalSince(scene.epoch)
-                    Canvas { ctx, size in
-                        if motion { scene.advance(to: t, width: size.width) }
-                        scene.draw(in: &ctx, size: size, time: t, skin: GearCatalog.skin(id: app.loadout1.skin), motion: motion)
+            // Every slow layer is a pure function of one clock, like the CSS
+            // keyframes on the web, so the clouds, aurora and planets never
+            // restart or snap when the screen is rebuilt (after a mission, a
+            // modal, a rotation) and the color blends stay continuous.
+            TimelineView(.animation(minimumInterval: 1.0 / 30, paused: !motion)) { timeline in
+                let t = motion ? timeline.date.timeIntervalSince(scene.epoch) : 0
+                ZStack {
+                    NebulaClouds(t: t)
+                        .offset(x: -8 * parallax.x, y: -6 * parallax.y)
+                    AuroraBand(t: t)
+                    if !metrics.midWidth {
+                        GalaxyView(t: t)
+                            .frame(width: 384, height: 384)
+                            .position(x: w * 0.14 + 192, y: h * 0.04 + 192)
+                            .offset(x: -10 * parallax.x, y: -8 * parallax.y)
                     }
+                    let giantSize: CGFloat = metrics.midWidth ? 160 : 272
+                    GasGiantView(t: t)
+                        .frame(width: giantSize, height: giantSize)
+                        .opacity(metrics.midWidth ? 0.5 : 0.72)
+                        .position(x: w - (metrics.midWidth ? -w * 0.03 : w * 0.05) - giantSize / 2,
+                                  y: (metrics.midWidth ? h * 0.03 : h * 0.06) + giantSize / 2)
+                        .offset(x: -34 * parallax.x, y: -24 * parallax.y)
+                    if !metrics.midWidth {
+                        RingedPlanetView(t: t)
+                            .frame(width: 208, height: 192)
+                            .opacity(0.7)
+                            .position(x: w * 0.06 + 104, y: h - h * 0.08 - 96)
+                            .offset(x: -26 * parallax.x, y: -18 * parallax.y)
+                    }
+                    TimelineView(.animation(paused: app.anyModalOpen || !motion)) { stars in
+                        let st = stars.date.timeIntervalSince(scene.epoch)
+                        Canvas { ctx, size in
+                            if motion { scene.advance(to: st, width: size.width) }
+                            scene.draw(in: &ctx, size: size, time: st, skin: GearCatalog.skin(id: app.loadout1.skin), motion: motion)
+                        }
+                    }
+                    .offset(x: -14 * parallax.x, y: -10 * parallax.y)
+                    // Vignette pulls the eye toward the panel
+                    RadialGradient(colors: [.clear, .clear, NeonColors.slate950.opacity(0.55)],
+                                   center: .center, startRadius: 0, endRadius: max(w, h) * 0.75)
                 }
-                .offset(x: -14 * parallax.x, y: -10 * parallax.y)
-                // Vignette pulls the eye toward the panel
-                RadialGradient(colors: [.clear, .clear, NeonColors.slate950.opacity(0.55)],
-                               center: .center, startRadius: 0, endRadius: max(w, h) * 0.75)
             }
             .clipped()
         }
@@ -59,11 +66,17 @@ struct HomeBackdropView: View {
     }
 }
 
+/// CSS `ease-in-out <period> infinite alternate` as a continuous function
+/// of time: 0 → 1 over `period` seconds and back, with no velocity kink at
+/// either turn, so blended colors glide instead of switching.
+private func breathe(_ t: TimeInterval, period: Double) -> Double {
+    0.5 - 0.5 * cos(.pi * t / period)
+}
+
 /// `.menu-nebula` `.mn-1…5`: five soft clouds that drift and swell over
 /// 26-40s. Radial gradients stand in for the CSS blur.
 private struct NebulaClouds: View {
-    let motion: Bool
-    @State private var drift = false
+    let t: TimeInterval
 
     private struct Cloud { let color: String; let size: CGFloat; let x, y: CGFloat; let opacity: Double; let period: Double }
     private let clouds: [Cloud] = [
@@ -80,32 +93,35 @@ private struct NebulaClouds: View {
             ZStack(alignment: .topLeading) {
                 ForEach(Array(clouds.enumerated()), id: \.offset) { i, c in
                     let d = w * c.size
+                    // mn-drift: translate(6vw, -4vh) scale(1.15), alternating
+                    let p = breathe(t, period: c.period)
                     Circle()
                         .fill(RadialGradient(colors: [Color(css: c.color), Color(css: c.color).opacity(0.5), .clear],
                                              center: .center, startRadius: 0, endRadius: d / 2))
                         .frame(width: d, height: d)
                         .opacity(c.opacity)
-                        .scaleEffect(drift ? 1.15 : 1)
-                        .offset(x: c.x * w + (drift ? 0.06 * w : 0), y: c.y * h - (drift ? 0.04 * h : 0))
-                        .animation(motion ? .easeInOut(duration: c.period).repeatForever(autoreverses: true) : nil, value: drift)
+                        .scaleEffect(1 + 0.15 * p)
+                        .offset(x: c.x * w + 0.06 * w * p, y: c.y * h - 0.04 * h * p)
                         .accessibilityHidden(true)
                         .id(i)
                 }
             }
             .blendMode(.screen)
         }
-        .onAppear { if motion { drift = true } }
     }
 }
 
 /// `.menu-aurora`: a wide translucent gradient band that sweeps side to side.
 private struct AuroraBand: View {
-    let motion: Bool
-    @State private var sweep = false
+    let t: TimeInterval
 
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width, h = geo.size.height
+            // aurora-sweep (26s, alternate): translateX -7% → 7%, skew -6° → 4°,
+            // opacity 0.4 → 0.65 (midway) → 0.45
+            let p = breathe(t, period: 26)
+            let opacity = p < 0.5 ? 0.4 + 0.25 * (p / 0.5) : 0.65 - 0.2 * ((p - 0.5) / 0.5)
             LinearGradient(stops: [
                 .init(color: .clear, location: 0),
                 .init(color: Color(css: "#2dd4bf").opacity(0.4), location: 0.18),
@@ -115,22 +131,19 @@ private struct AuroraBand: View {
                 .init(color: .clear, location: 0.95)
             ], startPoint: .leading, endPoint: .trailing)
             .frame(width: w * 1.4, height: h * 0.65)
-            .rotationEffect(.degrees(sweep ? 4 : -6))
+            .rotationEffect(.degrees(-6 + 10 * p))
             .blur(radius: 40)
-            .opacity(sweep ? 0.45 : 0.4)
-            .position(x: w * 0.5 + (sweep ? 0.07 : -0.07) * w, y: -h * 0.35 + h * 0.325)
+            .opacity(opacity)
+            .position(x: w * 0.5 + (-0.07 + 0.14 * p) * w, y: -h * 0.35 + h * 0.325)
             .blendMode(.screen)
-            .animation(motion ? .easeInOut(duration: 26).repeatForever(autoreverses: true) : nil, value: sweep)
         }
-        .onAppear { if motion { sweep = true } }
     }
 }
 
 /// `.menu-galaxy`: a faint conic spiral with a bright core, turning once
 /// every 140 seconds.
 private struct GalaxyView: View {
-    let motion: Bool
-    @State private var spin = false
+    let t: TimeInterval
 
     var body: some View {
         ZStack {
@@ -147,25 +160,22 @@ private struct GalaxyView: View {
             .blur(radius: 12)
             .mask(RadialGradient(stops: [.init(color: .black, location: 0.2), .init(color: .black.opacity(0.5), location: 0.42),
                                          .init(color: .clear, location: 0.66)], center: .center, startRadius: 0, endRadius: 192))
-            .rotationEffect(.degrees(spin ? 360 : 0))
-            .animation(motion ? .linear(duration: 140).repeatForever(autoreverses: false) : nil, value: spin)
+            .rotationEffect(.degrees((t / 140).truncatingRemainder(dividingBy: 1) * 360)) // galaxy-spin 140s linear
             RadialGradient(colors: [.white, Color(css: "#c7d2fe").opacity(0.7), .clear], center: .center, startRadius: 0, endRadius: 45)
                 .frame(width: 122, height: 122)
         }
         .opacity(0.5)
-        .onAppear { if motion { spin = true } }
     }
 }
 
 /// `.menu-giant` (index.php:158-180): the banded gas giant and its moon.
 private struct GasGiantView: View {
-    let motion: Bool
-    @State private var float = false
+    let t: TimeInterval
 
     var body: some View {
-        TimelineView(.animation(paused: !motion)) { timeline in
-            let t = timeline.date.timeIntervalSinceReferenceDate
-            let theta = motion ? (t / 26).truncatingRemainder(dividingBy: 1) * 2 * Double.pi : 0
+        let theta = (t / 26).truncatingRemainder(dividingBy: 1) * 2 * Double.pi // moon-orbit 26s linear
+        let p = breathe(t, period: 22) // giant-float 22s alternate
+        Group {
             GeometryReader { geo in
                 let s = geo.size.width / 200
                 let orbitR = geo.size.width * 0.62
@@ -205,10 +215,8 @@ private struct GasGiantView: View {
             }
         }
         .shadow(color: Color(css: "#f59e0b").opacity(0.28), radius: 20)
-        .offset(y: float ? -18 : 0)
-        .rotationEffect(.degrees(float ? 3 : -3))
-        .animation(motion ? .easeInOut(duration: 22).repeatForever(autoreverses: true) : nil, value: float)
-        .onAppear { if motion { float = true } }
+        .offset(y: -18 * p)
+        .rotationEffect(.degrees(-3 + 6 * p))
     }
 
     private struct Moon: View {
@@ -224,10 +232,10 @@ private struct GasGiantView: View {
 
 /// `.menu-planet` (index.php:181-196): the distant ringed planet.
 private struct RingedPlanetView: View {
-    let motion: Bool
-    @State private var float = false
+    let t: TimeInterval
 
     var body: some View {
+        let p = breathe(t, period: 16) // planet-float 16s alternate
         Canvas { ctx, size in
             let s = size.width / 130
             let t = CGAffineTransform(scaleX: s, y: s)
@@ -247,9 +255,7 @@ private struct RingedPlanetView: View {
             ctx.stroke(ring2, with: .color(Color(css: "#a5f3fc").opacity(0.3)), lineWidth: 1 * s)
         }
         .shadow(color: NeonColors.indigo400.opacity(0.35), radius: 11)
-        .offset(y: float ? -14 : 0)
-        .rotationEffect(.degrees(float ? 2 : -2))
-        .animation(motion ? .easeInOut(duration: 16).repeatForever(autoreverses: true) : nil, value: float)
-        .onAppear { if motion { float = true } }
+        .offset(y: -14 * p)
+        .rotationEffect(.degrees(-2 + 4 * p))
     }
 }
