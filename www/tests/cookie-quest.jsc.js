@@ -51,48 +51,72 @@ function steer(dx, dy) {
   __setKey('ArrowUp', 'ArrowUp', dy < -dead);
 }
 
-// Shared steering for the scripted runs. Picks the lane (x) with the least
-// predicted asteroid traffic over the next 60 frames around `rowY`, with a
-// pull toward `wantX` (a cookie, the jar...) and, when `avoidCookies` is
-// set, a push away from raining cookies (the fail path must not win).
-function safeLaneX(d, p, wantX, rowY, avoidCookies) {
-  var bestX = p.x, bestDanger = Infinity;
-  for (var lane = 60; lane <= 740; lane += 40) {
-    var danger = Math.abs(lane - wantX) / 150;
-    d.asteroids.forEach(function (a) {
-      var closest = Infinity;
-      for (var t = 0; t <= 60; t += 4) {
-        var ax = a.x + a.vx * t, ay = a.y + a.vy * t;
-        var ddx = ax - lane, ddy = ay - rowY;
-        var dist = Math.sqrt(ddx * ddx + ddy * ddy) - a.r - 15;
-        if (dist < closest) closest = dist;
-      }
-      if (closest < 70) danger += 3 * (70 - closest) / 70;
-    });
-    (d.suns || []).forEach(function (sun) {
-      // Lethal: keep a wide berth from where it will be
-      var closest = Infinity;
-      for (var t = 0; t <= 60; t += 4) {
-        var ddx = sun.x + sun.vx * t - lane, ddy = sun.y + sun.vy * t - rowY;
-        var dist = Math.sqrt(ddx * ddx + ddy * ddy) - 14 - 15;
-        if (dist < closest) closest = dist;
-      }
-      if (closest < 110) danger += 8 * (110 - closest) / 110;
-    });
-    if (avoidCookies) {
-      d.questCookies.forEach(function (c) {
-        if (c.y < rowY && Math.abs(c.x - lane) < 50) danger += 1.5;
-      });
+// Shared steering for the scripted runs. Picks the spot (lane x, one of
+// three rows around `rowY`) with the least predicted danger along the path
+// there and while holding it, with a pull toward `wantX` / `rowY`, a push off
+// the side walls (no cornering), and, when `avoidCookies` is set, a push away
+// from raining cookies (the fail path must not win). Returns {x, y}.
+function safeSpot(d, p, wantX, rowY, avoidCookies) {
+  // Danger of an obstacle (predicted linearly) against the ship's path to
+  // (lane, row): the path is sampled at the ship's rough speed, then the
+  // ship is assumed to hold the spot out to 60 frames.
+  function pathDanger(ox, oy, ovx, ovy, oradius, lane, row) {
+    var travel = Math.max(Math.abs(lane - p.x), Math.abs(row - p.y)) / 7;
+    var closest = Infinity;
+    for (var k = 0; k <= 6; k++) {
+      var frac = k / 6;
+      var sx = p.x + (lane - p.x) * frac, sy = p.y + (row - p.y) * frac, t = travel * frac;
+      var ddx = ox + ovx * t - sx, ddy = oy + ovy * t - sy;
+      var dist = Math.sqrt(ddx * ddx + ddy * ddy) - oradius - 15;
+      if (dist < closest) closest = dist;
     }
-    if (danger < bestDanger) { bestDanger = danger; bestX = lane; }
+    for (var t2 = travel; t2 <= 60; t2 += 6) {
+      var hdx = ox + ovx * t2 - lane, hdy = oy + ovy * t2 - row;
+      var hdist = Math.sqrt(hdx * hdx + hdy * hdy) - oradius - 15;
+      if (hdist < closest) closest = hdist;
+    }
+    return closest;
   }
-  return bestX;
+  var rows = [rowY - 60, rowY, rowY + 60].map(function (r) { return Math.max(140, Math.min(560, r)); });
+  var best = { x: p.x, y: rowY }, bestDanger = Infinity;
+  for (var lane = 100; lane <= 700; lane += 40) {
+    for (var ri = 0; ri < rows.length; ri++) {
+      var row = rows[ri];
+      var danger = Math.abs(lane - wantX) / 150 + Math.abs(row - rowY) / 120;
+      if (lane <= 140 || lane >= 660) danger += 0.8; // no cornering against a wall
+      d.asteroids.forEach(function (a) {
+        var c = pathDanger(a.x, a.y, a.vx, a.vy, a.r, lane, row);
+        if (c < 70) danger += 3 * (70 - c) / 70;
+      });
+      if (d.boss) {
+        // The jar: a bump costs as much hull as any hit
+        var bc = pathDanger(d.boss.x, d.boss.y, d.boss.vx, d.boss.vy, 58, lane, row);
+        if (bc < 90) danger += 4 * (90 - bc) / 90;
+      }
+      (d.suns || []).forEach(function (sun) {
+        // Lethal: keep a wide berth from where it will be
+        var sc = pathDanger(sun.x, sun.y, sun.vx, sun.vy, 14, lane, row);
+        if (sc < 110) danger += 8 * (110 - sc) / 110;
+      });
+      if (avoidCookies) {
+        d.questCookies.forEach(function (c) {
+          if (c.y < row && Math.abs(c.x - lane) < 50) danger += 1.5;
+        });
+      }
+      if (danger < bestDanger) { bestDanger = danger; best = { x: lane, y: row }; }
+    }
+  }
+  return best;
+}
+
+function safeLaneX(d, p, wantX, rowY, avoidCookies) {
+  return safeSpot(d, p, wantX, rowY, avoidCookies).x;
 }
 
 // Before the quest: dodge, and intercept the drifting cookie once it shows.
 function preQuestTarget(d, p) {
-  if (d.cookie) return { x: safeLaneX(d, p, d.cookie.x, d.cookie.y, false), y: d.cookie.y };
-  return { x: safeLaneX(d, p, 400, 300, false), y: 300 };
+  if (d.cookie) return safeSpot(d, p, d.cookie.x, d.cookie.y, false);
+  return safeSpot(d, p, 400, 300, false);
 }
 
 // ---------------------------------------------------------------------------
@@ -144,7 +168,7 @@ section('fail path: catch the cookie, dodge, let level 1 time out');
     // Dodge while waiting for the cookie and intercept it; then keep to the
     // safest lane and steer away from cookies so level 1 runs out of time
     // instead of being won.
-    var target = d.quest ? { x: safeLaneX(d, p, p.x, 330, true), y: 330 } : preQuestTarget(d, p);
+    var target = d.quest ? safeSpot(d, p, p.x, 330, true) : preQuestTarget(d, p);
     var dx = target.x - p.x, dy = target.y - p.y;
     steer(dx, dy);
     __step(f);
@@ -192,7 +216,7 @@ section('fail path: catch the cookie, dodge, let level 1 time out');
 section('complete path: magnet flame, homing ship, crack the jar');
 
 (function () {
-  __rng.seed(1234);
+  __rng.seed(2);
   var events = [];
   var completes = 0;
   var game = newGame({
@@ -212,11 +236,24 @@ section('complete path: magnet flame, homing ship, crack the jar');
     var q = d.quest;
     var dx = 0, dy = 0;
     if (q && q.phase === 'play' && d.boss) {
-      // Level 3: shadow the jar from ~170 px below along the safest lane
-      // (the planner dodges its crumbs and cookies) and let the blasters work.
-      var rowY = Math.min(d.boss.y + 170, 560);
-      dx = safeLaneX(d, p, d.boss.x + 30, rowY, false) - p.x;
-      dy = rowY - p.y;
+      var orb = null;
+      d.powerUps.forEach(function (pu) { if (pu.type === 'weapon' && !orb) orb = pu; });
+      var spot;
+      if (d.weapon <= 0 && orb) {
+        // Unarmed: go and grab the W orb first
+        spot = { x: safeSpot(d, p, orb.x, orb.y, false).x, y: orb.y };
+      } else if (d.boss.y < 330) {
+        // Armed and the jar is high: shadow it from ~170 px below along the
+        // safest spot (the planner dodges its crumbs and cookies) and let the
+        // blasters work.
+        spot = safeSpot(d, p, d.boss.x + 30, Math.min(d.boss.y + 170, 500), false);
+      } else {
+        // The jar has dived low: there is no room underneath it, so back off
+        // on our own side of it at mid height until it rises again.
+        spot = safeSpot(d, p, p.x < d.boss.x ? 160 : 640, 440, false);
+      }
+      dx = spot.x - p.x;
+      dy = spot.y - p.y;
       maxBossHp = Math.max(maxBossHp, d.boss.hp);
     } else if (q && q.phase === 'play') {
       // Levels 1–2: head for the nearest cookie above us (the magnet drags
@@ -227,7 +264,8 @@ section('complete path: magnet flame, homing ship, crack the jar');
         if (c.y < p.y + 40 && dist < best) { best = dist; wantX = c.x; ty = Math.max(c.y + 60, 200); }
       });
       d.asteroids.forEach(function (a) { if (a.style === 'burnt') sawBurnt = true; });
-      dx = safeLaneX(d, p, wantX, ty, false) - p.x; dy = ty - p.y;
+      var lv = safeSpot(d, p, wantX, ty, false);
+      dx = lv.x - p.x; dy = lv.y - p.y;
     } else if (!q) {
       var pre = preQuestTarget(d, p);
       dx = pre.x - p.x; dy = pre.y - p.y;
@@ -237,9 +275,11 @@ section('complete path: magnet flame, homing ship, crack the jar');
 
     var delta = __events.score - lastScore;
     lastScore = __events.score;
-    // Level 2 has only burnt cookies (no regular asteroids), so a +10 there
-    // can only be a burnt cookie wrongly paid for leaving the screen.
-    if (q && q.phase === 'play' && q.level === 2 && (delta === 10 || delta === 30)) badDeltas.push(f + ':' + delta);
+    // Level 2 spawns only burnt cookies, so once level 1's leftover asteroids
+    // are gone a +10 there can only be a burnt cookie wrongly paid for
+    // leaving the screen.
+    var leftovers = d.asteroids.some(function (a) { return a.style !== 'burnt'; });
+    if (q && q.phase === 'play' && q.level === 2 && !leftovers && (delta === 10 || delta === 30)) badDeltas.push(f + ':' + delta);
     if (completes === 1 && completeFrame < 0) completeFrame = f;
     var after = game.getDebugPositions();
     if (completeFrame >= 0 && !after.quest && endFrame < 0) { endFrame = f; break; }

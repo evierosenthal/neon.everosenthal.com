@@ -144,6 +144,10 @@
   var QUEST_SUN_ARM_FRAMES = 90;
   var SUN_COLOR = '#fbbf24';
   var QUEST_BOSS_FIRE_INTERVAL = 150; // play frames between crumb rings
+  // Blasters are earned, not granted: a W orb drops in at the start of every
+  // level, and level 3 re-supplies one every QUEST_WEAPON_RESUPPLY play
+  // frames while the ship is unarmed (and no orb is already waiting).
+  var QUEST_WEAPON_RESUPPLY = 450;
   var QUEST_BOSS_CONTACT_COOLDOWN = 45; // frames a ship is immune after bumping the boss
   var COOKIE_COLOR = '#d4a373';
   var COOKIE_GOLD = '#fbbf24';
@@ -566,6 +570,27 @@
         speckles: [],
         rotation: rotation,
         spinSpeed: spinSpeed
+      };
+    }
+
+    // The quest's W orb: appears low on the screen (away from the Giant
+    // Cookie's lair at the top) and drifts like the mission's opening orb.
+    // Randoms, in order: 1 vx, 2 vy, 3 id (randomId).
+    function createQuestWeaponOrb(width, height) {
+      var vx = (Math.random() - 0.5) * 1.5;   // 1
+      var vy = (Math.random() - 0.5) * 1.5;   // 2
+      return {
+        id: randomId(),                        // 3
+        x: width / 2,
+        y: height * 0.72,
+        vx: vx,
+        vy: vy,
+        radius: 12,
+        color: '#ef4444',
+        type: 'powerup',
+        life: 1800,
+        maxLife: 1800,
+        subType: 'weapon'
       };
     }
 
@@ -1459,21 +1484,20 @@
       return QUEST_LEVELS[state.quest.level - 1];
     }
 
-    // intro -> play: the blasters are granted for the whole level (plus
-    // 300 frames of slack) and level 3 gets its boss (no randoms) and then
-    // its QUEST_SUN_COUNT suns (createQuestSun's 4 draws each).
+    // intro -> play: level 3 gets its boss (no randoms) and then its
+    // QUEST_SUN_COUNT suns (createQuestSun's 4 draws each); every level then
+    // drops a W orb (createQuestWeaponOrb's 3 draws) — the blasters have to
+    // be picked up.
     function beginQuestPlay() {
       var q = state.quest;
-      var def = questLevelDef();
       q.phase = 'play';
       q.timer = 0;
-      state.activeEffects.weaponUpgrade = Math.max(state.activeEffects.weaponUpgrade, def.duration + 300);
       if (q.level === 3) {
         q.boss = {
           x: canvas.width / 2,
           y: canvas.height * 0.28,
-          vx: 2.2,
-          vy: 1.3,
+          vx: 3.2,
+          vy: 1.9,
           radius: 58,
           hp: QUEST_BOSS_HP,
           maxHp: QUEST_BOSS_HP,
@@ -1485,6 +1509,14 @@
           q.suns.push(createQuestSun(canvas.width, canvas.height));
         }
       }
+      state.powerUps.push(createQuestWeaponOrb(canvas.width, canvas.height));
+    }
+
+    function hasWeaponOrbWaiting() {
+      for (var i = 0; i < state.powerUps.length; i++) {
+        if (state.powerUps[i].subType === 'weapon') return true;
+      }
+      return false;
     }
 
     function questLevelWon() {
@@ -1515,8 +1547,10 @@
     // not rolled when `rain` is 0), then the burnt-cookie roll (levels 2–3;
     // not rolled when `burnt` is 0), each followed by its factory's draws on
     // a hit; then, on level 3 every 150th play frame, the 8 crumb ids followed
-    // by the 4 boss cookies' draws (createBossCookie, on the diagonals).
-    // Banner phases and the intro draw nothing.
+    // by the 4 boss cookies' draws (createBossCookie, on the diagonals); then,
+    // on level 3 every 450th play frame with the ship unarmed and no W orb
+    // waiting, the re-supply orb's 3 draws. Banner phases and the intro draw
+    // nothing.
     function updateQuest() {
       var q = state.quest;
       var def = questLevelDef();
@@ -1563,6 +1597,10 @@
                 cang));
             }
           }
+        }
+        if (q.level === 3 && q.timer % QUEST_WEAPON_RESUPPLY === 0 &&
+            state.activeEffects.weaponUpgrade <= 0 && !hasWeaponOrbWaiting()) {
+          state.powerUps.push(createQuestWeaponOrb(canvas.width, canvas.height));
         }
         if (q.timer >= def.duration) questFailed();
         return;
@@ -3460,6 +3498,10 @@
           x: r1(state.quest.boss.x), y: r1(state.quest.boss.y),
           vx: r1(state.quest.boss.vx), vy: r1(state.quest.boss.vy), hp: state.quest.boss.hp
         } : null;
+        out.weapon = state.activeEffects.weaponUpgrade;
+        out.powerUps = state.powerUps.map(function (pu) {
+          return { x: r1(pu.x), y: r1(pu.y), type: pu.subType };
+        });
         out.suns = state.quest ? state.quest.suns.map(function (sn) {
           return { x: r1(sn.x), y: r1(sn.y), vx: r1(sn.vx), vy: r1(sn.vy) };
         }) : [];

@@ -220,6 +220,16 @@ extension GameEngine {
 
     /// game.js:544-563. A crumb fired by the Giant Cookie: a small burnt
     /// cookie flying along `angle` at 3.2 px/frame. Only random: id (randomId).
+    /// createQuestWeaponOrb: the quest's W orb, appearing low on the screen
+    /// (away from the Giant Cookie's lair) and drifting like the mission's
+    /// opening orb. Randoms, in order: vx, vy, id.
+    func createQuestWeaponOrb(width: Double, height: Double) -> PowerUp {
+        let vx = (random() - 0.5) * 1.5
+        let vy = (random() - 0.5) * 1.5
+        let id = randomId()
+        return PowerUp(id: id, x: width / 2, y: height * 0.72, vx: vx, vy: vy, life: 1800, maxLife: 1800, subType: .weapon)
+    }
+
     /// createQuestSun: a little sun in the upper half of the screen flying in
     /// a random direction. Randoms, in order: x, y, angle, speed.
     func createQuestSun(width: Double, height: Double) -> QuestSun {

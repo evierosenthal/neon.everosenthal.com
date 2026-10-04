@@ -185,15 +185,16 @@ that drift off screen pay 10. Difficulty climbs with survival time and score up 
 
 Once per **Hard** run (solo, CPU co-pilot or local two-player — never Super Hard, never online),
 somewhere between 20 and 60 seconds in, a lone cookie drifts across the screen. Touch it with
-either ship and the field clears into a three-level side quest with the blasters switched on and
-difficulty frozen:
+either ship and the field clears into a three-level side quest with difficulty frozen. A red W orb
+drops in at the start of every level — grab it to arm the blasters (level 3 sends another one
+every 7.5 s while you're unarmed):
 
 1. **Cookie Crumbs** — collect 10 falling cookies in 30 s (50 points each; the magnet pulls them)
    while a thinned-out stream of the usual Hard asteroids keeps coming
 2. **Crumb Storm** — collect 15 in 35 s while dodging burnt cookies (they hit like asteroids and
    can be shot for 20, but pay nothing for drifting off)
 3. **The Cookie Jar** — crack the Giant Cookie (50 blaster hits, 5 points each, 500 for the crack)
-   in 45 s while it bounces around firing rings of crumbs with four big burnt cookies between them,
+   in 45 s while it bounces around fast, firing rings of crumbs with four big burnt cookies between them,
    and three little suns roam the screen — touch one and the ship is gone, shield or not
 
 Running out of time drops you straight back into the normal run with no reward. Clearing all

@@ -30,6 +30,8 @@ public enum GameConstants {
     public static let questBossHP = 50
     /// QUEST_SUN_COUNT / QUEST_SUN_RADIUS / QUEST_SUN_ARM_FRAMES: level 3's
     /// lethal little suns and their harmless warm-up.
+    /// QUEST_WEAPON_RESUPPLY: level 3 re-supplies a W orb this often while unarmed.
+    public static let questWeaponResupply = 450
     public static let questSunCount = 3
     public static let questSunRadius = 14.0
     public static let questSunArmFrames = 90

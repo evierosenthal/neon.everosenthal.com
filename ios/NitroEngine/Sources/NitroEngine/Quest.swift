@@ -74,16 +74,14 @@ extension GameEngine {
     /// granted for the whole level (plus 300 frames of slack) and level 3
     /// gets its boss. No randoms.
     func beginQuestPlay() {
-        let def = questLevelDef
         s.quest!.phase = .play
         s.quest!.timer = 0
-        s.activeEffects.weaponUpgrade = max(s.activeEffects.weaponUpgrade, def.duration + 300)
         if s.quest!.level == 3 {
             s.quest!.boss = QuestBoss(
                 x: worldSize.width / 2,
                 y: worldSize.height * 0.28,
-                vx: 2.2,
-                vy: 1.3,
+                vx: 3.2,
+                vy: 1.9,
                 radius: 58,
                 hp: GameConstants.questBossHP,
                 maxHp: GameConstants.questBossHP,
@@ -94,6 +92,12 @@ extension GameEngine {
                 s.quest!.suns.append(createQuestSun(width: worldSize.width, height: worldSize.height))
             }
         }
+        // Every level drops a W orb: the blasters have to be picked up.
+        s.powerUps.append(createQuestWeaponOrb(width: worldSize.width, height: worldSize.height))
+    }
+
+    func hasWeaponOrbWaiting() -> Bool {
+        s.powerUps.contains { $0.subType == .weapon }
     }
 
     /// game.js:1400-1406
@@ -167,6 +171,10 @@ extension GameEngine {
                             angle: cang))
                     }
                 }
+            }
+            if s.quest!.level == 3 && s.quest!.timer % GameConstants.questWeaponResupply == 0
+                && s.activeEffects.weaponUpgrade <= 0 && !hasWeaponOrbWaiting() {
+                s.powerUps.append(createQuestWeaponOrb(width: worldSize.width, height: worldSize.height))
             }
             if s.quest!.timer >= def.duration { questFailed() }
             return

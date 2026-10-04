@@ -110,5 +110,6 @@ function __snapshot(game) {
     // Secret cookie quest telemetry (game.js getDebugPositions) and callbacks
     frame: pos.frame, cookieSpawnFrame: pos.cookieSpawnFrame, cookie: pos.cookie, quest: pos.quest,
     questCookies: pos.questCookies, boss: pos.boss, suns: pos.suns, asteroids: pos.asteroids,
+    weapon: pos.weapon, powerUps: pos.powerUps,
     questComplete: __events.questComplete, questEvents: __events.questEvents });
 }

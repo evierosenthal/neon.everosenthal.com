@@ -94,6 +94,9 @@ final class OracleParityTests: XCTestCase {
         var boss: Boss?
         struct SunPt: Decodable { var x, y, vx, vy: Double }
         var suns: [SunPt]
+        struct Orb: Decodable { var x, y: Double; var type: String }
+        var weapon: Int
+        var powerUps: [Orb]
         var asteroids: [Ast]
         var questComplete: Int
         var questEvents: [String]
@@ -232,6 +235,15 @@ final class OracleParityTests: XCTestCase {
                 break
             }
         }
+        if o.weapon != m.weapon { fail("weaponUpgrade js \(o.weapon) swift \(m.weapon)") }
+        if o.powerUps.count != m.powerUps.count {
+            fail("power-up count js \(o.powerUps.count) swift \(m.powerUps.count)")
+        } else {
+            for (i, (a, b)) in zip(o.powerUps, m.powerUps).enumerated() where !near(a.x, b.x) || !near(a.y, b.y) || a.type != b.type.rawValue {
+                fail("power-up \(i) js (\(a.x), \(a.y), \(a.type)) swift (\(b.x), \(b.y), \(b.type.rawValue))")
+                break
+            }
+        }
         if o.suns.count != m.suns.count {
             fail("sun count js \(o.suns.count) swift \(m.suns.count)")
         } else {
@@ -359,53 +371,67 @@ final class OracleParityTests: XCTestCase {
 
     typealias ShipPos = (x: Double, y: Double, vx: Double, vy: Double)
 
-    /// safeLaneX from www/tests/cookie-quest.jsc.js: the lane (x) with the
-    /// least predicted asteroid traffic over the next 60 frames around
-    /// `rowY`, pulled toward `wantX`, and (fail path) pushed away from
-    /// raining cookies.
-    static func safeLaneX(_ d: GameEngine.DebugPositions, p: ShipPos, wantX: Double,
-                          rowY: Double, avoidCookies: Bool) -> Double {
-        var bestX = p.x, bestDanger = Double.infinity
-        var lane = 60.0
-        while lane <= 740 {
-            var danger = abs(lane - wantX) / 150
-            for a in d.asteroids {
-                var closest = Double.infinity
-                var t = 0.0
-                while t <= 60 {
-                    let ax = a.x + a.vx * t, ay = a.y + a.vy * t
-                    let ddx = ax - lane, ddy = ay - rowY
-                    let dist = (ddx * ddx + ddy * ddy).squareRoot() - a.r - 15
-                    if dist < closest { closest = dist }
-                    t += 4
+    /// safeSpot from www/tests/cookie-quest.jsc.js: the spot (lane x, one of
+    /// three rows around `rowY`) with the least predicted danger along the
+    /// path there and while holding it, pulled toward `wantX` / `rowY`, kept
+    /// off the side walls, and (fail path) pushed away from raining cookies.
+    static func safeSpot(_ d: GameEngine.DebugPositions, p: ShipPos, wantX: Double,
+                         rowY: Double, avoidCookies: Bool) -> (x: Double, y: Double) {
+        func pathDanger(_ ox: Double, _ oy: Double, _ ovx: Double, _ ovy: Double, _ oradius: Double,
+                        _ lane: Double, _ row: Double) -> Double {
+            let travel = max(abs(lane - p.x), abs(row - p.y)) / 7
+            var closest = Double.infinity
+            for k in 0...6 {
+                let frac = Double(k) / 6
+                let sx = p.x + (lane - p.x) * frac, sy = p.y + (row - p.y) * frac, t = travel * frac
+                let ddx = ox + ovx * t - sx, ddy = oy + ovy * t - sy
+                let dist = (ddx * ddx + ddy * ddy).squareRoot() - oradius - 15
+                if dist < closest { closest = dist }
+            }
+            var t2 = travel
+            while t2 <= 60 {
+                let hdx = ox + ovx * t2 - lane, hdy = oy + ovy * t2 - row
+                let hdist = (hdx * hdx + hdy * hdy).squareRoot() - oradius - 15
+                if hdist < closest { closest = hdist }
+                t2 += 6
+            }
+            return closest
+        }
+        let rows = [rowY - 60, rowY, rowY + 60].map { max(140, min(560, $0)) }
+        var best = (x: p.x, y: rowY), bestDanger = Double.infinity
+        var lane = 100.0
+        while lane <= 700 {
+            for row in rows {
+                var danger = abs(lane - wantX) / 150 + abs(row - rowY) / 120
+                if lane <= 140 || lane >= 660 { danger += 0.8 } // no cornering against a wall
+                for a in d.asteroids {
+                    let c = pathDanger(a.x, a.y, a.vx, a.vy, a.r, lane, row)
+                    if c < 70 { danger += 3 * (70 - c) / 70 }
                 }
-                if closest < 70 { danger += 3 * (70 - closest) / 70 }
-            }
-            for sun in d.suns {
-                // Lethal: keep a wide berth from where it will be
-                var closest = Double.infinity
-                var t = 0.0
-                while t <= 60 {
-                    let ddx = sun.x + sun.vx * t - lane, ddy = sun.y + sun.vy * t - rowY
-                    let dist = (ddx * ddx + ddy * ddy).squareRoot() - 14 - 15
-                    if dist < closest { closest = dist }
-                    t += 4
+                if let boss = d.boss {
+                    // The jar: a bump costs as much hull as any hit
+                    let bc = pathDanger(boss.x, boss.y, boss.vx, boss.vy, 58, lane, row)
+                    if bc < 90 { danger += 4 * (90 - bc) / 90 }
                 }
-                if closest < 110 { danger += 8 * (110 - closest) / 110 }
+                for sun in d.suns {
+                    // Lethal: keep a wide berth from where it will be
+                    let sc = pathDanger(sun.x, sun.y, sun.vx, sun.vy, 14, lane, row)
+                    if sc < 110 { danger += 8 * (110 - sc) / 110 }
+                }
+                if avoidCookies {
+                    for c in d.questCookies where c.y < row && abs(c.x - lane) < 50 { danger += 1.5 }
+                }
+                if danger < bestDanger { bestDanger = danger; best = (x: lane, y: row) }
             }
-            if avoidCookies {
-                for c in d.questCookies where c.y < rowY && abs(c.x - lane) < 50 { danger += 1.5 }
-            }
-            if danger < bestDanger { bestDanger = danger; bestX = lane }
             lane += 40
         }
-        return bestX
+        return best
     }
 
     /// preQuestTarget: dodge while waiting, intercept the drifting cookie.
     static func preQuestTarget(_ d: GameEngine.DebugPositions, p: ShipPos) -> (x: Double, y: Double) {
-        if let c = d.cookie { return (safeLaneX(d, p: p, wantX: c.x, rowY: c.y, avoidCookies: false), c.y) }
-        return (safeLaneX(d, p: p, wantX: 400, rowY: 300, avoidCookies: false), 300)
+        if let c = d.cookie { return safeSpot(d, p: p, wantX: c.x, rowY: c.y, avoidCookies: false) }
+        return safeSpot(d, p: p, wantX: 400, rowY: 300, avoidCookies: false)
     }
 
     /// steer(dx, dy): a key is held past a 6 px dead zone.
@@ -420,7 +446,7 @@ final class OracleParityTests: XCTestCase {
     static func cookieQuestFailSteering(_ d: GameEngine.DebugPositions) -> PilotInput {
         let p = d.p1!
         let target: (x: Double, y: Double) = d.quest != nil
-            ? (safeLaneX(d, p: p, wantX: p.x, rowY: 330, avoidCookies: true), 330)
+            ? safeSpot(d, p: p, wantX: p.x, rowY: 330, avoidCookies: true)
             : preQuestTarget(d, p: p)
         return keys(dx: target.x - p.x, dy: target.y - p.y)
     }
@@ -434,17 +460,28 @@ final class OracleParityTests: XCTestCase {
         let p = d.p1!
         var dx = 0.0, dy = 0.0
         if let q = d.quest, q.phase == .play, let boss = d.boss {
-            let rowY = min(boss.y + 170, 560)
-            dx = safeLaneX(d, p: p, wantX: boss.x + 30, rowY: rowY, avoidCookies: false) - p.x
-            dy = rowY - p.y
+            let spot: (x: Double, y: Double)
+            if d.weapon <= 0, let orb = d.powerUps.first(where: { $0.type == .weapon }) {
+                // Unarmed: go and grab the W orb first
+                spot = (safeSpot(d, p: p, wantX: orb.x, rowY: orb.y, avoidCookies: false).x, orb.y)
+            } else if boss.y < 330 {
+                // Armed and the jar is high: shadow it from ~170 px below
+                spot = safeSpot(d, p: p, wantX: boss.x + 30, rowY: min(boss.y + 170, 500), avoidCookies: false)
+            } else {
+                // The jar has dived low: back off on our own side at mid height
+                spot = safeSpot(d, p: p, wantX: p.x < boss.x ? 160 : 640, rowY: 440, avoidCookies: false)
+            }
+            dx = spot.x - p.x
+            dy = spot.y - p.y
         } else if let q = d.quest, q.phase == .play {
             var wantX = 400.0, ty = 330.0, best = Double.infinity
             for c in d.questCookies {
                 let dist = abs(c.x - p.x) + abs(c.y - p.y)
                 if c.y < p.y + 40 && dist < best { best = dist; wantX = c.x; ty = max(c.y + 60, 200) }
             }
-            dx = safeLaneX(d, p: p, wantX: wantX, rowY: ty, avoidCookies: false) - p.x
-            dy = ty - p.y
+            let lv = safeSpot(d, p: p, wantX: wantX, rowY: ty, avoidCookies: false)
+            dx = lv.x - p.x
+            dy = lv.y - p.y
         } else if d.quest == nil {
             let pre = preQuestTarget(d, p: p)
             dx = pre.x - p.x
@@ -453,12 +490,12 @@ final class OracleParityTests: XCTestCase {
         return keys(dx: dx, dy: dy)
     }
 
-    /// Seed 1234 + Magnet Muzzle + the steering above finish all three
-    /// levels (about 2100 frames); the run stops when the 'complete' banner
+    /// Seed 2 + Magnet Muzzle + the steering above finish all three
+    /// levels (about 3700 frames); the run stops when the 'complete' banner
     /// ends, 180 frames after engineDidCompleteQuest.
     func testCookieQuestCompleteParity() throws {
         let delegateRef = RecordingDelegateBox()
-        try run(Scenario(name: "cookie quest complete", frames: 9000, seed: 1234,
+        try run(Scenario(name: "cookie quest complete", frames: 9000, seed: 2,
                          input: OracleParityTests.cookieQuestSteering,
                          stopWhen: { positions, delegate in
                              delegateRef.delegate = delegate

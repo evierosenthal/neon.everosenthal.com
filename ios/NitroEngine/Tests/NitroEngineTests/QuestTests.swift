@@ -138,7 +138,8 @@ final class QuestTests: XCTestCase {
         XCTAssertEqual(engine.state?.quest?.phase, .play)
         XCTAssertEqual(engine.state!.difficulty, frozen)
         XCTAssertEqual(delegate.difficulties.count, reports, "no difficulty report during the quest")
-        XCTAssertGreaterThan(engine.state!.activeEffects.weaponUpgrade, 0, "blasters granted for the level")
+        XCTAssertEqual(engine.state!.activeEffects.weaponUpgrade, 0, "blasters are not granted; a W orb is dropped instead")
+        XCTAssertTrue(engine.state!.powerUps.contains { $0.subType == .weapon }, "the level's W orb is waiting")
     }
 
     private func installQuest(_ engine: GameEngine, level: Int, phase: QuestPhase, phaseTimer: Int = 120,
@@ -235,7 +236,8 @@ final class QuestTests: XCTestCase {
         let before = engine.rngCalls
         engine.tick() // intro -> play: boss + suns
         XCTAssertEqual(engine.state!.quest!.suns.count, GameConstants.questSunCount)
-        XCTAssertEqual(engine.rngCalls - before - baseline, GameConstants.questSunCount * 4, "4 draws per sun, none for the boss")
+        XCTAssertEqual(engine.rngCalls - before - baseline, GameConstants.questSunCount * 4 + 3, "4 draws per sun, 3 for the W orb, none for the boss")
+        XCTAssertTrue(engine.state!.powerUps.contains { $0.subType == .weapon }, "the level drops a W orb")
         for sun in engine.state!.quest!.suns {
             // spawned and ticked once in the same frame
             XCTAssertEqual(sun.armTimer, GameConstants.questSunArmFrames - 1)
