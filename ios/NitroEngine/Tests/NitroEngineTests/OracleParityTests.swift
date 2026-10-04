@@ -68,7 +68,8 @@ final class OracleParityTests: XCTestCase {
           skin: \(js(config.skin)), trail: \(js(config.trail)), flame: \(js(config.flame)),
           skin2: \(js(config.skin2)), trail2: \(js(config.trail2)), flame2: \(js(config.flame2)),
           cookieSpawnFrame: \(config.cookieSpawnFrame.map(String.init) ?? "undefined"),
-          cookieAimAtShip: \(config.cookieAimAtShip) }
+          cookieAimAtShip: \(config.cookieAimAtShip),
+          questBossHP: \(config.questBossHP.map(String.init) ?? "undefined") }
         """
     }
 
@@ -461,7 +462,16 @@ final class OracleParityTests: XCTestCase {
         var dx = 0.0, dy = 0.0
         if let q = d.quest, q.phase == .play, let boss = d.boss {
             let spot: (x: Double, y: Double)
-            if d.weapon <= 0, let orb = d.powerUps.first(where: { $0.type == .weapon }) {
+            let hunter = d.suns.first { sn in
+                let hdx = sn.x - p.x, hdy = sn.y - p.y
+                return (hdx * hdx + hdy * hdy).squareRoot() < 170 && (sn.vx * hdx + sn.vy * hdy) < 0 // closing in
+            }
+            if let hunter {
+                // A sun is bearing down on us: run straight away from it first
+                let away = atan2(p.y - hunter.y, p.x - hunter.x)
+                spot = safeSpot(d, p: p, wantX: max(100, min(700, p.x + cos(away) * 240)),
+                                rowY: max(140, min(560, p.y + sin(away) * 240)), avoidCookies: false)
+            } else if d.weapon <= 0, let orb = d.powerUps.first(where: { $0.type == .weapon }) {
                 // Unarmed: go and grab the W orb first
                 spot = (safeSpot(d, p: p, wantX: orb.x, rowY: orb.y, avoidCookies: false).x, orb.y)
             } else if boss.y < 330 {
@@ -490,22 +500,47 @@ final class OracleParityTests: XCTestCase {
         return keys(dx: dx, dy: dy)
     }
 
-    /// Seed 2 + Magnet Muzzle + the steering above finish all three
-    /// levels (about 3700 frames); the run stops when the 'complete' banner
-    /// ends, 180 frames after engineDidCompleteQuest.
-    func testCookieQuestCompleteParity() throws {
+    /// The whole quest at full difficulty, both engines in lock-step until
+    /// the ship dies or the quest ends. The Cookie Jar at full strength is
+    /// beyond the scripted pilot, so this run asserts parity through the
+    /// fight (suns, hunter, shots, orbs) rather than victory.
+    func testCookieJarFightParity() throws {
         let delegateRef = RecordingDelegateBox()
-        try run(Scenario(name: "cookie quest complete", frames: 9000, seed: 2,
+        try run(Scenario(name: "cookie jar fight", frames: 9000, seed: 2,
                          input: OracleParityTests.cookieQuestSteering,
                          stopWhen: { positions, delegate in
                              delegateRef.delegate = delegate
-                             return delegate.questCompletes == 1 && positions.quest == nil
+                             return delegate.gameOverScore != nil || (delegate.questCompletes == 1 && positions.quest == nil)
                          }) { c in
             c.initialDifficulty = 1.3
             c.controlModePreference = .keyboard
             c.flame = GearCatalog.flames.first { $0.power == .magnet }
             c.cookieSpawnFrame = 120
             c.cookieAimAtShip = true
+        })
+        let delegate = try XCTUnwrap(delegateRef.delegate)
+        XCTAssertTrue(delegate.questEvents.contains("levelWon:2"), "the pilot reaches the Cookie Jar: \(delegate.questEvents)")
+    }
+
+    /// The quest's ending, end to end on both engines: with the Giant
+    /// Cookie's hit points overridden to 3 (the `questBossHP` test hook) the
+    /// pilot grabs the W orb and cracks it before the suns arm, and the run
+    /// stops when the 'complete' banner ends, 180 frames after
+    /// engineDidCompleteQuest.
+    func testCookieQuestCompleteParity() throws {
+        let delegateRef = RecordingDelegateBox()
+        try run(Scenario(name: "cookie quest complete", frames: 9000, seed: 2,
+                         input: OracleParityTests.cookieQuestSteering,
+                         stopWhen: { positions, delegate in
+                             delegateRef.delegate = delegate
+                             return delegate.gameOverScore != nil || (delegate.questCompletes == 1 && positions.quest == nil)
+                         }) { c in
+            c.initialDifficulty = 1.3
+            c.controlModePreference = .keyboard
+            c.flame = GearCatalog.flames.first { $0.power == .magnet }
+            c.cookieSpawnFrame = 120
+            c.cookieAimAtShip = true
+            c.questBossHP = 3
         })
         let delegate = try XCTUnwrap(delegateRef.delegate)
         XCTAssertEqual(delegate.questCompletes, 1, "engineDidCompleteQuest fired once")

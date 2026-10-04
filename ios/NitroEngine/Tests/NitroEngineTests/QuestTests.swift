@@ -238,9 +238,23 @@ final class QuestTests: XCTestCase {
         XCTAssertEqual(engine.state!.quest!.suns.count, GameConstants.questSunCount)
         XCTAssertEqual(engine.rngCalls - before - baseline, GameConstants.questSunCount * 4 + 3, "4 draws per sun, 3 for the W orb, none for the boss")
         XCTAssertTrue(engine.state!.powerUps.contains { $0.subType == .weapon }, "the level drops a W orb")
-        for sun in engine.state!.quest!.suns {
+        XCTAssertTrue(engine.state!.quest!.suns[0].hunter)
+        XCTAssertFalse(engine.state!.quest!.suns[1].hunter)
+        // The hunter closes in on the ship over the next second
+        func hunterDistance() -> Double {
+            let h = engine.state!.quest!.suns[0], p = engine.state!.player
+            return ((h.x - p.x) * (h.x - p.x) + (h.y - p.y) * (h.y - p.y)).squareRoot()
+        }
+        engine.state!.player.x = 120
+        engine.state!.player.y = 520 // well away from the hunter's spawn
+        let far = hunterDistance()
+        for _ in 0..<60 { engine.tick() }
+        XCTAssertLessThan(hunterDistance(), far - 60, "the hunter chases the ship")
+        let h = engine.state!.quest!.suns[0]
+        XCTAssertLessThanOrEqual((h.vx * h.vx + h.vy * h.vy).squareRoot(), GameConstants.questHunterSpeed + 1e-9)
+        for sun in engine.state!.quest!.suns.dropFirst() {
             // spawned and ticked once in the same frame
-            XCTAssertEqual(sun.armTimer, GameConstants.questSunArmFrames - 1)
+            XCTAssertEqual(sun.armTimer, GameConstants.questSunArmFrames - 1 - 60)
             XCTAssertTrue(sun.x >= 60 && sun.x <= testWorld.width - 60)
             XCTAssertTrue(sun.y >= 90 && sun.y <= 90 + testWorld.height * 0.5)
         }

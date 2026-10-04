@@ -171,7 +171,7 @@ extension Renderer {
         let arming = sun.armTimer > 0
         ctx.saveGState()
         ctx.translateBy(x: CGFloat(sun.x), y: CGFloat(sun.y))
-        ctx.rotate(by: CGFloat(t * 0.6))
+        ctx.rotate(by: CGFloat(t * (sun.hunter ? 1.8 : 0.6)))
         if arming {
             let warm = 1 - Double(sun.armTimer) / Double(GameConstants.questSunArmFrames)
             ctx.setCanvasAlpha(CGFloat(0.35 + 0.35 * warm + 0.15 * sin(t * 18)))
@@ -188,11 +188,12 @@ extension Renderer {
             rays.addLine(to: CGPoint(x: cos(a + half) * R * 0.92, y: sin(a + half) * R * 0.92))
             rays.closeSubpath()
         }
-        ctx.canvasShadow(blur: 18, color: GameConstants.sunColor)
-        ctx.setFill("#fb923c")
+        // (red-hot on the hunter)
+        ctx.canvasShadow(blur: 18, color: sun.hunter ? "#ef4444" : GameConstants.sunColor)
+        ctx.setFill(sun.hunter ? "#f87171" : "#fb923c")
         ctx.fill(rays)
         ctx.clearShadow()
-        ctx.setStroke("#c2410c")
+        ctx.setStroke(sun.hunter ? "#991b1b" : "#c2410c")
         ctx.stroke(rays, lineWidth: 1.5)
         // Body: yellow disc shading to orange at the rim, bold outline
         let disc = CGPath(ellipseIn: CGRect(x: -R, y: -R, width: R * 2, height: R * 2), transform: nil)
@@ -240,7 +241,7 @@ extension Renderer {
         let progress: String
         if q.level == 3 {
             let dealt = q.boss.map { $0.maxHp - $0.hp } ?? GameConstants.questBossHP
-            progress = "GIANT COOKIE \(dealt)/\(GameConstants.questBossHP)"
+            progress = "GIANT COOKIE \(dealt)/\(q.boss?.maxHp ?? GameConstants.questBossHP)"
         } else {
             progress = "\(q.collected)/\(q.goal) COOKIES"
         }

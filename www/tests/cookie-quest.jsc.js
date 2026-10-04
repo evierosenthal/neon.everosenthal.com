@@ -213,7 +213,7 @@ section('fail path: catch the cookie, dodge, let level 1 time out');
 })();
 
 // ---------------------------------------------------------------------------
-section('complete path: magnet flame, homing ship, crack the jar');
+section('the Cookie Jar at full strength: both suns and the hunter are out, the pilot reaches the fight');
 
 (function () {
   __rng.seed(2);
@@ -224,6 +224,104 @@ section('complete path: magnet flame, homing ship, crack the jar');
     onQuestComplete: function () { completes++; events.push('complete'); }
   });
   game.start({ initialDifficulty: 1.3, cookieSpawnFrame: 120, cookieAimAtShip: true, flame: MAGNET_FLAME });
+  releaseKeys();
+
+  var lastScore = __events.score;
+  var badDeltas = [];
+  var completeFrame = -1, endFrame = -1, maxBossHp = 0, sawBurnt = false, minHunterDist = Infinity, sunsSeen = 0, hunterClosed = false;
+  var maxFrames = 9000;
+  for (var f = 0; f < maxFrames; f++) {
+    var d = game.getDebugPositions();
+    var p = d.p1;
+    var q = d.quest;
+    var dx = 0, dy = 0;
+    if (q && q.phase === 'play' && d.boss) {
+      var orb = null;
+      d.powerUps.forEach(function (pu) { if (pu.type === 'weapon' && !orb) orb = pu; });
+      var spot;
+      var hunter = null;
+      (d.suns || []).forEach(function (sn) {
+        var hdx = sn.x - p.x, hdy = sn.y - p.y;
+        if (Math.sqrt(hdx * hdx + hdy * hdy) < 170 && (sn.vx * hdx + sn.vy * hdy) < 0) hunter = sn; // closing in
+      });
+      if (hunter) {
+        // A sun is bearing down on us: run straight away from it first
+        var away = Math.atan2(p.y - hunter.y, p.x - hunter.x);
+        spot = safeSpot(d, p, Math.max(100, Math.min(700, p.x + Math.cos(away) * 240)),
+                        Math.max(140, Math.min(560, p.y + Math.sin(away) * 240)), false);
+      } else if (d.weapon <= 0 && orb) {
+        // Unarmed: go and grab the W orb first
+        spot = { x: safeSpot(d, p, orb.x, orb.y, false).x, y: orb.y };
+      } else if (d.boss.y < 330) {
+        // Armed and the jar is high: shadow it from ~170 px below along the
+        // safest spot (the planner dodges its crumbs and cookies) and let the
+        // blasters work.
+        spot = safeSpot(d, p, d.boss.x + 30, Math.min(d.boss.y + 170, 500), false);
+      } else {
+        // The jar has dived low: there is no room underneath it, so back off
+        // on our own side of it at mid height until it rises again.
+        spot = safeSpot(d, p, p.x < d.boss.x ? 160 : 640, 440, false);
+      }
+      dx = spot.x - p.x;
+      dy = spot.y - p.y;
+      maxBossHp = Math.max(maxBossHp, d.boss.hp);
+      sunsSeen = Math.max(sunsSeen, (d.suns || []).length);
+      if (d.suns && d.suns.length) {
+        var h0 = d.suns[0], hd = Math.sqrt(Math.pow(h0.x - p.x, 2) + Math.pow(h0.y - p.y, 2));
+        if (hd < minHunterDist) { if (minHunterDist < Infinity && hd < minHunterDist - 1) hunterClosed = true; minHunterDist = hd; }
+      }
+    } else if (q && q.phase === 'play') {
+      // Levels 1–2: head for the nearest cookie above us (the magnet drags
+      // them in) along the safest lane past the asteroids / burnt cookies.
+      var wantX = 400, ty = 330, best = Infinity;
+      d.questCookies.forEach(function (c) {
+        var dist = Math.abs(c.x - p.x) + Math.abs(c.y - p.y);
+        if (c.y < p.y + 40 && dist < best) { best = dist; wantX = c.x; ty = Math.max(c.y + 60, 200); }
+      });
+      d.asteroids.forEach(function (a) { if (a.style === 'burnt') sawBurnt = true; });
+      var lv = safeSpot(d, p, wantX, ty, false);
+      dx = lv.x - p.x; dy = lv.y - p.y;
+    } else if (!q) {
+      var pre = preQuestTarget(d, p);
+      dx = pre.x - p.x; dy = pre.y - p.y;
+    }
+    steer(dx, dy);
+    __step(f);
+
+    var delta = __events.score - lastScore;
+    lastScore = __events.score;
+    // Level 2 spawns only burnt cookies, so once level 1's leftover asteroids
+    // are gone a +10 there can only be a burnt cookie wrongly paid for
+    // leaving the screen.
+    var leftovers = d.asteroids.some(function (a) { return a.style !== 'burnt'; });
+    if (q && q.phase === 'play' && q.level === 2 && !leftovers && (delta === 10 || delta === 30)) badDeltas.push(f + ':' + delta);
+    if (completes === 1 && completeFrame < 0) completeFrame = f;
+    var after = game.getDebugPositions();
+    if (completeFrame >= 0 && !after.quest && endFrame < 0) { endFrame = f; break; }
+    if (__events.gameOver !== null) break;
+  }
+  check(events.indexOf('levelWon:2') !== -1, 'the pilot reaches the Cookie Jar (events ' + events.join(',') + ')');
+  check(maxBossHp >= 45 && maxBossHp <= 50, 'the jar has 50 hp at full strength (first seen at ' + maxBossHp + ')');
+  check(sunsSeen === 3, 'three suns are out (' + sunsSeen + ')');
+  check(hunterClosed, 'the hunting sun closes in on the ship');
+  check(sawBurnt, 'burnt cookies fell during level 2');
+  check(badDeltas.length === 0, 'burnt cookies never pay the off-screen +10 in level 2 (deltas ' + badDeltas.join(' ') + ')');
+  print('fight: ' + f + ' frames, score ' + __events.score + ', health ' + __events.health + ', hits ' + __events.hits + ', outcome ' + (__events.gameOver !== null ? 'destroyed' : (completes ? 'won' : 'running')));
+  game.stop();
+})();
+
+// ---------------------------------------------------------------------------
+section('ending: magnet flame, homing ship, crack a 3-hit jar (questBossHP hook)');
+
+(function () {
+  __rng.seed(2);
+  var events = [];
+  var completes = 0;
+  var game = newGame({
+    onQuestEvent: function (kind, level) { events.push(kind + ':' + level); },
+    onQuestComplete: function () { completes++; events.push('complete'); }
+  });
+  game.start({ initialDifficulty: 1.3, cookieSpawnFrame: 120, cookieAimAtShip: true, flame: MAGNET_FLAME, questBossHP: 3 });
   releaseKeys();
 
   var lastScore = __events.score;
@@ -239,7 +337,17 @@ section('complete path: magnet flame, homing ship, crack the jar');
       var orb = null;
       d.powerUps.forEach(function (pu) { if (pu.type === 'weapon' && !orb) orb = pu; });
       var spot;
-      if (d.weapon <= 0 && orb) {
+      var hunter = null;
+      (d.suns || []).forEach(function (sn) {
+        var hdx = sn.x - p.x, hdy = sn.y - p.y;
+        if (Math.sqrt(hdx * hdx + hdy * hdy) < 170 && (sn.vx * hdx + sn.vy * hdy) < 0) hunter = sn; // closing in
+      });
+      if (hunter) {
+        // A sun is bearing down on us: run straight away from it first
+        var away = Math.atan2(p.y - hunter.y, p.x - hunter.x);
+        spot = safeSpot(d, p, Math.max(100, Math.min(700, p.x + Math.cos(away) * 240)),
+                        Math.max(140, Math.min(560, p.y + Math.sin(away) * 240)), false);
+      } else if (d.weapon <= 0 && orb) {
         // Unarmed: go and grab the W orb first
         spot = { x: safeSpot(d, p, orb.x, orb.y, false).x, y: orb.y };
       } else if (d.boss.y < 330) {
@@ -288,11 +396,11 @@ section('complete path: magnet flame, homing ship, crack the jar');
   check(__events.gameOver === null, 'ship survived the complete path (died at score ' + __events.gameOver + ', events ' + events.join(',') + ')');
   check(completes === 1, 'onQuestComplete fired exactly once (' + completes + '); events ' + events.join(','));
   check(events.join(',') === 'start:1,levelWon:1,levelWon:2,levelWon:3,complete', 'event order: ' + events.join(','));
-  check(maxBossHp > 0 && maxBossHp <= 50, 'boss hp is within 50 when first seen (' + maxBossHp + ')');
+  check(maxBossHp > 0 && maxBossHp <= 3, 'the questBossHP hook set the jar to 3 hits (' + maxBossHp + ')');
   check(sawBurnt, 'burnt cookies fell during level 2');
   check(badDeltas.length === 0, 'burnt cookies never pay the off-screen +10 in level 2 (deltas ' + badDeltas.join(' ') + ')');
   check(endFrame > 0 && endFrame === completeFrame + 180, 'complete banner lasts 180 frames (' + completeFrame + ' -> ' + endFrame + ')');
-  print('complete path: ' + (endFrame + 1) + ' frames, score ' + __events.score + ', health ' + __events.health + ', hits ' + __events.hits);
+  print('ending: ' + (endFrame + 1) + ' frames, score ' + __events.score + ', health ' + __events.health + ', hits ' + __events.hits);
   game.stop();
 })();
 

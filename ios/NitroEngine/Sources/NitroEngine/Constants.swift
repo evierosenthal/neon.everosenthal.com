@@ -36,6 +36,9 @@ public enum GameConstants {
     public static let questSunRadius = 14.0
     public static let questSunArmFrames = 90
     public static let sunColor: CSSColor = "#fbbf24"
+    /// QUEST_HUNTER_SPEED / QUEST_HUNTER_ACCEL: the hunting sun's chase.
+    public static let questHunterSpeed = 2.8
+    public static let questHunterAccel = 0.1
     /// QUEST_BOSS_FIRE_INTERVAL: play frames between crumb rings.
     public static let questBossFireInterval = 150
     /// QUEST_BOSS_CONTACT_COOLDOWN: frames a ship is immune after bumping the boss.

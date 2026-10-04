@@ -80,17 +80,18 @@ extension GameEngine {
             s.quest!.boss = QuestBoss(
                 x: worldSize.width / 2,
                 y: worldSize.height * 0.28,
-                vx: 3.2,
-                vy: 1.9,
+                vx: 4.8,
+                vy: 2.9,
                 radius: 58,
-                hp: GameConstants.questBossHP,
-                maxHp: GameConstants.questBossHP,
+                hp: config.questBossHP ?? GameConstants.questBossHP,
+                maxHp: config.questBossHP ?? GameConstants.questBossHP,
                 rotation: 0,
                 hitFlash: 0,
                 contactCooldown: 0) // ship-bump immunity frames (see updateQuestBoss)
             for _ in 0..<GameConstants.questSunCount {
                 s.quest!.suns.append(createQuestSun(width: worldSize.width, height: worldSize.height))
             }
+            s.quest!.suns[0].hunter = true // the first sun hunts
         }
         // Every level drops a W orb: the blasters have to be picked up.
         s.powerUps.append(createQuestWeaponOrb(width: worldSize.width, height: worldSize.height))
@@ -263,6 +264,25 @@ extension GameEngine {
         let w = worldSize.width, h = worldSize.height
         for i in s.quest!.suns.indices {
             var sun = s.quest!.suns[i]
+            if sun.hunter {
+                // Steer toward the nearest ship, capped at the hunter's speed
+                var target: Player? = nil
+                var best = Double.infinity
+                for sp in [s.player, s.player2].compactMap({ $0 }) {
+                    let tdx = sp.x - sun.x, tdy = sp.y - sun.y
+                    let td = (tdx * tdx + tdy * tdy).squareRoot()
+                    if td < best { best = td; target = sp }
+                }
+                if let target, best > 0 {
+                    sun.vx += ((target.x - sun.x) / best) * GameConstants.questHunterAccel
+                    sun.vy += ((target.y - sun.y) / best) * GameConstants.questHunterAccel
+                    let sp2 = (sun.vx * sun.vx + sun.vy * sun.vy).squareRoot()
+                    if sp2 > GameConstants.questHunterSpeed {
+                        sun.vx = (sun.vx / sp2) * GameConstants.questHunterSpeed
+                        sun.vy = (sun.vy / sp2) * GameConstants.questHunterSpeed
+                    }
+                }
+            }
             sun.x += sun.vx
             sun.y += sun.vy
             if sun.x < sun.radius { sun.x = sun.radius; sun.vx = abs(sun.vx) }

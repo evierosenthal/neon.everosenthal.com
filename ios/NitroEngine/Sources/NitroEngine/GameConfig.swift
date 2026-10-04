@@ -38,6 +38,8 @@ public struct GameConfig: Hashable, Codable, Sendable {
     /// random is still drawn and ignored). Production callers set neither.
     public var cookieSpawnFrame: Int? = nil
     public var cookieAimAtShip = false
+    /// `questBossHP` overrides the Giant Cookie's hit points (test hook).
+    public var questBossHP: Int? = nil
 
     public init() {}
 

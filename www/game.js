@@ -143,6 +143,10 @@
   var QUEST_SUN_RADIUS = 14;
   var QUEST_SUN_ARM_FRAMES = 90;
   var SUN_COLOR = '#fbbf24';
+  // The first sun is a hunter: it homes in on the nearest ship (slower than
+  // a ship at full thrust, so you can outrun it but never stop).
+  var QUEST_HUNTER_SPEED = 2.8;
+  var QUEST_HUNTER_ACCEL = 0.1;
   var QUEST_BOSS_FIRE_INTERVAL = 150; // play frames between crumb rings
   // Blasters are earned, not granted: a W orb drops in at the start of every
   // level, and level 3 re-supplies one every QUEST_WEAPON_RESUPPLY play
@@ -216,9 +220,12 @@
       //    reset() (that Math.random() is NOT consumed when this is given);
       //  cookieAimAtShip — true spawns the cookie at the player's y (the y
       //    Math.random() is still consumed and ignored, so the random count
-      //    is identical with or without the hook).
+      //    is identical with or without the hook);
+      //  questBossHP — a number overrides the Giant Cookie's hit points so a
+      //    scripted run can reach the quest's ending (no randoms involved).
       cookieSpawnFrame: undefined,
-      cookieAimAtShip: false
+      cookieAimAtShip: false,
+      questBossHP: undefined
     };
 
     // --- Online play ----------------------------------------------------------
@@ -608,7 +615,8 @@
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         radius: QUEST_SUN_RADIUS,
-        armTimer: QUEST_SUN_ARM_FRAMES // harmless (and faint) until this hits 0
+        armTimer: QUEST_SUN_ARM_FRAMES, // harmless (and faint) until this hits 0
+        hunter: false // set on the first sun: it chases the nearest ship
       };
     }
 
@@ -1496,11 +1504,11 @@
         q.boss = {
           x: canvas.width / 2,
           y: canvas.height * 0.28,
-          vx: 3.2,
-          vy: 1.9,
+          vx: 4.8,
+          vy: 2.9,
           radius: 58,
-          hp: QUEST_BOSS_HP,
-          maxHp: QUEST_BOSS_HP,
+          hp: config.questBossHP || QUEST_BOSS_HP,
+          maxHp: config.questBossHP || QUEST_BOSS_HP,
           rotation: 0,
           hitFlash: 0,
           contactCooldown: 0 // ship-bump immunity frames (see updateQuestBoss)
@@ -1508,6 +1516,7 @@
         for (var i = 0; i < QUEST_SUN_COUNT; i++) {
           q.suns.push(createQuestSun(canvas.width, canvas.height));
         }
+        q.suns[0].hunter = true; // the first sun hunts
       }
       state.powerUps.push(createQuestWeaponOrb(canvas.width, canvas.height));
     }
@@ -1676,14 +1685,34 @@
     // reaches 0) the ring's 5 particles; if hp <= 0: 3 rings of 16, 40
     // createParticle, the "COOKIE JAR CRACKED!" text id; else per ship bump
     // the same particles/text as the matching asteroid-hit branch.
-    // Level 3's suns: fly, bounce off the world bounds, warm up, and burn any
-    // ship that touches one once armed — instant death, no shield, no armor.
-    // Runs right after updateQuestBoss(). Randoms on a burn, in order: the
-    // "SOLAR FLARE!" text id, the ring's 22 particles, then 16 createParticle.
+    // Level 3's suns: fly (the hunter steers toward the nearest ship, the
+    // others bounce off the world bounds), warm up, and burn any ship that
+    // touches one once armed — instant death, no shield, no armor. Runs right
+    // after updateQuestBoss(). Randoms on a burn, in order: the "SOLAR
+    // FLARE!" text id, the ring's 22 particles, then 16 createParticle.
     function updateQuestSuns() {
       var q = state.quest;
       for (var i = 0; i < q.suns.length; i++) {
         var sun = q.suns[i];
+        if (sun.hunter) {
+          // Steer toward the nearest ship, capped at the hunter's speed
+          var target = null, best = Infinity;
+          [state.player, state.player2].forEach(function (sp) {
+            if (!sp) return;
+            var tdx = sp.x - sun.x, tdy = sp.y - sun.y;
+            var td = Math.sqrt(tdx * tdx + tdy * tdy);
+            if (td < best) { best = td; target = sp; }
+          });
+          if (target && best > 0) {
+            sun.vx += ((target.x - sun.x) / best) * QUEST_HUNTER_ACCEL;
+            sun.vy += ((target.y - sun.y) / best) * QUEST_HUNTER_ACCEL;
+            var sp2 = Math.sqrt(sun.vx * sun.vx + sun.vy * sun.vy);
+            if (sp2 > QUEST_HUNTER_SPEED) {
+              sun.vx = (sun.vx / sp2) * QUEST_HUNTER_SPEED;
+              sun.vy = (sun.vy / sp2) * QUEST_HUNTER_SPEED;
+            }
+          }
+        }
         sun.x += sun.vx;
         sun.y += sun.vy;
         if (sun.x < sun.radius) { sun.x = sun.radius; sun.vx = Math.abs(sun.vx); }
@@ -2489,14 +2518,14 @@
       var arming = sun.armTimer > 0;
       ctx.save();
       ctx.translate(sun.x, sun.y);
-      ctx.rotate(t * 0.6);
+      ctx.rotate(t * (sun.hunter ? 1.8 : 0.6));
       ctx.globalAlpha = arming ? 0.35 + 0.35 * (1 - sun.armTimer / QUEST_SUN_ARM_FRAMES) + 0.15 * Math.sin(t * 18) : 1;
       ctx.lineJoin = 'round';
       ctx.shadowBlur = 18;
-      ctx.shadowColor = SUN_COLOR;
-      // Rays: triangles rooted just inside the disc edge
-      ctx.fillStyle = '#fb923c';
-      ctx.strokeStyle = '#c2410c';
+      ctx.shadowColor = sun.hunter ? '#ef4444' : SUN_COLOR;
+      // Rays: triangles rooted just inside the disc edge (red-hot on the hunter)
+      ctx.fillStyle = sun.hunter ? '#f87171' : '#fb923c';
+      ctx.strokeStyle = sun.hunter ? '#991b1b' : '#c2410c';
       ctx.lineWidth = 1.5;
       for (var i = 0; i < 12; i++) {
         var a = i * (Math.PI / 6);
@@ -2565,7 +2594,7 @@
       ctx.textBaseline = 'middle';
 
       var progress = q.level === 3
-        ? 'GIANT COOKIE ' + (q.boss ? (q.boss.maxHp - q.boss.hp) : QUEST_BOSS_HP) + '/' + QUEST_BOSS_HP
+        ? 'GIANT COOKIE ' + (q.boss ? (q.boss.maxHp - q.boss.hp) + '/' + q.boss.maxHp : QUEST_BOSS_HP + '/' + QUEST_BOSS_HP)
         : q.collected + '/' + q.goal + ' COOKIES';
       ctx.font = '12px monospace';
       ctx.fillStyle = '#fde68a';
@@ -3413,6 +3442,7 @@
         // cookie aimed at the ship's y. Production callers pass neither.
         config.cookieSpawnFrame = typeof options.cookieSpawnFrame === 'number' ? options.cookieSpawnFrame : undefined;
         config.cookieAimAtShip = !!options.cookieAimAtShip;
+        config.questBossHP = typeof options.questBossHP === 'number' ? options.questBossHP : undefined;
         resetNet();
 
         resizeCanvas();

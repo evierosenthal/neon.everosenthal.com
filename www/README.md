@@ -194,8 +194,9 @@ every 7.5 s while you're unarmed):
 2. **Crumb Storm** — collect 15 in 35 s while dodging burnt cookies (they hit like asteroids and
    can be shot for 20, but pay nothing for drifting off)
 3. **The Cookie Jar** — crack the Giant Cookie (50 blaster hits, 5 points each, 500 for the crack)
-   in 45 s while it bounces around fast, firing rings of crumbs with four big burnt cookies between them,
-   and three little suns roam the screen — touch one and the ship is gone, shield or not
+   in 45 s while it tears around the screen firing rings of crumbs with four big burnt cookies between
+   them, and three little suns are out — two roam, one (red-hot) hunts your ship and never gives up,
+   so keep moving; touch any of them and the ship is gone, shield or not
 
 Running out of time drops you straight back into the normal run with no reward. Clearing all
 three pays **1000 coins** (Star Fire / Money Storm multipliers apply) and unlocks the three
@@ -206,7 +207,8 @@ The cookie can appear in every Hard run, whether or not the quest has been won b
 developers get it 3 seconds into every Hard run, aimed at their ship, so it can be tested quickly.
 
 Test hooks on `game.start(options)`: `cookieSpawnFrame` (a number) fixes the frame the cookie
-appears on instead of the random draw, and `cookieAimAtShip: true` spawns it at the player's y.
+appears on instead of the random draw, `cookieAimAtShip: true` spawns it at the player's y, and
+`questBossHP` (a number) overrides the Giant Cookie's hit points so a scripted run can reach the ending.
 `www/tests/cookie-quest.jsc.js` drives the whole quest headlessly in JavaScriptCore (it reuses the
 iOS parity harness stubs). From the repo root:
 

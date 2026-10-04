@@ -297,10 +297,13 @@ public struct QuestSun: Hashable, Codable, Sendable {
     public var radius: Double
     /// Harmless (and drawn faint) until this reaches 0.
     public var armTimer: Int
+    /// The first sun hunts: it steers toward the nearest ship.
+    public var hunter: Bool
 
     public init(x: Double, y: Double, vx: Double, vy: Double, radius: Double = GameConstants.questSunRadius,
-                armTimer: Int = GameConstants.questSunArmFrames) {
+                armTimer: Int = GameConstants.questSunArmFrames, hunter: Bool = false) {
         self.x = x; self.y = y; self.vx = vx; self.vy = vy; self.radius = radius; self.armTimer = armTimer
+        self.hunter = hunter
     }
 }
 
