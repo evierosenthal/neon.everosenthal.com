@@ -2441,38 +2441,50 @@
       ctx.restore();
     }
 
-    // A little sun: white-hot core, orange rim, a flickering corona of 8
-    // rays (flicker from the clock, no randoms). Faint and pulsing while it
-    // is still warming up.
+    // A little sun in classic clipart style: a bright yellow disc with a bold
+    // orange outline and a ring of 12 pointed triangular rays (long and
+    // short alternating), slowly turning. No face. Faint and pulsing while
+    // it is still warming up. Nothing random here.
     function drawQuestSun(sun) {
       var R = sun.radius;
       var t = Date.now() / 1000;
       var arming = sun.armTimer > 0;
       ctx.save();
       ctx.translate(sun.x, sun.y);
+      ctx.rotate(t * 0.6);
       ctx.globalAlpha = arming ? 0.35 + 0.35 * (1 - sun.armTimer / QUEST_SUN_ARM_FRAMES) + 0.15 * Math.sin(t * 18) : 1;
-      ctx.strokeStyle = 'rgba(251, 191, 36, 0.75)';
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      for (var i = 0; i < 8; i++) {
-        var a = i * (Math.PI / 4) + t * 0.9;
-        var len = R * (1.35 + 0.35 * Math.sin(t * 7 + i * 1.7));
+      ctx.lineJoin = 'round';
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = SUN_COLOR;
+      // Rays: triangles rooted just inside the disc edge
+      ctx.fillStyle = '#fb923c';
+      ctx.strokeStyle = '#c2410c';
+      ctx.lineWidth = 1.5;
+      for (var i = 0; i < 12; i++) {
+        var a = i * (Math.PI / 6);
+        var tip = R * (i % 2 ? 1.6 : 2.0);
+        var half = 0.26; // half the ray's angular width at its base
         ctx.beginPath();
-        ctx.moveTo(Math.cos(a) * R * 0.95, Math.sin(a) * R * 0.95);
-        ctx.lineTo(Math.cos(a) * len, Math.sin(a) * len);
+        ctx.moveTo(Math.cos(a - half) * R * 0.92, Math.sin(a - half) * R * 0.92);
+        ctx.lineTo(Math.cos(a) * tip, Math.sin(a) * tip);
+        ctx.lineTo(Math.cos(a + half) * R * 0.92, Math.sin(a + half) * R * 0.92);
+        ctx.closePath();
+        ctx.fill();
         ctx.stroke();
       }
+      ctx.shadowBlur = 0;
+      // Body: yellow disc shading to orange at the rim, bold outline
       var g = ctx.createRadialGradient(-R * 0.25, -R * 0.25, R * 0.1, 0, 0, R);
-      g.addColorStop(0, '#fffbeb');
-      g.addColorStop(0.45, '#fde047');
-      g.addColorStop(1, '#f97316');
+      g.addColorStop(0, '#fef9c3');
+      g.addColorStop(0.5, '#fde047');
+      g.addColorStop(1, '#f59e0b');
       ctx.beginPath();
       ctx.arc(0, 0, R, 0, Math.PI * 2);
       ctx.fillStyle = g;
-      ctx.shadowBlur = 22;
-      ctx.shadowColor = SUN_COLOR;
       ctx.fill();
-      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#c2410c';
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
       ctx.restore();
     }
 
