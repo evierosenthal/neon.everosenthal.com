@@ -27,7 +27,7 @@ public enum GameConstants {
                       hint: "CRACK THE COOKIE JAR · YOUR BLASTERS ARE HOT")
     ]
     /// QUEST_BOSS_HP
-    public static let questBossHP = 36
+    public static let questBossHP = 50
     /// QUEST_BOSS_FIRE_INTERVAL: play frames between crumb rings.
     public static let questBossFireInterval = 150
     /// QUEST_BOSS_CONTACT_COOLDOWN: frames a ship is immune after bumping the boss.

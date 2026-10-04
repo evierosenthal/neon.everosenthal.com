@@ -220,9 +220,22 @@ extension GameEngine {
 
     /// game.js:544-563. A crumb fired by the Giant Cookie: a small burnt
     /// cookie flying along `angle` at 3.2 px/frame. Only random: id (randomId).
+    /// createBossCookie: a burnt cookie asteroid fired by the Giant Cookie
+    /// between its crumbs. Randoms, in order: radius, the ten vertices, id.
+    func createBossCookie(x: Double, y: Double, angle: Double) -> Asteroid {
+        let radius = 20 + random() * 10
+        var vertices: [Double] = []
+        for _ in 0..<10 { vertices.append(0.9 + random() * 0.12) }
+        let id = randomId()
+        return Asteroid(id: id, x: x, y: y, vx: cos(angle) * 2.4, vy: sin(angle) * 2.4, radius: radius,
+                        color: GameConstants.burntCookieColor, style: .burnt, tint: .burnt,
+                        vertices: vertices, craters: [], speckles: [],
+                        rotation: angle, spinSpeed: 0.03)
+    }
+
     func createCrumb(x: Double, y: Double, angle: Double) -> Asteroid {
         let id = randomId()
-        return Asteroid(id: id, x: x, y: y, vx: cos(angle) * 3.2, vy: sin(angle) * 3.2, radius: 9,
+        return Asteroid(id: id, x: x, y: y, vx: cos(angle) * 3.2, vy: sin(angle) * 3.2, radius: 13,
                         color: GameConstants.burntCookieColor, style: .burnt, tint: .burnt,
                         vertices: GameConstants.crumbVertices, craters: [], speckles: [],
                         rotation: angle, spinSpeed: 0.04)

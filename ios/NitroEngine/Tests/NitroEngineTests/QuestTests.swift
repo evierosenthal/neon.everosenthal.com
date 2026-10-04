@@ -83,10 +83,21 @@ final class QuestTests: XCTestCase {
         let crumb = engine.createCrumb(x: 10, y: 20, angle: 0)
         XCTAssertEqual(engine.rngCalls - mid, 1, "only the id")
         XCTAssertEqual(crumb.vertices, GameConstants.crumbVertices)
-        XCTAssertEqual(crumb.radius, 9)
+        XCTAssertEqual(crumb.radius, 13)
         XCTAssertEqual(crumb.vx, 3.2)
         XCTAssertEqual(crumb.vy, 0)
         XCTAssertEqual(crumb.spinSpeed, 0.04)
+
+        // createBossCookie: radius, ten vertices, id (12 draws); fired along the angle
+        let b0 = engine.rngCalls
+        let bossCookie = engine.createBossCookie(x: 10, y: 20, angle: .pi / 2)
+        XCTAssertEqual(engine.rngCalls - b0, 12, "radius, 10 vertices, id")
+        XCTAssertEqual(bossCookie.style, .burnt)
+        XCTAssertEqual(bossCookie.vertices.count, 10)
+        XCTAssertTrue((20...30).contains(bossCookie.radius))
+        XCTAssertEqual(bossCookie.vx, 0, accuracy: 1e-9)
+        XCTAssertEqual(bossCookie.vy, 2.4, accuracy: 1e-9)
+        XCTAssertEqual(bossCookie.spinSpeed, 0.03)
 
         let c0 = engine.rngCalls
         _ = engine.createQuestCookie(width: 800)

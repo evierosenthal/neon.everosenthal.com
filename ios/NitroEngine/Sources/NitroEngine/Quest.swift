@@ -153,6 +153,14 @@ extension GameEngine {
                             y: b.y + sin(ang) * (b.radius + 12),
                             angle: ang))
                     }
+                    // ...and four burnt cookie asteroids on the diagonals between them
+                    for k in 0..<4 {
+                        let cang = ((Double(k) + 0.5) / 4) * Double.pi * 2
+                        s.asteroids.append(createBossCookie(
+                            x: b.x + cos(cang) * (b.radius + 18),
+                            y: b.y + sin(cang) * (b.radius + 18),
+                            angle: cang))
+                    }
                 }
             }
             if s.quest!.timer >= def.duration { questFailed() }

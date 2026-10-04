@@ -202,10 +202,11 @@ section('complete path: magnet flame, homing ship, crack the jar');
     var q = d.quest;
     var dx = 0, dy = 0;
     if (q && q.phase === 'play' && d.boss) {
-      // Level 3: shadow the jar from 150 px below, offset so the straight-down
-      // crumb misses, and let the blasters do the work.
-      dx = (d.boss.x + 34) - p.x;
-      dy = Math.min(d.boss.y + 150, 560) - p.y;
+      // Level 3: shadow the jar from ~170 px below along the safest lane
+      // (the planner dodges its crumbs and cookies) and let the blasters work.
+      var rowY = Math.min(d.boss.y + 170, 560);
+      dx = safeLaneX(d, p, d.boss.x + 30, rowY, false) - p.x;
+      dy = rowY - p.y;
       maxBossHp = Math.max(maxBossHp, d.boss.hp);
     } else if (q && q.phase === 'play') {
       // Levels 1–2: head for the nearest cookie above us (the magnet drags
@@ -237,7 +238,7 @@ section('complete path: magnet flame, homing ship, crack the jar');
   check(__events.gameOver === null, 'ship survived the complete path (died at score ' + __events.gameOver + ', events ' + events.join(',') + ')');
   check(completes === 1, 'onQuestComplete fired exactly once (' + completes + '); events ' + events.join(','));
   check(events.join(',') === 'start:1,levelWon:1,levelWon:2,levelWon:3,complete', 'event order: ' + events.join(','));
-  check(maxBossHp > 0 && maxBossHp <= 36, 'boss hp is within 36 when first seen (' + maxBossHp + ')');
+  check(maxBossHp > 0 && maxBossHp <= 50, 'boss hp is within 50 when first seen (' + maxBossHp + ')');
   check(sawBurnt, 'burnt cookies fell during level 2');
   check(badDeltas.length === 0, 'burnt cookies never pay the off-screen +10 in level 2 (deltas ' + badDeltas.join(' ') + ')');
   check(endFrame > 0 && endFrame === completeFrame + 180, 'complete banner lasts 180 frames (' + completeFrame + ' -> ' + endFrame + ')');

@@ -412,8 +412,9 @@ final class OracleParityTests: XCTestCase {
         let p = d.p1!
         var dx = 0.0, dy = 0.0
         if let q = d.quest, q.phase == .play, let boss = d.boss {
-            dx = (boss.x + 34) - p.x
-            dy = min(boss.y + 150, 560) - p.y
+            let rowY = min(boss.y + 170, 560)
+            dx = safeLaneX(d, p: p, wantX: boss.x + 30, rowY: rowY, avoidCookies: false) - p.x
+            dy = rowY - p.y
         } else if let q = d.quest, q.phase == .play {
             var wantX = 400.0, ty = 330.0, best = Double.infinity
             for c in d.questCookies {

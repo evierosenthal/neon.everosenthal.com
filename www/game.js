@@ -136,7 +136,7 @@
     { name: 'THE COOKIE JAR', duration: 2700, goal: 1, rain: 0, burnt: 0.012,
       hint: 'CRACK THE COOKIE JAR · YOUR BLASTERS ARE HOT' }
   ];
-  var QUEST_BOSS_HP = 36;
+  var QUEST_BOSS_HP = 50;
   var QUEST_BOSS_FIRE_INTERVAL = 150; // play frames between crumb rings
   var QUEST_BOSS_CONTACT_COOLDOWN = 45; // frames a ship is immune after bumping the boss
   var COOKIE_COLOR = '#d4a373';
@@ -563,7 +563,36 @@
       };
     }
 
-    // A crumb fired by the Giant Cookie: a small burnt cookie flying along
+    // A burnt cookie asteroid fired by the Giant Cookie between its crumbs:
+    // bigger and slower than a crumb, launched along `angle` at 2.4 px/frame
+    // with the same ten-vertex outline as the rained ones. Randoms, in
+    // order: 1 radius, 2–11 the ten vertices, 12 id (randomId).
+    function createBossCookie(x, y, angle) {
+      var radius = 20 + Math.random() * 10;           // 1
+      var vertices = [];
+      for (var i = 0; i < 10; i++) {
+        vertices.push(0.9 + Math.random() * 0.12);    // 2..11
+      }
+      return {
+        id: randomId(),                                // 12
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * 2.4,
+        vy: Math.sin(angle) * 2.4,
+        radius: radius,
+        color: '#3b2314',
+        type: 'asteroid',
+        style: 'burnt',
+        tint: 'burnt',
+        vertices: vertices,
+        craters: [],
+        speckles: [],
+        rotation: angle,
+        spinSpeed: 0.03
+      };
+    }
+
+    // A crumb fired by the Giant Cookie: a burnt cookie chunk flying along
     // `angle` at 3.2 px/frame. Only random: id (randomId).
     function createCrumb(x, y, angle) {
       return {
@@ -572,7 +601,7 @@
         y: y,
         vx: Math.cos(angle) * 3.2,
         vy: Math.sin(angle) * 3.2,
-        radius: 9,
+        radius: 13,
         color: '#3b2314',
         type: 'asteroid',
         style: 'burnt',
@@ -1454,8 +1483,9 @@
     // the cookie-rain roll (levels 1–2;
     // not rolled when `rain` is 0), then the burnt-cookie roll (levels 2–3;
     // not rolled when `burnt` is 0), each followed by its factory's draws on
-    // a hit; then, on level 3 every 150th play frame, the 8 crumb ids. Banner
-    // phases and the intro draw nothing.
+    // a hit; then, on level 3 every 150th play frame, the 8 crumb ids followed
+    // by the 4 boss cookies' draws (createBossCookie, on the diagonals).
+    // Banner phases and the intro draw nothing.
     function updateQuest() {
       var q = state.quest;
       var def = questLevelDef();
@@ -1492,6 +1522,14 @@
                 b.x + Math.cos(ang) * (b.radius + 12),
                 b.y + Math.sin(ang) * (b.radius + 12),
                 ang));
+            }
+            // ...and four burnt cookie asteroids on the diagonals between them
+            for (var k = 0; k < 4; k++) {
+              var cang = ((k + 0.5) / 4) * Math.PI * 2;
+              state.asteroids.push(createBossCookie(
+                b.x + Math.cos(cang) * (b.radius + 18),
+                b.y + Math.sin(cang) * (b.radius + 18),
+                cang));
             }
           }
         }
