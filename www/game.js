@@ -134,9 +134,15 @@
     { name: 'CRUMB STORM', duration: 2100, goal: 15, rain: 0.04, burnt: 0.02,
       hint: 'COLLECT 15 COOKIES · DODGE THE BURNT ONES' },
     { name: 'THE COOKIE JAR', duration: 2700, goal: 1, rain: 0, burnt: 0.012,
-      hint: 'CRACK THE COOKIE JAR · YOUR BLASTERS ARE HOT' }
+      hint: 'CRACK THE COOKIE JAR · DON\'T TOUCH THE SUNS' }
   ];
   var QUEST_BOSS_HP = 50;
+  // Level 3's little suns: touch one and the ship is gone instantly. They
+  // fly around and bounce; harmless while they warm up (QUEST_SUN_ARM_FRAMES).
+  var QUEST_SUN_COUNT = 3;
+  var QUEST_SUN_RADIUS = 14;
+  var QUEST_SUN_ARM_FRAMES = 90;
+  var SUN_COLOR = '#fbbf24';
   var QUEST_BOSS_FIRE_INTERVAL = 150; // play frames between crumb rings
   var QUEST_BOSS_CONTACT_COOLDOWN = 45; // frames a ship is immune after bumping the boss
   var COOKIE_COLOR = '#d4a373';
@@ -560,6 +566,24 @@
         speckles: [],
         rotation: rotation,
         spinSpeed: spinSpeed
+      };
+    }
+
+    // A little sun for level 3, somewhere in the upper half of the screen,
+    // flying in a random direction. Randoms, in order: 1 x, 2 y, 3 angle,
+    // 4 speed.
+    function createQuestSun(width, height) {
+      var x = 60 + Math.random() * (width - 120);          // 1
+      var y = 90 + Math.random() * (height * 0.5);         // 2
+      var angle = Math.random() * Math.PI * 2;             // 3
+      var speed = 1.6 + Math.random() * 0.8;               // 4
+      return {
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        radius: QUEST_SUN_RADIUS,
+        armTimer: QUEST_SUN_ARM_FRAMES // harmless (and faint) until this hits 0
       };
     }
 
@@ -1425,7 +1449,8 @@
         goal: QUEST_LEVELS[0].goal,
         collected: 0,
         cookies: [],      // the raining quest cookies
-        boss: null        // the Giant Cookie (level 3 only)
+        boss: null,       // the Giant Cookie (level 3 only)
+        suns: []          // the lethal little suns (level 3 only)
       };
       handlers.onQuestEvent('start', 1);
     }
@@ -1435,7 +1460,8 @@
     }
 
     // intro -> play: the blasters are granted for the whole level (plus
-    // 300 frames of slack) and level 3 gets its boss. No randoms.
+    // 300 frames of slack) and level 3 gets its boss (no randoms) and then
+    // its QUEST_SUN_COUNT suns (createQuestSun's 4 draws each).
     function beginQuestPlay() {
       var q = state.quest;
       var def = questLevelDef();
@@ -1455,6 +1481,9 @@
           hitFlash: 0,
           contactCooldown: 0 // ship-bump immunity frames (see updateQuestBoss)
         };
+        for (var i = 0; i < QUEST_SUN_COUNT; i++) {
+          q.suns.push(createQuestSun(canvas.width, canvas.height));
+        }
       }
     }
 
@@ -1463,6 +1492,7 @@
       q.phase = 'won';
       q.phaseTimer = 120;
       q.boss = null;
+      q.suns = [];
       handlers.onQuestEvent('levelWon', q.level);
     }
 
@@ -1471,6 +1501,7 @@
       q.phase = 'failed';
       q.phaseTimer = 120;
       q.boss = null;
+      q.suns = [];
       handlers.onQuestEvent('failed', q.level);
     }
 
@@ -1607,6 +1638,45 @@
     // reaches 0) the ring's 5 particles; if hp <= 0: 3 rings of 16, 40
     // createParticle, the "COOKIE JAR CRACKED!" text id; else per ship bump
     // the same particles/text as the matching asteroid-hit branch.
+    // Level 3's suns: fly, bounce off the world bounds, warm up, and burn any
+    // ship that touches one once armed — instant death, no shield, no armor.
+    // Runs right after updateQuestBoss(). Randoms on a burn, in order: the
+    // "SOLAR FLARE!" text id, the ring's 22 particles, then 16 createParticle.
+    function updateQuestSuns() {
+      var q = state.quest;
+      for (var i = 0; i < q.suns.length; i++) {
+        var sun = q.suns[i];
+        sun.x += sun.vx;
+        sun.y += sun.vy;
+        if (sun.x < sun.radius) { sun.x = sun.radius; sun.vx = Math.abs(sun.vx); }
+        if (sun.x > canvas.width - sun.radius) { sun.x = canvas.width - sun.radius; sun.vx = -Math.abs(sun.vx); }
+        if (sun.y < sun.radius) { sun.y = sun.radius; sun.vy = Math.abs(sun.vy); }
+        if (sun.y > canvas.height - sun.radius) { sun.y = canvas.height - sun.radius; sun.vy = -Math.abs(sun.vy); }
+        if (sun.armTimer > 0) sun.armTimer--;
+      }
+      if (q.phase !== 'play' || state.dying) return;
+      var ships = [state.player, state.player2];
+      for (var s = 0; s < q.suns.length; s++) {
+        var hot = q.suns[s];
+        if (hot.armTimer > 0) continue;
+        for (var k = 0; k < ships.length; k++) {
+          var p = ships[k];
+          if (!p) continue;
+          var dx = p.x - hot.x;
+          var dy = p.y - hot.y;
+          if (Math.sqrt(dx * dx + dy * dy) >= hot.radius + p.radius - 2) continue;
+          state.health = 0;
+          handlers.onHealthUpdate(state.health);
+          shake = 24;
+          addFloatingText(p.x, p.y, 'SOLAR FLARE!', SUN_COLOR, 1.3);
+          createShockwaveRing(hot.x, hot.y, SUN_COLOR, 22);
+          for (var n = 0; n < 16; n++) state.particles.push(createParticle(p.x, p.y, '#fde68a'));
+          startDeathSequence(p, { x: hot.x, y: hot.y, color: SUN_COLOR });
+          return;
+        }
+      }
+    }
+
     function updateQuestBoss() {
       var q = state.quest;
       var b = q.boss;
@@ -1794,6 +1864,7 @@
       if (state.quest) updateQuestCookies(); // raining cookies: fall, magnet, pickup
       updateAsteroids();
       if (state.quest && state.quest.boss) updateQuestBoss(); // Giant Cookie: shots, ship bumps, death
+      if (state.quest && state.quest.suns.length) updateQuestSuns(); // level 3's lethal suns
 
       // Magnet burns twice as fast as the other effects (also ticked in the
       // effects loop above). This second tick must come AFTER
@@ -2370,8 +2441,43 @@
       ctx.restore();
     }
 
-    // Drifting cookie, raining quest cookies and the boss — drawn after the
-    // asteroids and before the ships.
+    // A little sun: white-hot core, orange rim, a flickering corona of 8
+    // rays (flicker from the clock, no randoms). Faint and pulsing while it
+    // is still warming up.
+    function drawQuestSun(sun) {
+      var R = sun.radius;
+      var t = Date.now() / 1000;
+      var arming = sun.armTimer > 0;
+      ctx.save();
+      ctx.translate(sun.x, sun.y);
+      ctx.globalAlpha = arming ? 0.35 + 0.35 * (1 - sun.armTimer / QUEST_SUN_ARM_FRAMES) + 0.15 * Math.sin(t * 18) : 1;
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.75)';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      for (var i = 0; i < 8; i++) {
+        var a = i * (Math.PI / 4) + t * 0.9;
+        var len = R * (1.35 + 0.35 * Math.sin(t * 7 + i * 1.7));
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * R * 0.95, Math.sin(a) * R * 0.95);
+        ctx.lineTo(Math.cos(a) * len, Math.sin(a) * len);
+        ctx.stroke();
+      }
+      var g = ctx.createRadialGradient(-R * 0.25, -R * 0.25, R * 0.1, 0, 0, R);
+      g.addColorStop(0, '#fffbeb');
+      g.addColorStop(0.45, '#fde047');
+      g.addColorStop(1, '#f97316');
+      ctx.beginPath();
+      ctx.arc(0, 0, R, 0, Math.PI * 2);
+      ctx.fillStyle = g;
+      ctx.shadowBlur = 22;
+      ctx.shadowColor = SUN_COLOR;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+
+    // Drifting cookie, raining quest cookies, the boss and its suns — drawn
+    // after the asteroids and before the ships.
     function drawCookies() {
       if (state.cookie) {
         ctx.save();
@@ -2387,6 +2493,7 @@
         ctx.restore();
       });
       if (state.quest.boss) drawQuestBoss(state.quest.boss);
+      state.quest.suns.forEach(drawQuestSun);
     }
 
     function formatClock(frames) {
@@ -3341,6 +3448,9 @@
           x: r1(state.quest.boss.x), y: r1(state.quest.boss.y),
           vx: r1(state.quest.boss.vx), vy: r1(state.quest.boss.vy), hp: state.quest.boss.hp
         } : null;
+        out.suns = state.quest ? state.quest.suns.map(function (sn) {
+          return { x: r1(sn.x), y: r1(sn.y), vx: r1(sn.vx), vy: r1(sn.vy) };
+        }) : [];
         out.asteroids = state.asteroids.map(function (a) {
           return { x: r1(a.x), y: r1(a.y), vx: r1(a.vx), vy: r1(a.vy), r: r1(a.radius), style: a.style };
         });

@@ -288,6 +288,22 @@ public enum QuestPhase: String, Codable, Sendable, CaseIterable {
 }
 
 /// `state.quest` (startQuest, game.js:1338-1347): the running cookie quest.
+/// A little sun (level 3): touch it once armed and the ship is gone.
+public struct QuestSun: Hashable, Codable, Sendable {
+    public var x: Double
+    public var y: Double
+    public var vx: Double
+    public var vy: Double
+    public var radius: Double
+    /// Harmless (and drawn faint) until this reaches 0.
+    public var armTimer: Int
+
+    public init(x: Double, y: Double, vx: Double, vy: Double, radius: Double = GameConstants.questSunRadius,
+                armTimer: Int = GameConstants.questSunArmFrames) {
+        self.x = x; self.y = y; self.vx = vx; self.vy = vy; self.radius = radius; self.armTimer = armTimer
+    }
+}
+
 public struct QuestState: Hashable, Codable, Sendable {
     /// 1...3
     public var level: Int
@@ -303,11 +319,13 @@ public struct QuestState: Hashable, Codable, Sendable {
     public var cookies: [QuestCookie]
     /// The Giant Cookie (level 3 play phase only).
     public var boss: QuestBoss?
+    /// The lethal little suns (level 3 play phase only).
+    public var suns: [QuestSun]
 
     public init(level: Int, phase: QuestPhase, phaseTimer: Int, timer: Int, goal: Int, collected: Int,
-                cookies: [QuestCookie], boss: QuestBoss?) {
+                cookies: [QuestCookie], boss: QuestBoss?, suns: [QuestSun] = []) {
         self.level = level; self.phase = phase; self.phaseTimer = phaseTimer; self.timer = timer
-        self.goal = goal; self.collected = collected; self.cookies = cookies; self.boss = boss
+        self.goal = goal; self.collected = collected; self.cookies = cookies; self.boss = boss; self.suns = suns
     }
 }
 

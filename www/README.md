@@ -193,7 +193,8 @@ difficulty frozen:
 2. **Crumb Storm** — collect 15 in 35 s while dodging burnt cookies (they hit like asteroids and
    can be shot for 20, but pay nothing for drifting off)
 3. **The Cookie Jar** — crack the Giant Cookie (50 blaster hits, 5 points each, 500 for the crack)
-   in 45 s while it bounces around firing rings of crumbs with four big burnt cookies between them
+   in 45 s while it bounces around firing rings of crumbs with four big burnt cookies between them,
+   and three little suns roam the screen — touch one and the ship is gone, shield or not
 
 Running out of time drops you straight back into the normal run with no reward. Clearing all
 three pays **1000 coins** (Star Fire / Money Storm multipliers apply) and unlocks the three

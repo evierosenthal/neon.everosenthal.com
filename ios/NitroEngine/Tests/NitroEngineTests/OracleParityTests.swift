@@ -92,6 +92,8 @@ final class OracleParityTests: XCTestCase {
         var quest: Quest?
         var questCookies: [Pt]
         var boss: Boss?
+        struct SunPt: Decodable { var x, y, vx, vy: Double }
+        var suns: [SunPt]
         var asteroids: [Ast]
         var questComplete: Int
         var questEvents: [String]
@@ -227,6 +229,14 @@ final class OracleParityTests: XCTestCase {
         } else {
             for (i, (a, b)) in zip(o.questCookies, m.questCookies).enumerated() where !near(a.x, b.x) || !near(a.y, b.y) {
                 fail("quest cookie \(i) js (\(a.x), \(a.y)) swift (\(b.x), \(b.y))")
+                break
+            }
+        }
+        if o.suns.count != m.suns.count {
+            fail("sun count js \(o.suns.count) swift \(m.suns.count)")
+        } else {
+            for (i, (a, b)) in zip(o.suns, m.suns).enumerated() where !near(a.x, b.x) || !near(a.y, b.y) {
+                fail("sun \(i) js (\(a.x), \(a.y)) swift (\(b.x), \(b.y))")
                 break
             }
         }
@@ -370,6 +380,18 @@ final class OracleParityTests: XCTestCase {
                     t += 4
                 }
                 if closest < 70 { danger += 3 * (70 - closest) / 70 }
+            }
+            for sun in d.suns {
+                // Lethal: keep a wide berth from where it will be
+                var closest = Double.infinity
+                var t = 0.0
+                while t <= 60 {
+                    let ddx = sun.x + sun.vx * t - lane, ddy = sun.y + sun.vy * t - rowY
+                    let dist = (ddx * ddx + ddy * ddy).squareRoot() - 14 - 15
+                    if dist < closest { closest = dist }
+                    t += 4
+                }
+                if closest < 110 { danger += 8 * (110 - closest) / 110 }
             }
             if avoidCookies {
                 for c in d.questCookies where c.y < rowY && abs(c.x - lane) < 50 { danger += 1.5 }

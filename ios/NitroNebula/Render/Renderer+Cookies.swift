@@ -159,10 +159,43 @@ extension Renderer {
         ctx.restoreGState()
     }
 
+    // MARK: Little suns
+
+    /// drawQuestSun: white-hot core, orange rim, a flickering corona of 8
+    /// rays (flicker from the simulation clock, no randoms). Faint and
+    /// pulsing while it is still warming up.
+    func drawQuestSun(_ sun: QuestSun, simMs: Double, _ ctx: CGContext) {
+        let R = CGFloat(sun.radius)
+        let t = simMs / 1000
+        let arming = sun.armTimer > 0
+        ctx.saveGState()
+        ctx.translateBy(x: CGFloat(sun.x), y: CGFloat(sun.y))
+        if arming {
+            let warm = 1 - Double(sun.armTimer) / Double(GameConstants.questSunArmFrames)
+            ctx.setCanvasAlpha(CGFloat(0.35 + 0.35 * warm + 0.15 * sin(t * 18)))
+        }
+        ctx.setStroke("rgba(251, 191, 36, 0.75)")
+        ctx.setLineWidth(2)
+        ctx.setLineCap(.round)
+        for i in 0..<8 {
+            let a = Double(i) * (.pi / 4) + t * 0.9
+            let len = R * CGFloat(1.35 + 0.35 * sin(t * 7 + Double(i) * 1.7))
+            ctx.beginPath()
+            ctx.move(to: CGPoint(x: CGFloat(cos(a)) * R * 0.95, y: CGFloat(sin(a)) * R * 0.95))
+            ctx.addLine(to: CGPoint(x: CGFloat(cos(a)) * len, y: CGFloat(sin(a)) * len))
+            ctx.strokePath()
+        }
+        let disc = CGPath(ellipseIn: CGRect(x: -R, y: -R, width: R * 2, height: R * 2), transform: nil)
+        ctx.fillRadialGradient(path: disc, from: CGPoint(x: -R * 0.25, y: -R * 0.25), r0: R * 0.1, to: .zero, r1: R,
+                               stops: [(0, Colors.rgba("#fffbeb")), (0.45, Colors.rgba("#fde047")), (1, Colors.rgba("#f97316"))],
+                               shadow: (22, Colors.rgba(GameConstants.sunColor)))
+        ctx.restoreGState()
+    }
+
     // MARK: Layers
 
-    /// Drifting cookie, raining quest cookies and the boss — after the
-    /// asteroids and before the ships.
+    /// Drifting cookie, raining quest cookies, the boss and its suns — after
+    /// the asteroids and before the ships.
     func drawCookies(_ f: RenderFrame, _ ctx: CGContext) {
         if let c = f.state.cookie {
             drawCookieDisc(x: CGFloat(c.x), y: CGFloat(c.y), radius: CGFloat(c.radius), rotation: CGFloat(c.rotation),
@@ -174,6 +207,7 @@ extension Renderer {
                            id: c.id, tick: f.tickCount, ctx)
         }
         if let b = q.boss { drawQuestBoss(b, tick: f.tickCount, ctx) }
+        for sun in q.suns { drawQuestSun(sun, simMs: f.simMs, ctx) }
     }
 
     static func formatClock(frames: Int) -> String {

@@ -24,10 +24,16 @@ public enum GameConstants {
         QuestLevelDef(name: "CRUMB STORM", duration: 2100, goal: 15, rain: 0.04, burnt: 0.02,
                       hint: "COLLECT 15 COOKIES · DODGE THE BURNT ONES"),
         QuestLevelDef(name: "THE COOKIE JAR", duration: 2700, goal: 1, rain: 0, burnt: 0.012,
-                      hint: "CRACK THE COOKIE JAR · YOUR BLASTERS ARE HOT")
+                      hint: "CRACK THE COOKIE JAR · DON'T TOUCH THE SUNS")
     ]
     /// QUEST_BOSS_HP
     public static let questBossHP = 50
+    /// QUEST_SUN_COUNT / QUEST_SUN_RADIUS / QUEST_SUN_ARM_FRAMES: level 3's
+    /// lethal little suns and their harmless warm-up.
+    public static let questSunCount = 3
+    public static let questSunRadius = 14.0
+    public static let questSunArmFrames = 90
+    public static let sunColor: CSSColor = "#fbbf24"
     /// QUEST_BOSS_FIRE_INTERVAL: play frames between crumb rings.
     public static let questBossFireInterval = 150
     /// QUEST_BOSS_CONTACT_COOLDOWN: frames a ship is immune after bumping the boss.

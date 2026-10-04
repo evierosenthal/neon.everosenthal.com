@@ -109,6 +109,6 @@ function __snapshot(game) {
     health: __events.health, hits: __events.hits, deaths: __events.deaths, gameOver: __events.gameOver,
     // Secret cookie quest telemetry (game.js getDebugPositions) and callbacks
     frame: pos.frame, cookieSpawnFrame: pos.cookieSpawnFrame, cookie: pos.cookie, quest: pos.quest,
-    questCookies: pos.questCookies, boss: pos.boss, asteroids: pos.asteroids,
+    questCookies: pos.questCookies, boss: pos.boss, suns: pos.suns, asteroids: pos.asteroids,
     questComplete: __events.questComplete, questEvents: __events.questEvents });
 }

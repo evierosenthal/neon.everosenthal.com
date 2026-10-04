@@ -202,6 +202,14 @@ public final class GameEngine {
             }
         }
 
+        public struct Sun: Equatable, Sendable {
+            public var x: Double
+            public var y: Double
+            public var vx: Double
+            public var vy: Double
+            public init(x: Double, y: Double, vx: Double, vy: Double) { self.x = x; self.y = y; self.vx = vx; self.vy = vy }
+        }
+
         // Secret cookie quest telemetry (game.js:3263-3284)
         public var frame: Int = 0
         public var cookieSpawnFrame: Int = -1
@@ -209,6 +217,7 @@ public final class GameEngine {
         public var quest: Quest? = nil
         public var questCookies: [Point] = []
         public var boss: Boss? = nil
+        public var suns: [Sun] = []
         public var asteroids: [AsteroidInfo] = []
 
         public static func == (l: DebugPositions, r: DebugPositions) -> Bool {
@@ -222,7 +231,7 @@ public final class GameEngine {
             return eq(l.p1, r.p1) && eq(l.p2, r.p2)
                 && l.frame == r.frame && l.cookieSpawnFrame == r.cookieSpawnFrame
                 && l.cookie == r.cookie && l.quest == r.quest && l.questCookies == r.questCookies
-                && l.boss == r.boss && l.asteroids == r.asteroids
+                && l.boss == r.boss && l.suns == r.suns && l.asteroids == r.asteroids
         }
     }
 
@@ -244,6 +253,7 @@ public final class GameEngine {
         out.boss = s.quest?.boss.map {
             DebugPositions.Boss(x: r1($0.x), y: r1($0.y), vx: r1($0.vx), vy: r1($0.vy), hp: $0.hp)
         }
+        out.suns = (s.quest?.suns ?? []).map { DebugPositions.Sun(x: r1($0.x), y: r1($0.y), vx: r1($0.vx), vy: r1($0.vy)) }
         out.asteroids = s.asteroids.map {
             DebugPositions.AsteroidInfo(x: r1($0.x), y: r1($0.y), vx: r1($0.vx), vy: r1($0.vy), r: r1($0.radius), style: $0.style)
         }

@@ -220,6 +220,16 @@ extension GameEngine {
 
     /// game.js:544-563. A crumb fired by the Giant Cookie: a small burnt
     /// cookie flying along `angle` at 3.2 px/frame. Only random: id (randomId).
+    /// createQuestSun: a little sun in the upper half of the screen flying in
+    /// a random direction. Randoms, in order: x, y, angle, speed.
+    func createQuestSun(width: Double, height: Double) -> QuestSun {
+        let x = 60 + random() * (width - 120)
+        let y = 90 + random() * (height * 0.5)
+        let angle = random() * Double.pi * 2
+        let speed = 1.6 + random() * 0.8
+        return QuestSun(x: x, y: y, vx: cos(angle) * speed, vy: sin(angle) * speed)
+    }
+
     /// createBossCookie: a burnt cookie asteroid fired by the Giant Cookie
     /// between its crumbs. Randoms, in order: radius, the ten vertices, id.
     func createBossCookie(x: Double, y: Double, angle: Double) -> Asteroid {

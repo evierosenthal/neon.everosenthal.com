@@ -97,6 +97,7 @@ extension GameEngine {
         if s.quest != nil { updateQuestCookies() } // raining cookies: fall, magnet, pickup
         updateAsteroids()
         if s.quest?.boss != nil { updateQuestBoss() } // Giant Cookie: shots, ship bumps, death
+        if let suns = s.quest?.suns, !suns.isEmpty { updateQuestSuns() } // level 3's lethal suns
 
         // Magnet burns twice as fast as the other effects (L1226-1233). This
         // second tick comes AFTER updateCollectibles(): the Magnet Muzzle

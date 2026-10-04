@@ -90,6 +90,9 @@ extension GameEngine {
                 rotation: 0,
                 hitFlash: 0,
                 contactCooldown: 0) // ship-bump immunity frames (see updateQuestBoss)
+            for _ in 0..<GameConstants.questSunCount {
+                s.quest!.suns.append(createQuestSun(width: worldSize.width, height: worldSize.height))
+            }
         }
     }
 
@@ -98,6 +101,7 @@ extension GameEngine {
         s.quest!.phase = .won
         s.quest!.phaseTimer = 120
         s.quest!.boss = nil
+        s.quest!.suns = []
         delegate?.engine(self, questEvent: .levelWon, level: s.quest!.level)
     }
 
@@ -106,6 +110,7 @@ extension GameEngine {
         s.quest!.phase = .failed
         s.quest!.phaseTimer = 120
         s.quest!.boss = nil
+        s.quest!.suns = []
         delegate?.engine(self, questEvent: .failed, level: s.quest!.level)
     }
 
@@ -242,6 +247,41 @@ extension GameEngine {
     /// reaches 0) the ring's 5 particles; if hp <= 0: 3 rings of 16, 40
     /// createParticle, the "COOKIE JAR CRACKED!" text id; else per ship bump
     /// the same particles/text as the matching asteroid-hit branch.
+    /// game.js updateQuestSuns: level 3's suns fly, bounce, warm up, and burn
+    /// any ship that touches one once armed — instant death, no shield, no
+    /// armor. Randoms on a burn, in order: the "SOLAR FLARE!" text id, the
+    /// ring's 22 particles, then 16 createParticle.
+    func updateQuestSuns() {
+        let w = worldSize.width, h = worldSize.height
+        for i in s.quest!.suns.indices {
+            var sun = s.quest!.suns[i]
+            sun.x += sun.vx
+            sun.y += sun.vy
+            if sun.x < sun.radius { sun.x = sun.radius; sun.vx = abs(sun.vx) }
+            if sun.x > w - sun.radius { sun.x = w - sun.radius; sun.vx = -abs(sun.vx) }
+            if sun.y < sun.radius { sun.y = sun.radius; sun.vy = abs(sun.vy) }
+            if sun.y > h - sun.radius { sun.y = h - sun.radius; sun.vy = -abs(sun.vy) }
+            if sun.armTimer > 0 { sun.armTimer -= 1 }
+            s.quest!.suns[i] = sun
+        }
+        if s.quest!.phase != .play || s.dying { return }
+        for hot in s.quest!.suns where hot.armTimer <= 0 {
+            for p in [s.player, s.player2].compactMap({ $0 }) {
+                let dx = p.x - hot.x
+                let dy = p.y - hot.y
+                if (dx * dx + dy * dy).squareRoot() >= hot.radius + p.radius - 2 { continue }
+                s.health = 0
+                delegate?.engine(self, healthDidChange: s.health)
+                shake = 24
+                addFloatingText(x: p.x, y: p.y, text: "SOLAR FLARE!", color: GameConstants.sunColor, scale: 1.3)
+                createShockwaveRing(x: hot.x, y: hot.y, color: GameConstants.sunColor, count: 22)
+                for _ in 0..<16 { s.particles.append(createParticle(x: p.x, y: p.y, color: "#fde68a")) }
+                startDeathSequence(deadPlayer: p, killerX: hot.x, killerY: hot.y, killerColor: GameConstants.sunColor)
+                return
+            }
+        }
+    }
+
     func updateQuestBoss() {
         if s.quest!.phase != .play { return }
         var j = s.projectiles.count - 1

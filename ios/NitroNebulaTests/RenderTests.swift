@@ -235,8 +235,9 @@ nonisolated final class RenderTests: XCTestCase {
                 let cookies = (0..<3).map { i in
                     QuestCookie(id: "qc\(i)", x: 300 + Double(i) * 80, y: 250, vx: 0, vy: 3, rotation: noise.next(), spin: 0.02)
                 }
+                let suns = [QuestSun(x: 120, y: 120, vx: 1, vy: 1, armTimer: 0), QuestSun(x: 760, y: 300, vx: -1, vy: 0, armTimer: 45)]
                 frame.state.quest = QuestState(level: 3, phase: phase, phaseTimer: 60, timer: 600, goal: 1, collected: 0,
-                                               cookies: cookies, boss: boss)
+                                               cookies: cookies, boss: boss, suns: suns)
                 frame.state.asteroids.append(
                     makeAsteroid(id: "burnt", x: 650, y: 330, radius: 20, style: .burnt, tint: .burnt, noise: &noise))
                 let bmp = render(frame, renderer: renderer, name: "render-cookie-\(phase.rawValue)-\(useCache ? "cached" : "live").png")
@@ -247,6 +248,8 @@ nonisolated final class RenderTests: XCTestCase {
                     ("burnt cookie", 650, 330),
                     ("giant cookie", 500, 150),
                     ("hp bar", 500 - 50, 150 - 58 - 22 + 3),
+                    ("armed sun", 120, 120),
+                    ("warming sun", 760, 300),
                     ("status line", RenderTests.width / 2, 120)
                 ]
                 if phase != .play {

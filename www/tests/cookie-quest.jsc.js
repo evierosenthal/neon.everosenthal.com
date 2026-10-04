@@ -69,6 +69,16 @@ function safeLaneX(d, p, wantX, rowY, avoidCookies) {
       }
       if (closest < 70) danger += 3 * (70 - closest) / 70;
     });
+    (d.suns || []).forEach(function (sun) {
+      // Lethal: keep a wide berth from where it will be
+      var closest = Infinity;
+      for (var t = 0; t <= 60; t += 4) {
+        var ddx = sun.x + sun.vx * t - lane, ddy = sun.y + sun.vy * t - rowY;
+        var dist = Math.sqrt(ddx * ddx + ddy * ddy) - 14 - 15;
+        if (dist < closest) closest = dist;
+      }
+      if (closest < 110) danger += 8 * (110 - closest) / 110;
+    });
     if (avoidCookies) {
       d.questCookies.forEach(function (c) {
         if (c.y < rowY && Math.abs(c.x - lane) < 50) danger += 1.5;

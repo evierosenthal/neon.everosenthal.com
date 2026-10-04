@@ -142,12 +142,12 @@ final class QuestTests: XCTestCase {
     }
 
     private func installQuest(_ engine: GameEngine, level: Int, phase: QuestPhase, phaseTimer: Int = 120,
-                              goal: Int, collected: Int, boss: QuestBoss? = nil) {
+                              goal: Int, collected: Int, boss: QuestBoss? = nil, suns: [QuestSun] = []) {
         engine.clearField()
         engine.state!.quest = QuestState(level: level, phase: phase, phaseTimer: phaseTimer, timer: 50, goal: goal,
                                          collected: collected,
                                          cookies: [QuestCookie(id: "q", x: 100, y: 100, vx: 0, vy: 1, rotation: 0, spin: 0)],
-                                         boss: boss)
+                                         boss: boss, suns: suns)
     }
 
     /// game.js:1400-1406, 1467-1476 — won banner, then the next level's
@@ -221,5 +221,43 @@ final class QuestTests: XCTestCase {
         XCTAssertEqual(d.boss, GameEngine.DebugPositions.Boss(x: 400, y: 168.1, vx: 2.2, vy: 1.3, hp: 36))
         XCTAssertEqual(d.questCookies, [GameEngine.DebugPositions.Point(x: 100, y: 100)])
         XCTAssertEqual(d.asteroids, [])
+    }
+
+    /// Level 3's suns: three spawn with the boss (4 draws each), they are
+    /// harmless while warming up, and once armed a touch is instant death
+    /// regardless of the shield.
+    @MainActor func testSunsSpawnWarmUpAndKillInstantly() {
+        let (engine, _) = makeEngine({ $0.initialDifficulty = 1.3; $0.cookieSpawnFrame = 1 }, rng: ConstantRNG(0.5))
+        installQuest(engine, level: 3, phase: .intro, phaseTimer: 2, goal: 1, collected: 0)
+        let t0 = engine.rngCalls
+        engine.tick() // a plain intro tick (thruster particles only)
+        let baseline = engine.rngCalls - t0
+        let before = engine.rngCalls
+        engine.tick() // intro -> play: boss + suns
+        XCTAssertEqual(engine.state!.quest!.suns.count, GameConstants.questSunCount)
+        XCTAssertEqual(engine.rngCalls - before - baseline, GameConstants.questSunCount * 4, "4 draws per sun, none for the boss")
+        for sun in engine.state!.quest!.suns {
+            // spawned and ticked once in the same frame
+            XCTAssertEqual(sun.armTimer, GameConstants.questSunArmFrames - 1)
+            XCTAssertTrue(sun.x >= 60 && sun.x <= testWorld.width - 60)
+            XCTAssertTrue(sun.y >= 90 && sun.y <= 90 + testWorld.height * 0.5)
+        }
+
+        // Park an armed sun and a warming one on the ship; only the armed one burns.
+        let boss = QuestBoss(x: 50, y: 50, vx: 0, vy: 0, hp: 50, maxHp: 50)
+        let p = engine.state!.player
+        installQuest(engine, level: 3, phase: .play, goal: 1, collected: 0, boss: boss,
+                     suns: [QuestSun(x: p.x, y: p.y, vx: 0, vy: 0, armTimer: 5)])
+        engine.state!.activeEffects.shield = 1000
+        engine.tick()
+        XCTAssertEqual(engine.state!.health, 100, "a warming sun is harmless")
+        XCTAssertFalse(engine.state!.dying)
+        engine.state!.quest!.suns[0].armTimer = 0
+        engine.state!.quest!.suns[0].x = engine.state!.player.x
+        engine.state!.quest!.suns[0].y = engine.state!.player.y
+        engine.tick()
+        XCTAssertEqual(engine.state!.health, 0, "an armed sun kills through the shield")
+        XCTAssertTrue(engine.state!.dying)
+        XCTAssertTrue(engine.state!.floatingTexts.contains { $0.text == "SOLAR FLARE!" })
     }
 }
