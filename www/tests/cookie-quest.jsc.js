@@ -242,7 +242,7 @@ section('the Cookie Jar at full strength: both suns and the hunter are out, the 
       var hunter = null;
       (d.suns || []).forEach(function (sn) {
         var hdx = sn.x - p.x, hdy = sn.y - p.y;
-        if (Math.sqrt(hdx * hdx + hdy * hdy) < 170 && (sn.vx * hdx + sn.vy * hdy) < 0) hunter = sn; // closing in
+        if (!hunter && Math.sqrt(hdx * hdx + hdy * hdy) < 100 && (sn.vx * hdx + sn.vy * hdy) < 0) hunter = sn; // first one closing in
       });
       if (hunter) {
         // A sun is bearing down on us: run straight away from it first

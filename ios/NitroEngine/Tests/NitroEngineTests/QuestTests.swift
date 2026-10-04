@@ -276,4 +276,14 @@ final class QuestTests: XCTestCase {
         XCTAssertTrue(engine.state!.dying)
         XCTAssertTrue(engine.state!.floatingTexts.contains { $0.text == "SOLAR FLARE!" })
     }
+
+    /// The `questBossHP` test hook overrides the Giant Cookie's hit points.
+    @MainActor func testQuestBossHPHook() {
+        let (engine, _) = makeEngine({ $0.initialDifficulty = 1.3; $0.cookieSpawnFrame = 1; $0.questBossHP = 3 }, rng: ConstantRNG(0.5))
+        installQuest(engine, level: 3, phase: .intro, phaseTimer: 1, goal: 1, collected: 0)
+        engine.tick()
+        XCTAssertEqual(engine.state!.quest!.boss?.hp, 3)
+        XCTAssertEqual(engine.state!.quest!.boss?.maxHp, 3)
+        XCTAssertEqual(engine.debugPositions?.quest?.bossHp, 3)
+    }
 }

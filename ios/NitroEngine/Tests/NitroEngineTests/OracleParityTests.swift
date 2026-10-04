@@ -464,7 +464,7 @@ final class OracleParityTests: XCTestCase {
             let spot: (x: Double, y: Double)
             let hunter = d.suns.first { sn in
                 let hdx = sn.x - p.x, hdy = sn.y - p.y
-                return (hdx * hdx + hdy * hdy).squareRoot() < 170 && (sn.vx * hdx + sn.vy * hdy) < 0 // closing in
+                return (hdx * hdx + hdy * hdy).squareRoot() < 100 && (sn.vx * hdx + sn.vy * hdy) < 0 // closing in
             }
             if let hunter {
                 // A sun is bearing down on us: run straight away from it first

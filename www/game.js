@@ -131,9 +131,9 @@
   var QUEST_LEVELS = [
     { name: 'COOKIE CRUMBS', duration: 1800, goal: 10, rain: 0.045, burnt: 0, asteroids: 0.65,
       hint: 'COLLECT 10 COOKIES · MIND THE ASTEROIDS' },
-    { name: 'CRUMB STORM', duration: 2100, goal: 15, rain: 0.04, burnt: 0.02,
+    { name: 'CRUMB STORM', duration: 2100, goal: 15, rain: 0.04, burnt: 0.03, asteroids: 0.25,
       hint: 'COLLECT 15 COOKIES · DODGE THE BURNT ONES' },
-    { name: 'THE COOKIE JAR', duration: 2700, goal: 1, rain: 0, burnt: 0.012,
+    { name: 'THE COOKIE JAR', duration: 2700, goal: 1, rain: 0, burnt: 0.02, asteroids: 0.2,
       hint: 'CRACK THE COOKIE JAR · DON\'T TOUCH THE SUNS' }
   ];
   var QUEST_BOSS_HP = 50;
@@ -145,8 +145,8 @@
   var SUN_COLOR = '#fbbf24';
   // The first sun is a hunter: it homes in on the nearest ship (slower than
   // a ship at full thrust, so you can outrun it but never stop).
-  var QUEST_HUNTER_SPEED = 2.8;
-  var QUEST_HUNTER_ACCEL = 0.1;
+  var QUEST_HUNTER_SPEED = 4.0;
+  var QUEST_HUNTER_ACCEL = 0.14;
   var QUEST_BOSS_FIRE_INTERVAL = 150; // play frames between crumb rings
   // Blasters are earned, not granted: a W orb drops in at the start of every
   // level, and level 3 re-supplies one every QUEST_WEAPON_RESUPPLY play

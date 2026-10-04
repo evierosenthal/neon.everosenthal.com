@@ -21,9 +21,9 @@ public enum GameConstants {
     public static let questLevels: [QuestLevelDef] = [
         QuestLevelDef(name: "COOKIE CRUMBS", duration: 1800, goal: 10, rain: 0.045, burnt: 0, asteroids: 0.65,
                       hint: "COLLECT 10 COOKIES · MIND THE ASTEROIDS"),
-        QuestLevelDef(name: "CRUMB STORM", duration: 2100, goal: 15, rain: 0.04, burnt: 0.02,
+        QuestLevelDef(name: "CRUMB STORM", duration: 2100, goal: 15, rain: 0.04, burnt: 0.03, asteroids: 0.25,
                       hint: "COLLECT 15 COOKIES · DODGE THE BURNT ONES"),
-        QuestLevelDef(name: "THE COOKIE JAR", duration: 2700, goal: 1, rain: 0, burnt: 0.012,
+        QuestLevelDef(name: "THE COOKIE JAR", duration: 2700, goal: 1, rain: 0, burnt: 0.02, asteroids: 0.2,
                       hint: "CRACK THE COOKIE JAR · DON'T TOUCH THE SUNS")
     ]
     /// QUEST_BOSS_HP
@@ -37,8 +37,8 @@ public enum GameConstants {
     public static let questSunArmFrames = 90
     public static let sunColor: CSSColor = "#fbbf24"
     /// QUEST_HUNTER_SPEED / QUEST_HUNTER_ACCEL: the hunting sun's chase.
-    public static let questHunterSpeed = 2.8
-    public static let questHunterAccel = 0.1
+    public static let questHunterSpeed = 4.0
+    public static let questHunterAccel = 0.14
     /// QUEST_BOSS_FIRE_INTERVAL: play frames between crumb rings.
     public static let questBossFireInterval = 150
     /// QUEST_BOSS_CONTACT_COOLDOWN: frames a ship is immune after bumping the boss.
