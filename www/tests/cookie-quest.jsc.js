@@ -138,11 +138,11 @@ var hard = randomsInStart({ initialDifficulty: 1.3 });
 var hardHooked = randomsInStart({ initialDifficulty: 1.3, cookieSpawnFrame: 300 });
 var superHard = randomsInStart({ initialDifficulty: 6.0 });
 var online = randomsInStart({ initialDifficulty: 1.3, online: { role: 'host', send: function () {} } });
-check(medium === easy, 'Medium start draws the same randoms as Easy (' + medium + ' vs ' + easy + ')');
 check(superHard === easy, 'Super Hard start draws the same randoms as Easy (' + superHard + ' vs ' + easy + ')');
 check(online === easy, 'online Hard start draws the same randoms as Easy (' + online + ' vs ' + easy + ')');
 check(hardHooked === easy, 'Hard with cookieSpawnFrame hook draws no extra random (' + hardHooked + ' vs ' + easy + ')');
 check(hard === easy + 1, 'Hard start draws exactly one extra random (' + hard + ' vs ' + easy + ')');
+check(medium === easy + 1, 'Medium start draws exactly one extra random too (' + medium + ' vs ' + easy + ')');
 
 // ---------------------------------------------------------------------------
 section('fail path: catch the cookie, dodge, let level 1 time out');

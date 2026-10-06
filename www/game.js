@@ -136,6 +136,10 @@
     { name: 'THE COOKIE JAR', duration: 2700, goal: 1, rain: 0, burnt: 0.02, asteroids: 0.2,
       hint: 'CRACK THE COOKIE JAR · DON\'T TOUCH THE SUNS' }
   ];
+  // The cookie is scheduled once a run's difficulty reaches this (the start
+  // of the Medium tier): Medium and Hard runs qualify immediately, an Easy
+  // run after about a minute of survival. Super Hard and online runs never.
+  var QUEST_MIN_DIFFICULTY = 0.6;
   var QUEST_BOSS_HP = 50;
   // Level 3's little suns: touch one and the ship is gone instantly. They
   // fly around and bounce; harmless while they warm up (QUEST_SUN_ARM_FRAMES).
@@ -774,17 +778,21 @@
         });
       }
 
-      // Secret cookie quest: Hard runs only (not Super Hard, never online).
-      // One Math.random() here, AFTER the stars and only when eligible, so
-      // Easy / Medium / Super Hard / online runs draw exactly what they did
-      // before the quest existed.
-      var questEligible = config.initialDifficulty >= 1.0 && config.initialDifficulty < 5.0 && !config.online;
+      // Secret cookie quest: any local Easy / Medium / Hard run (not Super
+      // Hard, never online), scheduled once the run has reached Medium
+      // difficulty (QUEST_MIN_DIFFICULTY). Medium and Hard are there from the
+      // start: one Math.random() here, AFTER the stars. Easy starts below it,
+      // so its draw waits until the ramp crosses the line (updateDriftingCookie)
+      // — -2 marks "pending". Super Hard / online runs draw nothing extra.
+      var questEligible = config.initialDifficulty < 5.0 && !config.online;
       if (!questEligible) {
         state.cookieSpawnFrame = -1;
       } else if (typeof config.cookieSpawnFrame === 'number') {
         state.cookieSpawnFrame = config.cookieSpawnFrame; // test hook: no random consumed
-      } else {
+      } else if (state.difficulty >= QUEST_MIN_DIFFICULTY) {
         state.cookieSpawnFrame = 1200 + Math.floor(Math.random() * 2401); // 20–60 s in
+      } else {
+        state.cookieSpawnFrame = -2; // Easy: scheduled when the run reaches Medium difficulty
       }
 
       keysPressed = {};
@@ -1429,10 +1437,16 @@
     // The drifting cookie: appears on state.cookieSpawnFrame (only while no
     // quest is running — this is only called then), wobbles across the
     // screen and starts the quest when a ship touches it. Runs in
-    // updateSpawns()'s slot, right after updateSpawns(). Randoms: the
-    // factory's three on the spawn frame; on a catch, startQuest()'s bursts
-    // and then the "SECRET LEVEL!" text id.
+    // updateSpawns()'s slot, right after updateSpawns(). Randoms: for an
+    // Easy run, the spawn-frame draw on the frame the difficulty reaches
+    // QUEST_MIN_DIFFICULTY; the factory's three on the spawn frame; on a
+    // catch, startQuest()'s bursts and then the "SECRET LEVEL!" text id.
     function updateDriftingCookie() {
+      // An Easy run that has just climbed into Medium difficulty: schedule
+      // the cookie now (one Math.random(), 20–60 s from here).
+      if (state.cookieSpawnFrame === -2 && state.difficulty >= QUEST_MIN_DIFFICULTY) {
+        state.cookieSpawnFrame = state.frame + 1200 + Math.floor(Math.random() * 2401);
+      }
       if (state.frame === state.cookieSpawnFrame && !state.cookie) {
         state.cookie = createDriftingCookie(canvas.width, canvas.height);
       }

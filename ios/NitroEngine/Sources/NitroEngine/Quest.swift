@@ -18,6 +18,11 @@ extension GameEngine {
     /// updateSpawns(). Randoms: the factory's three on the spawn frame; on a
     /// catch, startQuest()'s bursts and then the "SECRET LEVEL!" text id.
     func updateDriftingCookie() {
+        // An Easy run that has just climbed into Medium difficulty: schedule
+        // the cookie now (one draw, 20-60 s from here).
+        if s.cookieSpawnFrame == -2 && s.difficulty >= GameConstants.questMinDifficulty {
+            s.cookieSpawnFrame = s.frame + 1200 + Int((random() * 2401).rounded(.down))
+        }
         if s.frame == s.cookieSpawnFrame && s.cookie == nil {
             s.cookie = createDriftingCookie(width: worldSize.width, height: worldSize.height)
         }

@@ -61,7 +61,7 @@ nonisolated final class CookieQuestAppTests: XCTestCase {
 
         app.coins = 0
         app.tapGear(cookie)
-        XCTAssertEqual(app.tailorError, "Find the cookie in Hard mode to unlock this.")
+        XCTAssertEqual(app.tailorError, "Find the secret cookie — it drifts by once a mission reaches Medium difficulty.")
         XCTAssertEqual(app.loadout1.skin, "cyan")
         XCTAssertFalse(app.ownedSkins.contains("cookie"))
 

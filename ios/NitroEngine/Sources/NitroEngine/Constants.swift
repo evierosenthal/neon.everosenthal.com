@@ -27,6 +27,9 @@ public enum GameConstants {
                       hint: "CRACK THE COOKIE JAR · DON'T TOUCH THE SUNS")
     ]
     /// QUEST_BOSS_HP
+    /// QUEST_MIN_DIFFICULTY: the cookie is scheduled once a run reaches this
+    /// (the start of the Medium tier).
+    public static let questMinDifficulty = 0.6
     public static let questBossHP = 50
     /// QUEST_SUN_COUNT / QUEST_SUN_RADIUS / QUEST_SUN_ARM_FRAMES: level 3's
     /// lethal little suns and their harmless warm-up.

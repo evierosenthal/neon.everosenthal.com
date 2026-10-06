@@ -1872,7 +1872,7 @@
   function handleSkinClick(skin) {
     setFormError(el.skinsError, '');
     if (isSecretLocked(skin)) {
-      setFormError(el.skinsError, 'Find the cookie in Hard mode to unlock this.');
+      setFormError(el.skinsError, 'Find the secret cookie — it drifts by once a mission reaches Medium difficulty.');
       return;
     }
     if (ownedSkins.indexOf(skin.id) === -1 && !isDeveloper()) {
@@ -2063,8 +2063,8 @@
       trail2: localMultiplayer ? getTrail(selectedTrail2) : null,
       flame2: localMultiplayer ? getFlame(selectedFlame2) : null,
       // Lead developers test the cookie quest a lot: the cookie shows up
-      // 3 s into every Hard run, aimed at the ship (the game's own test
-      // hooks; everyone else waits the random 20–60 s).
+      // 3 s into every run, aimed at the ship (the game's own test hooks;
+      // everyone else waits the random 20–60 s).
       cookieSpawnFrame: isLeadDeveloper() ? 180 : undefined,
       cookieAimAtShip: isLeadDeveloper()
     });

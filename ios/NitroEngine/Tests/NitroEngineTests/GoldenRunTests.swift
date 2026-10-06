@@ -47,14 +47,17 @@ final class GoldenRunTests: XCTestCase {
         XCTAssertEqual(p2.y, GOLDEN_CPU_P2.y)
     }
 
-    // Captured from the first run that passed OracleParityTests.
-    // (The solo run is the same seed/config/script as the oracle's
-    // "solo bouncy+pulse" scenario, whose JavaScript run also ends at 1750.)
-    let GOLDEN_SCORE = 1750
-    let GOLDEN_HEALTH = 100
-    let GOLDEN_HITS = 1
-    let GOLDEN_P1 = (x: 687.4, y: 26.1, vx: -8.34, vy: 0.44)
-    let GOLDEN_ASTEROIDS = 4
+    // Captured from runs that passed OracleParityTests (the solo run is the
+    // same seed/config/script as the oracle's "solo bouncy+pulse" scenario,
+    // so its JavaScript run ends at the same numbers).
+    // Re-verified against game.js (OracleParityTests.testSoloKeyboardParity
+    // is this exact config) on 2026-10-05, when Medium runs gained the cookie
+    // quest's spawn-frame draw in reset().
+    let GOLDEN_SCORE = 1400
+    let GOLDEN_HEALTH = 80
+    let GOLDEN_HITS = 2
+    let GOLDEN_P1 = (x: 678.5, y: 28.8, vx: -8.58, vy: -0.27)
+    let GOLDEN_ASTEROIDS = 8
     // The CPU run is a Hard (1.3) start: since the secret cookie quest,
     // reset() draws one extra random there (the cookie's spawn frame), which
     // shifted this run. Re-captured after an oracle run of the same

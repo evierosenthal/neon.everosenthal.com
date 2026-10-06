@@ -183,8 +183,9 @@ that drift off screen pay 10. Difficulty climbs with survival time and score up 
 
 ## Secret cookie quest
 
-Once per **Hard** run (solo, CPU co-pilot or local two-player — never Super Hard, never online),
-somewhere between 20 and 60 seconds in, a lone cookie drifts across the screen. Touch it with
+Once per run (solo, CPU co-pilot or local two-player — never Super Hard, never online) a lone
+cookie drifts across the screen, 20 to 60 seconds after the run reaches **Medium** difficulty:
+Hard and Medium missions qualify from the start, an Easy mission after about a minute of survival. Touch it with
 either ship and the field clears into a three-level side quest with difficulty frozen. A red W orb
 drops in at the start of every level — grab it to arm the blasters (level 3 sends another one
 every 7.5 s while you're unarmed):
@@ -203,8 +204,8 @@ three pays **1000 coins** (Star Fire / Money Storm multipliers apply) and unlock
 secret Tailor skins — Cookie Crumb, Choco Chip and Golden Cookie — which can't be bought and
 aren't free for developers. `localStorage` remembers the win under `neon_nebula_cookie_quest`.
 
-The cookie can appear in every Hard run, whether or not the quest has been won before. Lead
-developers get it 3 seconds into every Hard run, aimed at their ship, so it can be tested quickly.
+The cookie can appear in every eligible run, whether or not the quest has been won before. Lead
+developers get it 3 seconds into every run, aimed at their ship, so it can be tested quickly.
 
 Test hooks on `game.start(options)`: `cookieSpawnFrame` (a number) fixes the frame the cookie
 appears on instead of the random draw, `cookieAimAtShip: true` spawns it at the player's y, and
