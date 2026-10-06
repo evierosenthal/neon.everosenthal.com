@@ -1,6 +1,7 @@
 import Foundation
 
-// game.js:656-735 — the CPU wingman's steering.
+// game.js — the CPU wingman's steering: flee the cookie quest's suns and
+// jar, evade asteroids, harvest pickups, else hold formation.
 extension GameEngine {
     func updateCPUPilot(friction: Double, moveSpeed: Double) {
         var p2 = s.player2!
@@ -34,10 +35,39 @@ extension GameEngine {
             }
         }
 
+        // Lethal hazards of the cookie quest's Cookie Jar level: the little
+        // suns (instant death on touch, one of them hunting) and the jar
+        // itself (a bump costs hull). Nearest by edge distance; no randoms.
+        var hazard: (x: Double, y: Double)? = nil
+        var minHazardEdge = Double.infinity
+        var hazardReach = 0.0
+        if let q = s.quest {
+            for sn in q.suns {
+                let sdx = sn.x - p2.x, sdy = sn.y - p2.y
+                let sEdge = (sdx * sdx + sdy * sdy).squareRoot() - sn.radius
+                if sEdge < minHazardEdge { minHazardEdge = sEdge; hazard = (sn.x, sn.y); hazardReach = 240 }
+            }
+            if let bz = q.boss {
+                let bdx = bz.x - p2.x, bdy = bz.y - p2.y
+                let bEdge = (bdx * bdx + bdy * bdy).squareRoot() - bz.radius
+                if bEdge < minHazardEdge { minHazardEdge = bEdge; hazard = (bz.x, bz.y); hazardReach = 120 }
+            }
+        }
+
         var desiredVx = 0.0
         var desiredVy = 0.0
 
-        if let ta = targetAsteroid, minDistAsteroid < 220 {
+        if let hz = hazard, minHazardEdge < hazardReach {
+            // Flee the hazard at full speed; never into a wall (drop that
+            // axis), and if cornered break out along the screen toward the centre.
+            var awayX = jsSign(p2.x - hz.x)
+            var awayY = jsSign(p2.y - hz.y)
+            if (p2.x < 90 && awayX < 0) || (p2.x > worldSize.width - 90 && awayX > 0) { awayX = 0 }
+            if (p2.y < 90 && awayY < 0) || (p2.y > worldSize.height - 90 && awayY > 0) { awayY = 0 }
+            if awayX == 0 && awayY == 0 { awayX = p2.x < worldSize.width / 2 ? 1 : -1 }
+            desiredVx = awayX * moveSpeed
+            desiredVy = awayY * moveSpeed
+        } else if let ta = targetAsteroid, minDistAsteroid < 220 {
             // Threat mitigation: evade (L691-708)
             let dx = p2.x - ta.x
             let dy = p2.y - ta.y

@@ -142,7 +142,7 @@ check(superHard === easy, 'Super Hard start draws the same randoms as Easy (' + 
 check(online === easy, 'online Hard start draws the same randoms as Easy (' + online + ' vs ' + easy + ')');
 check(hardHooked === easy, 'Hard with cookieSpawnFrame hook draws no extra random (' + hardHooked + ' vs ' + easy + ')');
 check(hard === easy + 1, 'Hard start draws exactly one extra random (' + hard + ' vs ' + easy + ')');
-check(medium === easy + 1, 'Medium start draws exactly one extra random too (' + medium + ' vs ' + easy + ')');
+check(medium === easy, 'Medium start draws the same randoms as Easy (its draw waits for the ramp) (' + medium + ' vs ' + easy + ')');
 
 // ---------------------------------------------------------------------------
 section('fail path: catch the cookie, dodge, let level 1 time out');

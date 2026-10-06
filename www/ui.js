@@ -1872,7 +1872,7 @@
   function handleSkinClick(skin) {
     setFormError(el.skinsError, '');
     if (isSecretLocked(skin)) {
-      setFormError(el.skinsError, 'Find the secret cookie — it drifts by once a mission reaches Medium difficulty.');
+      setFormError(el.skinsError, 'Find the secret cookie — it drifts by once a mission reaches Hard difficulty.');
       return;
     }
     if (ownedSkins.indexOf(skin.id) === -1 && !isDeveloper()) {

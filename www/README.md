@@ -179,13 +179,15 @@ crash and the high-score fanfare.
 | `M` Magnet | Pulls nearby treats toward your ship (Medium difficulty and above only) |
 
 Sundaes and donuts pay 100 points and repair the hull; destroyed asteroids pay 20; asteroids
-that drift off screen pay 10. Difficulty climbs with survival time and score up to a per-mode ceiling.
+that drift off screen pay 10. Difficulty climbs with survival time and score up to a per-mode ceiling
+(Easy and Medium both top out just inside Hard territory, Hard and Super Hard much higher).
 
 ## Secret cookie quest
 
 Once per run (solo, CPU co-pilot or local two-player — never Super Hard, never online) a lone
-cookie drifts across the screen, 20 to 60 seconds after the run reaches **Medium** difficulty:
-Hard and Medium missions qualify from the start, an Easy mission after about a minute of survival. Touch it with
+cookie drifts across the screen, 20 to 60 seconds after the run reaches **Hard** difficulty (the
+HUD's HARD tile lights up): a Hard mission qualifies from the start; Medium after roughly a minute
+and a half of survival, Easy after a few minutes, as their difficulty ramps climb into Hard territory. Touch it with
 either ship and the field clears into a three-level side quest with difficulty frozen. A red W orb
 drops in at the start of every level — grab it to arm the blasters (level 3 sends another one
 every 7.5 s while you're unarmed):

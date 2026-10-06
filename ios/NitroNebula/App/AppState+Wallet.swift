@@ -72,7 +72,7 @@ extension AppState {
     func tapGear(_ item: GearItem) {
         tailorError = nil
         if isSecretLocked(item) {
-            tailorError = "Find the secret cookie — it drifts by once a mission reaches Medium difficulty."
+            tailorError = "Find the secret cookie — it drifts by once a mission reaches Hard difficulty."
             return
         }
         if !isOwned(item) && !isDeveloper {

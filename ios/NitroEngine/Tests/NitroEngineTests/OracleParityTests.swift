@@ -522,6 +522,28 @@ final class OracleParityTests: XCTestCase {
         XCTAssertTrue(delegate.questEvents.contains("levelWon:2"), "the pilot reaches the Cookie Jar: \(delegate.questEvents)")
     }
 
+    /// The Cookie Jar with the CPU wingman aboard: its sun/jar-fleeing
+    /// steering must match game.js frame for frame too. Runs until the
+    /// ship dies or the quest ends; asserts the fight was reached.
+    func testCookieJarFightWithWingmanParity() throws {
+        let delegateRef = RecordingDelegateBox()
+        try run(Scenario(name: "cookie jar fight (wingman)", frames: 9000, seed: 2,
+                         input: OracleParityTests.cookieQuestSteering,
+                         stopWhen: { positions, delegate in
+                             delegateRef.delegate = delegate
+                             return delegate.gameOverScore != nil || (delegate.questCompletes == 1 && positions.quest == nil)
+                         }) { c in
+            c.initialDifficulty = 1.3
+            c.isCPUMultiplayer = true
+            c.controlModePreference = .keyboard
+            c.flame = GearCatalog.flames.first { $0.power == .magnet }
+            c.cookieSpawnFrame = 120
+            c.cookieAimAtShip = true
+        })
+        let delegate = try XCTUnwrap(delegateRef.delegate)
+        XCTAssertTrue(delegate.questEvents.contains("levelWon:2"), "the pair reaches the Cookie Jar: \(delegate.questEvents)")
+    }
+
     /// The quest's ending, end to end on both engines: with the Giant
     /// Cookie's hit points overridden to 3 (the `questBossHP` test hook) the
     /// pilot grabs the W orb and cracks it before the suns arm, and the run

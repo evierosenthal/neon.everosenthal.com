@@ -8,7 +8,7 @@ extension GameEngine {
         if initDiff >= 5.0 { return 8.0 }      // Super Hard
         if initDiff >= 1.0 { return 2.8 }      // Hard
         if initDiff >= 0.6 { return 1.1 }      // Medium (stays below Hard's start)
-        return 0.85                            // Easy (reaches start of Medium)
+        return 1.1                             // Easy (climbs into Hard territory eventually, like Medium)
     }
 
     func updateDifficulty() {

@@ -137,9 +137,10 @@
       hint: 'CRACK THE COOKIE JAR · DON\'T TOUCH THE SUNS' }
   ];
   // The cookie is scheduled once a run's difficulty reaches this (the start
-  // of the Medium tier): Medium and Hard runs qualify immediately, an Easy
-  // run after about a minute of survival. Super Hard and online runs never.
-  var QUEST_MIN_DIFFICULTY = 0.6;
+  // of the Hard tier, where the HUD's HARD tile lights): a Hard run
+  // qualifies immediately; Medium and Easy runs once their ramp climbs into
+  // Hard territory. Super Hard and online runs never.
+  var QUEST_MIN_DIFFICULTY = 1.0;
   var QUEST_BOSS_HP = 50;
   // Level 3's little suns: touch one and the ship is gone instantly. They
   // fly around and bounce; harmless while they warm up (QUEST_SUN_ARM_FRAMES).
@@ -779,11 +780,12 @@
       }
 
       // Secret cookie quest: any local Easy / Medium / Hard run (not Super
-      // Hard, never online), scheduled once the run has reached Medium
-      // difficulty (QUEST_MIN_DIFFICULTY). Medium and Hard are there from the
-      // start: one Math.random() here, AFTER the stars. Easy starts below it,
-      // so its draw waits until the ramp crosses the line (updateDriftingCookie)
-      // — -2 marks "pending". Super Hard / online runs draw nothing extra.
+      // Hard, never online), scheduled once the run has reached Hard
+      // difficulty (QUEST_MIN_DIFFICULTY). Hard is there from the start: one
+      // Math.random() here, AFTER the stars. Easy and Medium start below it,
+      // so their draw waits until the ramp crosses the line
+      // (updateDriftingCookie) — -2 marks "pending". Super Hard / online runs
+      // draw nothing extra.
       var questEligible = config.initialDifficulty < 5.0 && !config.online;
       if (!questEligible) {
         state.cookieSpawnFrame = -1;
@@ -792,7 +794,7 @@
       } else if (state.difficulty >= QUEST_MIN_DIFFICULTY) {
         state.cookieSpawnFrame = 1200 + Math.floor(Math.random() * 2401); // 20–60 s in
       } else {
-        state.cookieSpawnFrame = -2; // Easy: scheduled when the run reaches Medium difficulty
+        state.cookieSpawnFrame = -2; // Easy / Medium: scheduled when the run reaches Hard difficulty
       }
 
       keysPressed = {};
@@ -971,12 +973,43 @@
         }
       }
 
+      // Lethal hazards of the cookie quest's Cookie Jar level: the little
+      // suns (instant death on touch, one of them hunting) and the jar itself
+      // (a bump costs hull). Nearest by edge distance; no randoms.
+      var hazard = null;
+      var minHazardEdge = Infinity;
+      var hazardReach = 0;
+      if (state.quest) {
+        for (var si = 0; si < state.quest.suns.length; si++) {
+          var sn = state.quest.suns[si];
+          var sdx = sn.x - p2.x, sdy = sn.y - p2.y;
+          var sEdge = Math.sqrt(sdx * sdx + sdy * sdy) - sn.radius;
+          if (sEdge < minHazardEdge) { minHazardEdge = sEdge; hazard = sn; hazardReach = 240; }
+        }
+        if (state.quest.boss) {
+          var bz = state.quest.boss;
+          var bdx = bz.x - p2.x, bdy = bz.y - p2.y;
+          var bEdge = Math.sqrt(bdx * bdx + bdy * bdy) - bz.radius;
+          if (bEdge < minHazardEdge) { minHazardEdge = bEdge; hazard = bz; hazardReach = 120; }
+        }
+      }
+
       // Determine AI steering vectors
       var desiredVx = 0;
       var desiredVy = 0;
 
-      // Threat Mitigation: Evade nearby asteroids (distance threshold < 220)
-      if (targetAsteroid && minDistAsteroid < 220) {
+      if (hazard && minHazardEdge < hazardReach) {
+        // Flee the hazard at full speed; never into a wall (drop that axis),
+        // and if cornered break out along the screen toward the centre.
+        var awayX = Math.sign(p2.x - hazard.x);
+        var awayY = Math.sign(p2.y - hazard.y);
+        if ((p2.x < 90 && awayX < 0) || (p2.x > canvas.width - 90 && awayX > 0)) awayX = 0;
+        if ((p2.y < 90 && awayY < 0) || (p2.y > canvas.height - 90 && awayY > 0)) awayY = 0;
+        if (awayX === 0 && awayY === 0) awayX = p2.x < canvas.width / 2 ? 1 : -1;
+        desiredVx = awayX * moveSpeed;
+        desiredVy = awayY * moveSpeed;
+      } else if (targetAsteroid && minDistAsteroid < 220) {
+        // Threat Mitigation: Evade nearby asteroids (distance threshold < 220)
         var dx = p2.x - targetAsteroid.x;
         var dy = p2.y - targetAsteroid.y;
 
@@ -1070,7 +1103,7 @@
       } else if (initDiff >= 0.6) {
         maxDiffCap = 1.1; // Medium mode cap (stays below Hard's 1.2 start)
       } else {
-        maxDiffCap = 0.85; // Easy mode cap (reaches start of Medium mode)
+        maxDiffCap = 1.1; // Easy mode cap (climbs into Hard territory eventually, like Medium, so the secret cookie can be reached from Easy)
       }
 
       var baseGrowthRate = 0.00008;
@@ -1438,12 +1471,12 @@
     // quest is running — this is only called then), wobbles across the
     // screen and starts the quest when a ship touches it. Runs in
     // updateSpawns()'s slot, right after updateSpawns(). Randoms: for an
-    // Easy run, the spawn-frame draw on the frame the difficulty reaches
-    // QUEST_MIN_DIFFICULTY; the factory's three on the spawn frame; on a
+    // Easy or Medium run, the spawn-frame draw on the frame the difficulty
+    // reaches QUEST_MIN_DIFFICULTY; the factory's three on the spawn frame; on a
     // catch, startQuest()'s bursts and then the "SECRET LEVEL!" text id.
     function updateDriftingCookie() {
-      // An Easy run that has just climbed into Medium difficulty: schedule
-      // the cookie now (one Math.random(), 20–60 s from here).
+      // An Easy or Medium run that has just climbed into Hard difficulty:
+      // schedule the cookie now (one Math.random(), 20–60 s from here).
       if (state.cookieSpawnFrame === -2 && state.difficulty >= QUEST_MIN_DIFFICULTY) {
         state.cookieSpawnFrame = state.frame + 1200 + Math.floor(Math.random() * 2401);
       }

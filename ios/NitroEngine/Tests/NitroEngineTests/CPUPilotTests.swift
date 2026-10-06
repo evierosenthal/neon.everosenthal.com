@@ -95,4 +95,37 @@ final class CPUPilotTests: XCTestCase {
         XCTAssertLessThanOrEqual(e.state!.player2!.x, 785)
         XCTAssertLessThanOrEqual(e.state!.player2!.y, 585)
     }
+
+    /// Cookie Jar level: the wingman flees a sun at full speed instead of
+    /// hovering in formation, and never flees into a wall.
+    @MainActor func testWingmanFleesSunsAndTheJar() {
+        let e = cpuEngine()
+        e.clearField()
+        var p2 = e.state!.player2!
+        p2.x = 400; p2.y = 300; p2.vx = 0; p2.vy = 0
+        e.state!.player2 = p2
+        e.state!.quest = QuestState(level: 3, phase: .play, phaseTimer: 0, timer: 10, goal: 1, collected: 0,
+                                    cookies: [], boss: nil,
+                                    suns: [QuestSun(x: 400, y: 420, vx: 0, vy: -3, armTimer: 0, hunter: true)])
+        for _ in 0..<10 { e.updateCPUPilot(friction: 0.92, moveSpeed: 5) }
+        XCTAssertLessThan(e.state!.player2!.vy, -2, "runs straight away from a sun closing from below")
+
+        // Pinned against the bottom wall with the sun above: can't go down, so it breaks out sideways
+        p2 = e.state!.player2!
+        p2.x = 400; p2.y = testWorld.height - 20; p2.vx = 0; p2.vy = 0
+        e.state!.player2 = p2
+        e.state!.quest!.suns = [QuestSun(x: 400, y: testWorld.height - 140, vx: 0, vy: 3, armTimer: 0)]
+        for _ in 0..<10 { e.updateCPUPilot(friction: 0.92, moveSpeed: 5) }
+        XCTAssertGreaterThan(abs(e.state!.player2!.vx), 2, "breaks out along the wall")
+        XCTAssertLessThanOrEqual(e.state!.player2!.vy, 0.01, "never into the wall")
+
+        // The jar is avoided too
+        p2 = e.state!.player2!
+        p2.x = 400; p2.y = 300; p2.vx = 0; p2.vy = 0
+        e.state!.player2 = p2
+        e.state!.quest!.suns = []
+        e.state!.quest!.boss = QuestBoss(x: 480, y: 300, vx: -4.8, vy: 0, hp: 50, maxHp: 50)
+        for _ in 0..<10 { e.updateCPUPilot(friction: 0.92, moveSpeed: 5) }
+        XCTAssertLessThan(e.state!.player2!.vx, -2, "backs away from the jar")
+    }
 }

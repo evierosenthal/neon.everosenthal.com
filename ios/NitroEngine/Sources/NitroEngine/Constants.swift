@@ -28,8 +28,8 @@ public enum GameConstants {
     ]
     /// QUEST_BOSS_HP
     /// QUEST_MIN_DIFFICULTY: the cookie is scheduled once a run reaches this
-    /// (the start of the Medium tier).
-    public static let questMinDifficulty = 0.6
+    /// (the start of the Hard tier).
+    public static let questMinDifficulty = 1.0
     public static let questBossHP = 50
     /// QUEST_SUN_COUNT / QUEST_SUN_RADIUS / QUEST_SUN_ARM_FRAMES: level 3's
     /// lethal little suns and their harmless warm-up.

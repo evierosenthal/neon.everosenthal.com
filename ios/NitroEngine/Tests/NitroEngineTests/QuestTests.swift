@@ -13,10 +13,10 @@ final class QuestTests: XCTestCase {
         return engine.rngCalls
     }
 
-    /// reset() — local runs that start at Medium difficulty or above (Medium,
-    /// Hard) draw the cookie spawn frame after the stars; Easy defers its
-    /// draw to the ramp, and Super Hard / online runs never draw it.
-    func testOnlyMediumAndHardRunsDrawTheCookieSpawnFrameAtStart() {
+    /// reset() — only a local run that starts at Hard difficulty draws the
+    /// cookie spawn frame after the stars; Easy and Medium defer their draw
+    /// to the ramp, and Super Hard / online runs never draw it.
+    func testOnlyHardRunsDrawTheCookieSpawnFrameAtStart() {
         let easy = randomsInStart { $0.initialDifficulty = 0.3 }
         let medium = randomsInStart { $0.initialDifficulty = 0.62 }
         let hard = randomsInStart { $0.initialDifficulty = 1.3 }
@@ -24,7 +24,7 @@ final class QuestTests: XCTestCase {
         let superHard = randomsInStart { $0.initialDifficulty = 6.0 }
         let onlineHard = randomsInStart { $0.initialDifficulty = 1.3; $0.online = .host }
         XCTAssertEqual(easy, 2 + GameConstants.starCount * 3, "initial orb vx/vy + 3 per star")
-        XCTAssertEqual(medium, easy + 1, "Medium qualifies from the start")
+        XCTAssertEqual(medium, easy, "Medium waits for the ramp like Easy")
         XCTAssertEqual(superHard, easy)
         XCTAssertEqual(onlineHard, easy)
         XCTAssertEqual(hardHooked, easy, "the cookieSpawnFrame hook replaces the draw")
@@ -39,16 +39,16 @@ final class QuestTests: XCTestCase {
         let (hooked, _) = makeEngine { $0.initialDifficulty = 1.3; $0.cookieSpawnFrame = 42 }
         XCTAssertEqual(hooked.state?.cookieSpawnFrame, 42)
         let (medium, _) = makeEngine({ $0.initialDifficulty = 0.62 }, rng: ConstantRNG(0))
-        XCTAssertEqual(medium.state?.cookieSpawnFrame, 1200, "Medium qualifies from the start")
+        XCTAssertEqual(medium.state?.cookieSpawnFrame, -2, "Medium waits for the ramp to reach Hard difficulty")
         let (easy, _) = makeEngine({ $0.initialDifficulty = 0.3 }, rng: ConstantRNG(0))
-        XCTAssertEqual(easy.state?.cookieSpawnFrame, -2, "Easy waits for the ramp to reach Medium difficulty")
+        XCTAssertEqual(easy.state?.cookieSpawnFrame, -2, "Easy waits for the ramp to reach Hard difficulty")
         let (superHard, _) = makeEngine { $0.initialDifficulty = 6.0 }
         XCTAssertEqual(superHard.state?.cookieSpawnFrame, -1)
         let (online, _) = makeEngine { $0.initialDifficulty = 1.3; $0.online = .host }
         XCTAssertEqual(online.state?.cookieSpawnFrame, -1)
 
         // The Easy run schedules the cookie on the frame its difficulty crosses the line
-        easy.state!.difficulty = 0.5
+        easy.state!.difficulty = 0.9
         easy.tick()
         XCTAssertEqual(easy.state?.cookieSpawnFrame, -2, "not yet")
         easy.state!.difficulty = GameConstants.questMinDifficulty

@@ -3,7 +3,7 @@ import XCTest
 
 final class DifficultyTests: XCTestCase {
     func testCapsByMode() {
-        XCTAssertEqual(GameEngine.maxDifficultyCap(initialDifficulty: 0.3), 0.85)
+        XCTAssertEqual(GameEngine.maxDifficultyCap(initialDifficulty: 0.3), 1.1)
         XCTAssertEqual(GameEngine.maxDifficultyCap(initialDifficulty: 0.62), 1.1)
         XCTAssertEqual(GameEngine.maxDifficultyCap(initialDifficulty: 1.3), 2.8)
         XCTAssertEqual(GameEngine.maxDifficultyCap(initialDifficulty: 6.0), 8.0)

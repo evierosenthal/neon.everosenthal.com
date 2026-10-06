@@ -64,8 +64,9 @@ on the web because of an effect-timer ordering bug, is fixed on both sides.
 ### The secret cookie quest
 
 Local runs (never Super Hard, never online) hide a side quest: once per run a
-cookie drifts across the screen 20–60 s after the run reaches Medium
-difficulty (immediately for Medium and Hard, after about a minute on Easy), and catching it starts three
+cookie drifts across the screen 20–60 s after the run reaches Hard
+difficulty (immediately on Hard; Medium and Easy get there as their ramps
+climb — Easy's ceiling now matches Medium's for that reason), and catching it starts three
 timed levels (collect 10 cookies among a thinned stream of the usual
 asteroids, collect 15 while dodging burnt ones, crack the 50-hit Giant Cookie while it fires crumbs and burnt cookies, with
 three lethal suns about, one of which hunts the ship). A W orb
