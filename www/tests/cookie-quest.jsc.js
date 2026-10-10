@@ -229,7 +229,7 @@ section('the Cookie Jar at full strength: both suns and the hunter are out, the 
   var lastScore = __events.score;
   var badDeltas = [];
   var completeFrame = -1, endFrame = -1, maxBossHp = 0, sawBurnt = false, minHunterDist = Infinity, sunsSeen = 0, hunterClosed = false;
-  var maxFrames = 9000;
+  var maxFrames = 12000;
   for (var f = 0; f < maxFrames; f++) {
     var d = game.getDebugPositions();
     var p = d.p1;
@@ -327,7 +327,7 @@ section('ending: magnet flame, homing ship, crack a 3-hit jar (questBossHP hook)
   var lastScore = __events.score;
   var badDeltas = [];
   var completeFrame = -1, endFrame = -1, maxBossHp = 0, sawBurnt = false;
-  var maxFrames = 9000;
+  var maxFrames = 12000;
   for (var f = 0; f < maxFrames; f++) {
     var d = game.getDebugPositions();
     var p = d.p1;

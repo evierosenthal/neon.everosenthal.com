@@ -516,7 +516,7 @@ final class OracleParityTests: XCTestCase {
     /// fight (suns, hunter, shots, orbs) rather than victory.
     func testCookieJarFightParity() throws {
         let delegateRef = RecordingDelegateBox()
-        try run(Scenario(name: "cookie jar fight", frames: 9000, seed: 2,
+        try run(Scenario(name: "cookie jar fight", frames: 12000, seed: 2,
                          input: OracleParityTests.cookieQuestSteering,
                          stopWhen: { positions, delegate in
                              delegateRef.delegate = delegate
@@ -537,7 +537,7 @@ final class OracleParityTests: XCTestCase {
     /// ship dies or the quest ends; asserts the fight was reached.
     func testCookieJarFightWithWingmanParity() throws {
         let delegateRef = RecordingDelegateBox()
-        try run(Scenario(name: "cookie jar fight (wingman)", frames: 9000, seed: 2,
+        try run(Scenario(name: "cookie jar fight (wingman)", frames: 12000, seed: 2,
                          input: OracleParityTests.cookieQuestSteering,
                          stopWhen: { positions, delegate in
                              delegateRef.delegate = delegate
@@ -561,7 +561,7 @@ final class OracleParityTests: XCTestCase {
     /// engineDidCompleteQuest.
     func testCookieQuestCompleteParity() throws {
         let delegateRef = RecordingDelegateBox()
-        try run(Scenario(name: "cookie quest complete", frames: 9000, seed: 2,
+        try run(Scenario(name: "cookie quest complete", frames: 12000, seed: 2,
                          input: OracleParityTests.cookieQuestSteering,
                          stopWhen: { positions, delegate in
                              delegateRef.delegate = delegate

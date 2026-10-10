@@ -23,7 +23,7 @@ public enum GameConstants {
                       hint: "COLLECT 10 COOKIES · MIND THE ASTEROIDS"),
         QuestLevelDef(name: "CRUMB STORM", duration: 2100, goal: 15, rain: 0.04, burnt: 0.03, asteroids: 0.25,
                       hint: "COLLECT 15 COOKIES · DODGE THE BURNT ONES"),
-        QuestLevelDef(name: "THE COOKIE JAR", duration: 2700, goal: 1, rain: 0, burnt: 0.02, asteroids: 0.2,
+        QuestLevelDef(name: "THE COOKIE JAR", duration: 4500, goal: 1, rain: 0, burnt: 0.02, asteroids: 0.2,
                       hint: "CRACK THE COOKIE JAR · DON'T TOUCH THE SUNS")
     ]
     /// QUEST_BOSS_HP

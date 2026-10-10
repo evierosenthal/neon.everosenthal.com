@@ -133,7 +133,7 @@
       hint: 'COLLECT 10 COOKIES · MIND THE ASTEROIDS' },
     { name: 'CRUMB STORM', duration: 2100, goal: 15, rain: 0.04, burnt: 0.03, asteroids: 0.25,
       hint: 'COLLECT 15 COOKIES · DODGE THE BURNT ONES' },
-    { name: 'THE COOKIE JAR', duration: 2700, goal: 1, rain: 0, burnt: 0.02, asteroids: 0.2,
+    { name: 'THE COOKIE JAR', duration: 4500, goal: 1, rain: 0, burnt: 0.02, asteroids: 0.2,
       hint: 'CRACK THE COOKIE JAR · DON\'T TOUCH THE SUNS' }
   ];
   // The cookie is scheduled once a run's difficulty reaches this (the start

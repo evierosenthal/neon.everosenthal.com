@@ -197,7 +197,7 @@ every 7.5 s while you're unarmed):
 2. **Crumb Storm** — collect 15 in 35 s while dodging burnt cookies (they hit like asteroids and
    can be shot for 20, but pay nothing for drifting off) and a thin trickle of ordinary asteroids
 3. **The Cookie Jar** — crack the Giant Cookie (50 blaster hits, 5 points each, 500 for the crack)
-   in 45 s while it tears around the screen firing rings of crumbs with four big burnt cookies between
+   in 75 s while it tears around the screen firing rings of crumbs with four big burnt cookies between
    them, burnt cookies and a few asteroids keep falling, and three little suns are out — two roam, one (red-hot) hunts your ship and never gives up,
    so keep moving; touch any of them and the ship is gone, shield or not
 
