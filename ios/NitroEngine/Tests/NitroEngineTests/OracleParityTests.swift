@@ -301,6 +301,16 @@ final class OracleParityTests: XCTestCase {
         })
     }
 
+    /// The same seed/config/frames as GoldenRunTests.testSeed7CPU600Ticks, so
+    /// the golden CPU numbers are always backed by game.js.
+    func testCPUGoldenConfigParity() throws {
+        try run(Scenario(name: "cpu golden seed 7", frames: 600, seed: 7) { c in
+            c.initialDifficulty = 1.3
+            c.isCPUMultiplayer = true
+            c.controlModePreference = .keyboard
+        })
+    }
+
     func testCPUMultiplayerParity() throws {
         try run(Scenario(name: "cpu turbo+rainbow", seed: 99) { c in
             c.initialDifficulty = 0.62

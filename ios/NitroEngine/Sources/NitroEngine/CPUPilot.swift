@@ -3,8 +3,11 @@ import Foundation
 // game.js — the CPU wingman's steering: flee the cookie quest's suns and
 // jar, evade asteroids, harvest pickups, else hold formation.
 extension GameEngine {
-    func updateCPUPilot(friction: Double, moveSpeed: Double) {
+    func updateCPUPilot(friction: Double, moveSpeed baseMoveSpeed: Double) {
         var p2 = s.player2!
+        // The wingman cruises a little faster than the pilots' base speed so
+        // it can keep up with hazards (CPU_SPEED_MULT).
+        let moveSpeed = baseMoveSpeed * GameConstants.cpuSpeedMult
 
         // Nearest asteroid
         var targetAsteroid: Asteroid? = nil
@@ -57,16 +60,31 @@ extension GameEngine {
         var desiredVx = 0.0
         var desiredVy = 0.0
 
+        var afterburner = false
         if let hz = hazard, minHazardEdge < hazardReach {
-            // Flee the hazard at full speed; never into a wall (drop that
-            // axis), and if cornered break out along the screen toward the centre.
-            var awayX = jsSign(p2.x - hz.x)
-            var awayY = jsSign(p2.y - hz.y)
-            if (p2.x < 90 && awayX < 0) || (p2.x > worldSize.width - 90 && awayX > 0) { awayX = 0 }
-            if (p2.y < 90 && awayY < 0) || (p2.y > worldSize.height - 90 && awayY > 0) { awayY = 0 }
-            if awayX == 0 && awayY == 0 { awayX = p2.x < worldSize.width / 2 ? 1 : -1 }
-            desiredVx = awayX * moveSpeed
-            desiredVy = awayY * moveSpeed
+            // Flee on the afterburner (double speed — the hunting sun is
+            // faster than a cruising wingman) and sidestep across the hazard's
+            // path rather than racing it: the escape line is the away vector
+            // plus a perpendicular component toward the screen centre. Never
+            // into a wall (drop that axis); if cornered, break out toward the centre.
+            afterburner = true
+            var ax = p2.x - hz.x, ay = p2.y - hz.y
+            var ad = (ax * ax + ay * ay).squareRoot()
+            if ad == 0 { ad = 1 }
+            ax /= ad; ay /= ad
+            // (the side is chosen from the hazard's position alone — the
+            // perpendicular's dominant axis should point toward the screen
+            // centre — so it doesn't flip every frame as we move)
+            var px = -ay, py = ax
+            let want = abs(px) >= abs(py) ? (worldSize.width / 2 - hz.x) * px : (worldSize.height / 2 - hz.y) * py
+            if want < 0 { px = -px; py = -py }
+            var fx = ax * 0.75 + px * 0.65, fy = ay * 0.75 + py * 0.65
+            if (p2.x < 90 && fx < 0) || (p2.x > worldSize.width - 90 && fx > 0) { fx = 0 }
+            if (p2.y < 90 && fy < 0) || (p2.y > worldSize.height - 90 && fy > 0) { fy = 0 }
+            var fd = (fx * fx + fy * fy).squareRoot()
+            if fd < 0.001 { fx = p2.x < worldSize.width / 2 ? 1 : -1; fy = 0; fd = 1 }
+            desiredVx = (fx / fd) * moveSpeed * 2
+            desiredVy = (fy / fd) * moveSpeed * 2
         } else if let ta = targetAsteroid, minDistAsteroid < 220 {
             // Threat mitigation: evade (L691-708)
             let dx = p2.x - ta.x
@@ -103,9 +121,10 @@ extension GameEngine {
         p2.vy *= friction
 
         let cpuSpeed = (p2.vx * p2.vx + p2.vy * p2.vy).squareRoot()
-        if cpuSpeed > moveSpeed {
-            p2.vx = (p2.vx / cpuSpeed) * moveSpeed
-            p2.vy = (p2.vy / cpuSpeed) * moveSpeed
+        let cpuCap = afterburner ? moveSpeed * 2 : moveSpeed
+        if cpuSpeed > cpuCap {
+            p2.vx = (p2.vx / cpuSpeed) * cpuCap
+            p2.vy = (p2.vy / cpuSpeed) * cpuCap
         }
 
         p2.x += p2.vx

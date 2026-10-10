@@ -121,6 +121,11 @@ nonisolated final class CookieQuestAppTests: XCTestCase {
         app.startGame(difficulty: 1.3, mode: .single)
         XCTAssertEqual(app.pendingStart?.cookieSpawnFrame, 180)
         XCTAssertEqual(app.pendingStart?.cookieAimAtShip, true)
+        for diff in [0.3, 0.62, 6.0] {
+            app.startGame(difficulty: diff, mode: .single)
+            XCTAssertNil(app.pendingStart?.cookieSpawnFrame, "no shortcut outside Hard (difficulty \(diff))")
+            XCTAssertEqual(app.pendingStart?.cookieAimAtShip, false)
+        }
 
         app.debugCookieSpawnFrame = 60
         app.startGame(difficulty: 1.3, mode: .single)

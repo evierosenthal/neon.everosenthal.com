@@ -2063,10 +2063,12 @@
       trail2: localMultiplayer ? getTrail(selectedTrail2) : null,
       flame2: localMultiplayer ? getFlame(selectedFlame2) : null,
       // Lead developers test the cookie quest a lot: the cookie shows up
-      // 3 s into every run, aimed at the ship (the game's own test hooks;
-      // everyone else waits the random 20–60 s).
-      cookieSpawnFrame: isLeadDeveloper() ? 180 : undefined,
-      cookieAimAtShip: isLeadDeveloper()
+      // 3 s into every run started on HARD, aimed at the ship (the game's
+      // own test hooks; everyone else waits the random 20–60 s). Easy and
+      // Medium runs are never shortcut — there the cookie only ever comes
+      // once the run has climbed into Hard difficulty, dev or not.
+      cookieSpawnFrame: isLeadDeveloper() && difficulty >= 1.0 && difficulty < 5.0 ? 180 : undefined,
+      cookieAimAtShip: isLeadDeveloper() && difficulty >= 1.0 && difficulty < 5.0
     });
   }
 

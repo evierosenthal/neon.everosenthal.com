@@ -40,6 +40,8 @@ public enum GameConstants {
     public static let questSunArmFrames = 90
     public static let sunColor: CSSColor = "#fbbf24"
     /// QUEST_HUNTER_SPEED / QUEST_HUNTER_ACCEL: the hunting sun's chase.
+    /// CPU_SPEED_MULT: the CPU wingman's speed relative to the pilots' base speed.
+    public static let cpuSpeedMult = 1.3
     public static let questHunterSpeed = 4.0
     public static let questHunterAccel = 0.14
     /// QUEST_BOSS_FIRE_INTERVAL: play frames between crumb rings.

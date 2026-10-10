@@ -59,7 +59,10 @@ final class GoldenRunTests: XCTestCase {
     // reset() draws one extra random there (the cookie's spawn frame), which
     // shifted this run. Re-captured after an oracle run of the same
     // seed/config/script ended at 520 / 100 with p2 matching frame by frame.
-    let GOLDEN_CPU_SCORE = 520
-    let GOLDEN_CPU_HEALTH = 100
-    let GOLDEN_CPU_P2 = (x: 727.9, y: 401.8)
+    // Re-captured 2026-10-06 when the wingman gained CPU_SPEED_MULT (1.3x);
+    // OracleParityTests.testCPUGoldenConfigParity runs this exact config
+    // against game.js.
+    let GOLDEN_CPU_SCORE = 790
+    let GOLDEN_CPU_HEALTH = 27
+    let GOLDEN_CPU_P2 = (x: 342.5, y: 477.8)
 }

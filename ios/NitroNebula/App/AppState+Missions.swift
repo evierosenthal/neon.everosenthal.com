@@ -39,10 +39,13 @@ extension AppState {
         config.controlModePreference = .keyboard
         config.speedFactor = Double(speedPercent) / 100
         // Lead developers test the cookie quest a lot: the cookie shows up 3 s
-        // into every Hard run, aimed at the ship (ui.js does the same). The
-        // debug launch hooks still win when set.
-        config.cookieSpawnFrame = debugCookieSpawnFrame ?? (isLeadDeveloper ? 180 : nil)
-        config.cookieAimAtShip = debugCookieAimAtShip || isLeadDeveloper
+        // into every run started on HARD, aimed at the ship (ui.js does the
+        // same). Easy and Medium runs are never shortcut — there the cookie
+        // only ever comes once the run has climbed into Hard difficulty, dev
+        // or not. The debug launch hooks still win when set.
+        let devShortcut = isLeadDeveloper && diff >= 1.0 && diff < 5.0
+        config.cookieSpawnFrame = debugCookieSpawnFrame ?? (devShortcut ? 180 : nil)
+        config.cookieAimAtShip = debugCookieAimAtShip || devShortcut
         let gear1 = loadout1.resolved
         config.skin = gear1.skin
         config.trail = gear1.trail

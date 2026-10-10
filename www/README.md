@@ -207,7 +207,8 @@ secret Tailor skins — Cookie Crumb, Choco Chip and Golden Cookie — which can
 aren't free for developers. `localStorage` remembers the win under `neon_nebula_cookie_quest`.
 
 The cookie can appear in every eligible run, whether or not the quest has been won before. Lead
-developers get it 3 seconds into every run, aimed at their ship, so it can be tested quickly.
+developers get it 3 seconds into every run started on Hard, aimed at their ship, so it can be
+tested quickly; on Easy and Medium they wait for the ramp like everyone else.
 
 Test hooks on `game.start(options)`: `cookieSpawnFrame` (a number) fixes the frame the cookie
 appears on instead of the random draw, `cookieAimAtShip: true` spawns it at the player's y, and

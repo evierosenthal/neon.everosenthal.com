@@ -2,6 +2,9 @@ import XCTest
 @testable import NitroEngine
 
 final class CPUPilotTests: XCTestCase {
+    /// The wingman's effective speed for `moveSpeed: 5` (CPU_SPEED_MULT).
+    let cpu5 = 5 * GameConstants.cpuSpeedMult
+
     func cpuEngine() -> GameEngine {
         let (e, _) = makeEngine { $0.isCPUMultiplayer = true }
         e.clearField()
@@ -26,8 +29,8 @@ final class CPUPilotTests: XCTestCase {
         _ = e.addAsteroid(x: p2.x + 30, y: p2.y - 100)   // |dx| < 65, dist ~104 < 110
         e.updateCPUPilot(friction: 0.92, moveSpeed: 5)
         let after = e.state!.player2!
-        XCTAssertEqual(after.vx, -5 * 0.12 * 0.92, accuracy: 1e-12)   // dx < 0 -> -moveSpeed
-        XCTAssertEqual(after.vy, 5 * 0.12 * 0.92, accuracy: 1e-12)    // sign(dy = +100)
+        XCTAssertEqual(after.vx, -cpu5 * 0.12 * 0.92, accuracy: 1e-12)   // dx < 0 -> -moveSpeed
+        XCTAssertEqual(after.vy, cpu5 * 0.12 * 0.92, accuracy: 1e-12)    // sign(dy = +100)
     }
 
     func testEvadesFartherAsteroidTowardCombatSector() {
@@ -36,7 +39,7 @@ final class CPUPilotTests: XCTestCase {
         _ = e.addAsteroid(x: p2.x - 150, y: p2.y - 100)  // dist ~180: < 220 but > 110, |dx| >= 65
         e.updateCPUPilot(friction: 0.92, moveSpeed: 5)
         let after = e.state!.player2!
-        XCTAssertEqual(after.vx, 5 * 0.12 * 0.92, accuracy: 1e-12)       // sign(dx = +150)
+        XCTAssertEqual(after.vx, cpu5 * 0.12 * 0.92, accuracy: 1e-12)    // sign(dx = +150)
         XCTAssertEqual(after.vy, (450 - p2.y) * 0.05 * 0.12 * 0.92, accuracy: 1e-12)
     }
 
@@ -46,7 +49,7 @@ final class CPUPilotTests: XCTestCase {
         e.addCollectible(x: p2.x - 200, y: p2.y)
         e.updateCPUPilot(friction: 0.92, moveSpeed: 5)
         let after = e.state!.player2!
-        XCTAssertEqual(after.vx, -5 * 0.85 * 0.12 * 0.92, accuracy: 1e-12)
+        XCTAssertEqual(after.vx, -cpu5 * 0.85 * 0.12 * 0.92, accuracy: 1e-12)
         XCTAssertEqual(after.vy, 0)                                        // jsSign(0) == 0
     }
 
@@ -76,7 +79,7 @@ final class CPUPilotTests: XCTestCase {
         e.addCollectible(x: p2.x + 50, y: p2.y)
         _ = e.addAsteroid(x: p2.x - 200, y: p2.y)        // within 220
         e.updateCPUPilot(friction: 0.92, moveSpeed: 5)
-        XCTAssertEqual(e.state!.player2!.vx, 5 * 0.12 * 0.92, accuracy: 1e-12) // flee right
+        XCTAssertEqual(e.state!.player2!.vx, cpu5 * 0.12 * 0.92, accuracy: 1e-12) // flee right
     }
 
     func testSpeedCap() {
@@ -84,7 +87,7 @@ final class CPUPilotTests: XCTestCase {
         e.state!.player2!.vx = 100
         e.updateCPUPilot(friction: 0.92, moveSpeed: 5)
         let p2 = e.state!.player2!
-        XCTAssertEqual((p2.vx * p2.vx + p2.vy * p2.vy).squareRoot(), 5, accuracy: 1e-9)
+        XCTAssertEqual((p2.vx * p2.vx + p2.vy * p2.vy).squareRoot(), cpu5, accuracy: 1e-9)
     }
 
     func testCPUShipIsClampedByUpdate() {
@@ -108,7 +111,8 @@ final class CPUPilotTests: XCTestCase {
                                     cookies: [], boss: nil,
                                     suns: [QuestSun(x: 400, y: 420, vx: 0, vy: -3, armTimer: 0, hunter: true)])
         for _ in 0..<10 { e.updateCPUPilot(friction: 0.92, moveSpeed: 5) }
-        XCTAssertLessThan(e.state!.player2!.vy, -2, "runs straight away from a sun closing from below")
+        XCTAssertLessThan(e.state!.player2!.vy, -3, "runs away from a sun closing from below, on the afterburner")
+        XCTAssertGreaterThan(abs(e.state!.player2!.vx), 2, "and sidesteps across its path")
 
         // Pinned against the bottom wall with the sun above: can't go down, so it breaks out sideways
         p2 = e.state!.player2!

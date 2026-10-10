@@ -150,6 +150,7 @@
   var SUN_COLOR = '#fbbf24';
   // The first sun is a hunter: it homes in on the nearest ship (slower than
   // a ship at full thrust, so you can outrun it but never stop).
+  var CPU_SPEED_MULT = 1.3; // the CPU wingman's speed, relative to the pilots' base speed
   var QUEST_HUNTER_SPEED = 4.0;
   var QUEST_HUNTER_ACCEL = 0.14;
   var QUEST_BOSS_FIRE_INTERVAL = 150; // play frames between crumb rings
@@ -944,7 +945,9 @@
 
       if (!config.isCPUMultiplayer) return;
 
-      // CPU Wingman AI Controls
+      // CPU Wingman AI Controls (the wingman cruises a little faster than
+      // the pilots' base speed so it can keep up with hazards)
+      moveSpeed = moveSpeed * CPU_SPEED_MULT;
       var targetAsteroid = null;
       var minDistAsteroid = Infinity;
       for (var i = 0; i < state.asteroids.length; i++) {
@@ -998,16 +1001,30 @@
       var desiredVx = 0;
       var desiredVy = 0;
 
+      var afterburner = false;
       if (hazard && minHazardEdge < hazardReach) {
-        // Flee the hazard at full speed; never into a wall (drop that axis),
-        // and if cornered break out along the screen toward the centre.
-        var awayX = Math.sign(p2.x - hazard.x);
-        var awayY = Math.sign(p2.y - hazard.y);
-        if ((p2.x < 90 && awayX < 0) || (p2.x > canvas.width - 90 && awayX > 0)) awayX = 0;
-        if ((p2.y < 90 && awayY < 0) || (p2.y > canvas.height - 90 && awayY > 0)) awayY = 0;
-        if (awayX === 0 && awayY === 0) awayX = p2.x < canvas.width / 2 ? 1 : -1;
-        desiredVx = awayX * moveSpeed;
-        desiredVy = awayY * moveSpeed;
+        // Flee on the afterburner (double speed — the hunting sun is faster
+        // than a cruising wingman) and sidestep across the hazard's path
+        // rather than racing it: the escape line is the away vector plus a
+        // perpendicular component toward the screen centre. Never into a
+        // wall (drop that axis); if cornered, break out toward the centre.
+        afterburner = true;
+        var ax = p2.x - hazard.x, ay = p2.y - hazard.y;
+        var ad = Math.sqrt(ax * ax + ay * ay) || 1;
+        ax /= ad; ay /= ad;
+        // (the side is chosen from the hazard's position alone — the
+        // perpendicular's dominant axis should point toward the screen
+        // centre — so it doesn't flip every frame as we move)
+        var px = -ay, py = ax;
+        var want = Math.abs(px) >= Math.abs(py) ? (canvas.width / 2 - hazard.x) * px : (canvas.height / 2 - hazard.y) * py;
+        if (want < 0) { px = -px; py = -py; }
+        var fx = ax * 0.75 + px * 0.65, fy = ay * 0.75 + py * 0.65;
+        if ((p2.x < 90 && fx < 0) || (p2.x > canvas.width - 90 && fx > 0)) fx = 0;
+        if ((p2.y < 90 && fy < 0) || (p2.y > canvas.height - 90 && fy > 0)) fy = 0;
+        var fd = Math.sqrt(fx * fx + fy * fy);
+        if (fd < 0.001) { fx = p2.x < canvas.width / 2 ? 1 : -1; fy = 0; fd = 1; }
+        desiredVx = (fx / fd) * moveSpeed * 2;
+        desiredVy = (fy / fd) * moveSpeed * 2;
       } else if (targetAsteroid && minDistAsteroid < 220) {
         // Threat Mitigation: Evade nearby asteroids (distance threshold < 220)
         var dx = p2.x - targetAsteroid.x;
@@ -1046,9 +1063,10 @@
       p2.vy *= friction;
 
       var cpuSpeed = Math.sqrt(p2.vx * p2.vx + p2.vy * p2.vy);
-      if (cpuSpeed > moveSpeed) {
-        p2.vx = (p2.vx / cpuSpeed) * moveSpeed;
-        p2.vy = (p2.vy / cpuSpeed) * moveSpeed;
+      var cpuCap = afterburner ? moveSpeed * 2 : moveSpeed;
+      if (cpuSpeed > cpuCap) {
+        p2.vx = (p2.vx / cpuSpeed) * cpuCap;
+        p2.vy = (p2.vy / cpuSpeed) * cpuCap;
       }
 
       p2.x += p2.vx;
